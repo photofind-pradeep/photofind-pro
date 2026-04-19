@@ -28,7 +28,7 @@ const drive = google.drive({ version: 'v3', auth });
 //  ROUTE 1 — Health Check
 // ════════════════════════════════════════
 app.get('/', (req, res) => {
-  res.json({ status: 'PhotoFind Pro server is running ✅' });
+  res.sendFile(__dirname + '/index.html');
 });
 
 // ════════════════════════════════════════
