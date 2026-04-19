@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PhotoFind Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Italiana&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#080608;--s1:#100E12;--s2:#181520;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.1);
+  --rose:#FF6B9D;--rose2:#E84E7E;--rose-dim:rgba(255,107,157,0.1);--rose-glow:rgba(255,107,157,0.2);
+  --green:#4ADE80;--green-dim:rgba(74,222,128,0.1);
+  --text:#EDE8F0;--muted:#6B6070;--muted2:#9088A0;
+}
+body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;top:-100px;left:50%;transform:translateX(-50%);width:500px;height:300px;background:radial-gradient(ellipse,rgba(255,107,157,0.07) 0%,transparent 70%);pointer-events:none;z-index:0}
+
+/* HEADER */
+.hdr{position:sticky;top:0;z-index:100;background:rgba(8,6,8,0.92);backdrop-filter:blur(24px);border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:9px}
+.logo-mark{width:30px;height:30px;background:linear-gradient(135deg,var(--rose),var(--rose2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.logo-name{font-family:'Italiana',serif;font-size:22px;letter-spacing:0.04em}
+.logo-name b{color:var(--rose)}
+.server-status{display:flex;align-items:center;gap:5px;font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border2);background:var(--s2)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--muted)}
+.status-dot.online{background:var(--green);animation:lpulse 1.5s ease infinite}
+.status-dot.offline{background:#ef4444}
+@keyframes lpulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* SCREENS */
+.screen{display:none}
+.screen.active{display:block;animation:fUp 0.4s ease}
+@keyframes fUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.wrap{max-width:460px;margin:0 auto;padding:22px 16px 90px;position:relative;z-index:1}
+
+/* FLOW BAR */
+.flow-bar{display:flex;align-items:flex-start;margin-bottom:24px}
+.fb-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;position:relative}
+.fb-item:not(:last-child)::after{content:'';position:absolute;top:13px;left:60%;width:80%;height:1px;background:var(--border);transition:background 0.3s}
+.fb-item.done:not(:last-child)::after{background:rgba(74,222,128,0.3)}
+.fb-dot{width:26px;height:26px;border-radius:50%;background:var(--s2);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--muted);transition:all 0.35s;z-index:1}
+.fb-dot.done{background:var(--green-dim);border-color:var(--green);color:var(--green)}
+.fb-dot.active{background:var(--rose-dim);border-color:var(--rose);color:var(--rose)}
+.fb-label{font-size:9px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;text-align:center}
+
+/* EVENT HERO */
+.event-hero{background:linear-gradient(145deg,#120810 0%,#080608 60%,#080D14 100%);border:1px solid rgba(255,107,157,0.15);border-radius:20px;padding:22px;margin-bottom:16px;position:relative;overflow:hidden}
+.event-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:180px;height:180px;background:radial-gradient(circle,rgba(255,107,157,0.08),transparent 70%)}
+.live-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(255,107,157,0.08);border:1px solid rgba(255,107,157,0.18);border-radius:20px;padding:4px 12px;font-size:10px;color:var(--rose);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:14px}
+.live-dot{width:6px;height:6px;background:var(--rose);border-radius:50%;animation:lpulse 1.5s ease infinite}
+.event-name{font-family:'Italiana',serif;font-size:28px;line-height:1.15;margin-bottom:6px;position:relative;z-index:1}
+.event-name span{color:var(--rose)}
+.event-meta{font-size:12px;color:var(--muted2);margin-bottom:18px;position:relative;z-index:1}
+.stats-row{display:flex;border-top:1px solid var(--border);padding-top:16px;position:relative;z-index:1}
+.stat{flex:1;text-align:center;border-right:1px solid var(--border)}
+.stat:last-child{border-right:none}
+.stat-v{font-family:'Italiana',serif;font-size:26px;color:var(--rose);display:block;line-height:1;margin-bottom:3px}
+.stat-l{font-size:10px;color:var(--muted);letter-spacing:0.08em}
+
+/* EVENT SELECTOR */
+.event-list{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.event-item{display:flex;align-items:center;gap:12px;padding:14px;background:var(--s1);border:1px solid var(--border);border-radius:14px;cursor:pointer;transition:all 0.2s}
+.event-item:hover{border-color:rgba(255,107,157,0.3);background:var(--rose-dim)}
+.event-item.selected{border-color:var(--rose);background:var(--rose-dim)}
+.event-icon{width:38px;height:38px;background:var(--rose-dim);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.event-info{flex:1}
+.event-info strong{font-size:13px;display:block;margin-bottom:2px}
+.event-info span{font-size:11px;color:var(--muted2)}
+.event-check{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:10px;transition:all 0.2s}
+.event-item.selected .event-check{background:var(--rose);border-color:var(--rose);color:white}
+
+/* CARD */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:14px}
+.card-ttl{font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--rose);font-weight:600;margin-bottom:14px}
+
+/* CAMERA */
+.cam-box{position:relative;border-radius:20px;overflow:hidden;background:#000;aspect-ratio:3/4;margin-bottom:18px;border:1px solid var(--border)}
+#videoEl{width:100%;height:100%;object-fit:cover;display:block;transform:scaleX(-1)}
+.cam-empty{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--s1)}
+.cam-empty .ei{font-size:52px}
+.cam-empty p{font-size:12px;color:var(--muted);text-align:center;padding:0 24px;line-height:1.6}
+.cam-ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.face-ring{width:185px;height:230px;position:relative}
+.corner{position:absolute;width:26px;height:26px;border-color:var(--rose);border-style:solid;opacity:0.85}
+.c-tl{top:0;left:0;border-width:2px 0 0 2px;border-radius:5px 0 0 0}
+.c-tr{top:0;right:0;border-width:2px 2px 0 0;border-radius:0 5px 0 0}
+.c-bl{bottom:0;left:0;border-width:0 0 2px 2px;border-radius:0 0 0 5px}
+.c-br{bottom:0;right:0;border-width:0 2px 2px 0;border-radius:0 0 5px 0}
+.scan{position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,var(--rose),rgba(255,107,157,0.5),var(--rose),transparent);animation:scanAnim 2s ease-in-out infinite}
+@keyframes scanAnim{0%{top:0;opacity:0}8%{opacity:1}92%{opacity:1}100%{top:100%;opacity:0}}
+.cam-tip{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(8,6,8,0.82);backdrop-filter:blur(10px);color:rgba(237,232,240,0.75);font-size:11px;padding:6px 14px;border-radius:20px;border:1px solid var(--border2);white-space:nowrap}
+
+/* PREVIEW */
+.prev-box{position:relative;border-radius:20px;overflow:hidden;margin-bottom:18px;border:1px solid var(--border)}
+#capturedCanvas{width:100%;display:block;transform:scaleX(-1)}
+.detected-tag{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(8,6,8,0.85);backdrop-filter:blur(10px);border:1px solid rgba(74,222,128,0.3);border-radius:20px;padding:5px 14px;font-size:11px;color:var(--green);display:flex;align-items:center;gap:6px;white-space:nowrap}
+
+/* PROCESSING */
+.proc-wrap{text-align:center;padding:28px 0 16px}
+.glow-orb{width:90px;height:90px;margin:0 auto 22px;position:relative;display:flex;align-items:center;justify-content:center}
+.orb-ring{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(255,107,157,0.25);animation:orbRing 2.2s ease-out infinite}
+.orb-ring:nth-child(2){animation-delay:0.75s}
+.orb-ring:nth-child(3){animation-delay:1.5s}
+@keyframes orbRing{0%{transform:scale(0.7);opacity:1}100%{transform:scale(1.7);opacity:0}}
+.orb-core{width:54px;height:54px;background:linear-gradient(135deg,var(--rose),var(--rose2));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;z-index:1}
+.proc-title{font-family:'Italiana',serif;font-size:26px;margin-bottom:4px}
+.proc-sub{font-size:12px;color:var(--muted2);margin-bottom:22px}
+.prog-rail{height:2.5px;background:var(--s2);border-radius:3px;overflow:hidden;margin-bottom:7px}
+.prog-bar{height:100%;background:linear-gradient(90deg,var(--rose2),var(--rose));border-radius:3px;transition:width 0.5s ease}
+.prog-pct{font-size:11px;color:var(--rose);text-align:right;margin-bottom:20px}
+.proc-list{text-align:left}
+.p-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--muted);transition:color 0.3s}
+.p-item:last-child{border-bottom:none}
+.p-item.done{color:var(--text)}
+.p-item.active{color:var(--rose)}
+.p-ico{width:20px;height:20px;border-radius:5px;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all 0.3s}
+.p-item.done .p-ico{background:var(--green-dim);color:var(--green)}
+.p-item.active .p-ico{background:var(--rose-dim);color:var(--rose);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* RESULTS */
+.result-top{text-align:center;padding:6px 0 22px}
+.star-burst{font-size:32px;margin-bottom:10px;display:block}
+.res-pill{display:inline-flex;align-items:center;gap:5px;background:var(--green-dim);border:1px solid rgba(74,222,128,0.2);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--green);letter-spacing:0.08em;margin-bottom:12px}
+.res-main{font-family:'Italiana',serif;font-size:34px;line-height:1.15;margin-bottom:6px}
+.res-main span{color:var(--rose)}
+.res-sub{font-size:12px;color:var(--muted2)}
+
+/* PHOTO GRID */
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;border-radius:14px;overflow:hidden;margin-bottom:18px}
+.ph-cell{aspect-ratio:1;position:relative;cursor:pointer;overflow:hidden;background:var(--s2)}
+.ph-cell img{width:100%;height:100%;object-fit:cover;transition:transform 0.3s}
+.ph-cell:hover img{transform:scale(1.08)}
+.ph-ov{position:absolute;inset:0;background:rgba(8,6,8,0);transition:background 0.2s;display:flex;align-items:center;justify-content:center}
+.ph-cell:hover .ph-ov{background:rgba(8,6,8,0.4)}
+.ph-open{opacity:0;font-size:20px;transition:opacity 0.2s}
+.ph-cell:hover .ph-open{opacity:1}
+.no-photos{text-align:center;padding:40px 20px;color:var(--muted2);font-size:13px}
+.no-photos .ni{font-size:40px;display:block;margin-bottom:10px}
+
+/* DOWNLOAD */
+.dl-card{background:var(--s1);border:1px solid rgba(255,107,157,0.12);border-radius:14px;overflow:hidden;margin-bottom:14px}
+.dl-row{display:flex;align-items:center;gap:11px;padding:14px;border-bottom:1px solid var(--border)}
+.dl-row:last-child{border-bottom:none}
+.dl-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.dl-info{flex:1}
+.dl-info strong{font-size:13px;display:block;margin-bottom:2px}
+.dl-info span{font-size:11px;color:var(--muted2)}
+.dl-btn{padding:6px 12px;border-radius:7px;border:none;font-family:'Jost',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s;flex-shrink:0;text-decoration:none;display:inline-flex;align-items:center}
+.dlb-rose{background:var(--rose);color:white}
+.dlb-rose:hover{background:var(--rose2)}
+.dlb-ghost{background:var(--s2);color:var(--text);border:1px solid var(--border2)}
+.dlb-ghost:hover{border-color:var(--rose);color:var(--rose)}
+
+/* SHARE */
+.share-row{display:flex;gap:8px;margin-bottom:18px}
+.sh-btn{flex:1;padding:11px 6px;background:var(--s1);border:1px solid var(--border);border-radius:11px;color:var(--text);font-family:'Jost',sans-serif;font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all 0.2s;font-weight:500}
+.sh-btn .si{font-size:18px}
+.sh-btn:hover{border-color:rgba(255,107,157,0.3);background:var(--rose-dim);color:var(--rose)}
+
+/* BUTTONS */
+.btn{width:100%;padding:15px;border-radius:12px;font-family:'Jost',sans-serif;font-size:14px;font-weight:500;cursor:pointer;border:none;transition:all 0.22s;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:0.02em}
+.btn-rose{background:linear-gradient(135deg,var(--rose) 0%,var(--rose2) 100%);color:white;box-shadow:0 4px 20px var(--rose-glow)}
+.btn-rose:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(255,107,157,0.35)}
+.btn-rose:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--muted2);margin-top:10px;font-size:13px}
+.btn-ghost:hover{border-color:rgba(255,107,157,0.3);color:var(--rose)}
+
+/* ERROR BOX */
+.error-box{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:12px;padding:14px;margin-bottom:14px;font-size:12px;color:#fca5a5;display:none}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--s2);border:1px solid var(--border2);color:var(--text);padding:10px 20px;border-radius:30px;font-size:12px;z-index:999;transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,0.6)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+#hiddenCanvas{display:none}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="logo">
+    <div class="logo-mark">📸</div>
+    <div class="logo-name">Photo<b>Find</b> Pro</div>
+  </div>
+  <div class="server-status">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">Connecting...</span>
+  </div>
+</div>
+
+<!-- ════ SCREEN 1 — SELECT EVENT ════ -->
+<div class="screen active" id="s1">
+<div class="wrap">
+
+  <div class="flow-bar">
+    <div class="fb-item active"><div class="fb-dot active">1</div><div class="fb-label">Event</div></div>
+    <div class="fb-item"><div class="fb-dot">2</div><div class="fb-label">Scan</div></div>
+    <div class="fb-item"><div class="fb-dot">3</div><div class="fb-label">Match</div></div>
+    <div class="fb-item"><div class="fb-dot">4</div><div class="fb-label">Download</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-ttl">✦ Select Your Event</div>
+    <div class="event-list" id="eventList">
+      <div style="text-align:center;padding:20px;color:var(--muted2);font-size:13px">Loading events...</div>
+    </div>
+  </div>
+
+  <div class="error-box" id="errorBox">⚠️ <span id="errorMsg"></span></div>
+
+  <button class="btn btn-rose" id="continueBtn" onclick="goToCamera()" disabled>
+    📷 Continue to Camera
+  </button>
+
+</div>
+</div>
+
+<!-- ════ SCREEN 2 — CAMERA ════ -->
+<div class="screen" id="s2">
+<div class="wrap">
+
+  <div class="flow-bar">
+    <div class="fb-item done"><div class="fb-dot done">✓</div><div class="fb-label">Event</div></div>
+    <div class="fb-item active"><div class="fb-dot active">2</div><div class="fb-label">Scan</div></div>
+    <div class="fb-item"><div class="fb-dot">3</div><div class="fb-label">Match</div></div>
+    <div class="fb-item"><div class="fb-dot">4</div><div class="fb-label">Download</div></div>
+  </div>
+
+  <div class="event-hero">
+    <div class="live-tag"><div class="live-dot"></div> SELECTED EVENT</div>
+    <div class="event-name" id="heroEventName">Loading...</div>
+    <div class="event-meta" id="heroEventMeta"></div>
+    <div class="stats-row">
+      <div class="stat"><span class="stat-v" id="heroPhotoCount">—</span><span class="stat-l">Photos</span></div>
+      <div class="stat"><span class="stat-v">AI</span><span class="stat-l">Powered</span></div>
+      <div class="stat"><span class="stat-v">HD</span><span class="stat-l">Quality</span></div>
+    </div>
+  </div>
+
+  <div class="cam-box">
+    <video id="videoEl" autoplay playsinline muted></video>
+    <div id="noCam" class="cam-empty" style="display:none">
+      <div class="ei">🤳</div>
+      <p>Camera permission denied.<br>Please allow access in browser settings.</p>
+    </div>
+    <div class="cam-ov">
+      <div class="face-ring">
+        <div class="corner c-tl"></div><div class="corner c-tr"></div>
+        <div class="corner c-bl"></div><div class="corner c-br"></div>
+        <div class="scan"></div>
+      </div>
+    </div>
+    <div class="cam-tip">Keep face in good light · Look straight</div>
+  </div>
+  <canvas id="hiddenCanvas"></canvas>
+
+  <button class="btn btn-rose" onclick="capturePhoto()">⊙ &nbsp; Capture Selfie</button>
+  <button class="btn btn-ghost" onclick="goTo('s1')">← Change Event</button>
+
+</div>
+</div>
+
+<!-- ════ SCREEN 3 — PREVIEW ════ -->
+<div class="screen" id="s3">
+<div class="wrap">
+
+  <div class="flow-bar">
+    <div class="fb-item done"><div class="fb-dot done">✓</div><div class="fb-label">Event</div></div>
+    <div class="fb-item done"><div class="fb-dot done">✓</div><div class="fb-label">Scan</div></div>
+    <div class="fb-item active"><div class="fb-dot active">3</div><div class="fb-label">Match</div></div>
+    <div class="fb-item"><div class="fb-dot">4</div><div class="fb-label">Download</div></div>
+  </div>
+
+  <div class="prev-box">
+    <canvas id="capturedCanvas"></canvas>
+    <div class="detected-tag"><div class="live-dot" style="background:var(--green)"></div> Ready to Search</div>
+  </div>
+
+  <button class="btn btn-rose" onclick="startMatch()">🔍 &nbsp; Find My Photos</button>
+  <button class="btn btn-ghost" onclick="retakePhoto()">↩ &nbsp; Retake</button>
+
+</div>
+</div>
+
+<!-- ════ SCREEN 4 — PROCESSING ════ -->
+<div class="screen" id="s4">
+<div class="wrap">
+
+  <div class="flow-bar">
+    <div class="fb-item done"><div class="fb-dot done">✓</div><div class="fb-label">Event</div></div>
+    <div class="fb-item done"><div class="fb-dot done">✓</div><div class="fb-label">Scan</div></div>
+    <div class="fb-item active"><div class="fb-dot active">3</div><div class="fb-label">Match</div></div>
+    <div class="fb-item"><div class="fb-dot">4</div><div class="fb-label">Download</div></div>
+  </div>
+
+  <div class="proc-wrap">
+    <div class="glow-orb">
+      <div class="orb-ring"></div><div class="orb-ring"></div><div class="orb-ring"></div>
+      <div class="orb-core" id="orbEmoji">🔍</div>
+    </div>
+    <div class="proc-title" id="procTitle">Searching...</div>
+    <div class="proc-sub" id="procSub">Scanning your event photos</div>
+    <div class="prog-rail"><div class="prog-bar" id="progBar" style="width:5%"></div></div>
+    <div class="prog-pct" id="progPct">5%</div>
+  </div>
+
+  <div class="proc-list">
+    <div class="p-item active" id="pi1"><div class="p-ico">↻</div> Connecting to Google Drive</div>
+    <div class="p-item" id="pi2"><div class="p-ico">→</div> Detecting face in selfie</div>
+    <div class="p-item" id="pi3"><div class="p-ico">→</div> Scanning all event photos</div>
+    <div class="p-item" id="pi4"><div class="p-ico">→</div> Matching your face</div>
+    <div class="p-item" id="pi5"><div class="p-ico">→</div> Preparing download links</div>
+  </div>
+
+</div>
+</div>
+
+<!-- ════ SCREEN 5 — RESULTS ════ -->
+<div class="screen" id="s5">
+<div class="wrap">
+
+  <div class="flow-bar">
+    <div class="fb-item done"><div class="fb-dot done">✓</div><div class="fb-label">Event</div></div>
+    <div class="fb-item done"><div class="fb-dot done">✓</div><div class="fb-label">Scan</div></div>
+    <div class="fb-item done"><div class="fb-dot done">✓</div><div class="fb-label">Match</div></div>
+    <div class="fb-item active"><div class="fb-dot active">4</div><div class="fb-label">Download</div></div>
+  </div>
+
+  <div class="result-top">
+    <span class="star-burst">🎉</span>
+    <div class="res-pill" id="resPill">✓ Photos Found</div>
+    <div class="res-main" id="resMain">Your <span id="resCount">0</span> Photos<br>Are Ready!</div>
+    <div class="res-sub" id="resSub">Matched from your event photos</div>
+  </div>
+
+  <div class="card-ttl" style="margin-bottom:10px">✦ Your Matched Photos</div>
+  <div class="photo-grid" id="photoGrid"></div>
+
+  <div class="card-ttl" style="margin-bottom:10px">✦ Download</div>
+  <div class="dl-card" id="dlCard"></div>
+
+  <div class="card-ttl" style="margin-bottom:10px">✦ Share</div>
+  <div class="share-row">
+    <button class="sh-btn" id="whatsappBtn"><span class="si">💬</span>WhatsApp</button>
+    <button class="sh-btn" id="emailBtn"><span class="si">✉️</span>Email</button>
+    <button class="sh-btn" id="copyBtn"><span class="si">🔗</span>Copy Link</button>
+  </div>
+
+  <button class="btn btn-rose" onclick="restart()">🔄 &nbsp; New Search</button>
+  <button class="btn btn-ghost" onclick="goTo('s1')">← Back to Events</button>
+
+</div>
+</div>
+
+<div class="toast" id="toastEl"></div>
+
+<script>
+const SERVER = 'http://localhost:3000';
+let selectedEvent = null;
+let capturedBlob = null;
+let matchedPhotos = [];
+let camStream = null;
+const video = document.getElementById('videoEl');
+
+// ── Check server on load ──
+async function checkServer() {
+  try {
+    const res = await fetch(`${SERVER}/`);
+    const data = await res.json();
+    document.getElementById('statusDot').className = 'status-dot online';
+    document.getElementById('statusText').textContent = 'Server Online';
+    loadEvents();
+  } catch (e) {
+    document.getElementById('statusDot').className = 'status-dot offline';
+    document.getElementById('statusText').textContent = 'Server Offline';
+    showError('Server not running. Please start server with: node server.js');
+  }
+}
+
+// ── Load Events from Drive ──
+async function loadEvents() {
+  try {
+    const res = await fetch(`${SERVER}/events`);
+    const data = await res.json();
+
+    const list = document.getElementById('eventList');
+
+    if (!data.events || data.events.length === 0) {
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted2);font-size:13px">No events found in Google Drive.<br>Create an event folder first.</div>';
+      return;
+    }
+
+    list.innerHTML = '';
+    data.events.forEach(event => {
+      const div = document.createElement('div');
+      div.className = 'event-item';
+      div.innerHTML = `
+        <div class="event-icon">🎊</div>
+        <div class="event-info">
+          <strong>${formatEventName(event.name)}</strong>
+          <span>${formatDate(event.createdTime)}</span>
+        </div>
+        <div class="event-check">✓</div>`;
+      div.onclick = () => selectEvent(event, div);
+      list.appendChild(div);
+    });
+  } catch (e) {
+    showError('Could not load events: ' + e.message);
+  }
+}
+
+function selectEvent(event, el) {
+  document.querySelectorAll('.event-item').forEach(i => i.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedEvent = event;
+  document.getElementById('continueBtn').disabled = false;
+}
+
+async function goToCamera() {
+  if (!selectedEvent) return;
+
+  // Load stats for this event
+  try {
+    const res = await fetch(`${SERVER}/stats/${selectedEvent.id}`);
+    const data = await res.json();
+    document.getElementById('heroEventName').textContent = formatEventName(selectedEvent.name);
+    document.getElementById('heroEventMeta').textContent = formatDate(selectedEvent.createdTime);
+    document.getElementById('heroPhotoCount').textContent = data.stats.totalPhotos;
+  } catch(e) {}
+
+  goTo('s2');
+  startCamera();
+}
+
+async function startCamera() {
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+    video.srcObject = camStream;
+    video.style.display = 'block';
+    document.getElementById('noCam').style.display = 'none';
+  } catch (e) {
+    video.style.display = 'none';
+    document.getElementById('noCam').style.display = 'flex';
+  }
+}
+
+function capturePhoto() {
+  const hc = document.getElementById('hiddenCanvas');
+  const ctx = hc.getContext('2d');
+
+  if (camStream && video.readyState >= 2) {
+    hc.width = video.videoWidth;
+    hc.height = video.videoHeight;
+    ctx.save(); ctx.scale(-1, 1);
+    ctx.drawImage(video, -hc.width, 0, hc.width, hc.height);
+    ctx.restore();
+  } else {
+    hc.width = 480; hc.height = 640;
+    ctx.fillStyle = '#1A0E12';
+    ctx.fillRect(0, 0, 480, 640);
+    ctx.font = '80px serif'; ctx.textAlign = 'center';
+    ctx.fillText('🤳', 240, 300);
+  }
+
+  // Copy to preview canvas
+  const cc = document.getElementById('capturedCanvas');
+  const pc = cc.getContext('2d');
+  cc.width = hc.width; cc.height = hc.height;
+  pc.drawImage(hc, 0, 0);
+
+  // Draw face detection frame
+  const cx = hc.width / 2, cy = hc.height * 0.38;
+  const fw = 160, fh = 200, cs = 26;
+  pc.strokeStyle = '#FF6B9D'; pc.lineWidth = 2.5;
+  [[cx-fw/2,cy-fh/2,1,0],[cx+fw/2-cs,cy-fh/2,0,1],
+   [cx-fw/2,cy+fh/2-cs,1,1],[cx+fw/2-cs,cy+fh/2-cs,0,0]].forEach(([x,y,fx,fy]) => {
+    pc.beginPath();
+    if(fx&&!fy){pc.moveTo(x,y+cs);pc.lineTo(x,y);pc.lineTo(x+cs,y)}
+    if(!fx&&!fy){pc.moveTo(x,y);pc.lineTo(x+cs,y);pc.lineTo(x+cs,y-cs)}
+    if(fx&&fy){pc.moveTo(x,y);pc.lineTo(x,y+cs);pc.lineTo(x+cs,y+cs)}
+    if(!fx&&fy){pc.moveTo(x,y);pc.lineTo(x+cs,y);pc.lineTo(x+cs,y+cs)}
+    pc.stroke();
+  });
+
+  // Convert canvas to blob for upload
+  hc.toBlob(blob => { capturedBlob = blob; }, 'image/jpeg', 0.9);
+
+  if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+  goTo('s3');
+}
+
+function retakePhoto() {
+  goTo('s2');
+  startCamera();
+}
+
+async function startMatch() {
+  if (!selectedEvent || !capturedBlob) {
+    toast('Please capture a selfie first');
+    return;
+  }
+
+  goTo('s4');
+
+  // Animate processing steps while real API call happens
+  animateStep('pi1', 'pi2', 20, '🔍', 'Detecting face...', 'Analyzing your selfie');
+
+  try {
+    // Create form data with selfie
+    const formData = new FormData();
+    formData.append('selfie', capturedBlob, 'selfie.jpg');
+
+    // Animate step 2
+    setTimeout(() => animateStep('pi2', 'pi3', 40, '🧠', 'Scanning photos...', `Checking all photos in ${formatEventName(selectedEvent.name)}`), 1500);
+    setTimeout(() => animateStep('pi3', 'pi4', 65, '🔄', 'Matching faces...', 'Comparing your face with each photo'), 3000);
+
+    // Send to server
+    const res = await fetch(`${SERVER}/match/${selectedEvent.id}`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await res.json();
+
+    // Animate final steps
+    animateStep('pi4', 'pi5', 85, '✅', 'Match complete!', `Found ${data.matchedCount || 0} photos`);
+    setTimeout(() => {
+      completeStep('pi5');
+      animateProg(100);
+      document.getElementById('procTitle').textContent = 'Done!';
+      document.getElementById('procSub').textContent = 'Preparing your results';
+    }, 800);
+
+    setTimeout(() => {
+      if (data.success) {
+        matchedPhotos = data.photos || [];
+        showResults(data);
+      } else {
+        toast('Error: ' + data.error);
+        goTo('s3');
+      }
+    }, 1500);
+
+  } catch (e) {
+    toast('Connection error: ' + e.message);
+    goTo('s3');
+  }
+}
+
+function showResults(data) {
+  const count = data.matchedCount || 0;
+  matchedPhotos = data.photos || [];
+
+  document.getElementById('resCount').textContent = count;
+  document.getElementById('resPill').textContent = `✓ ${count} Photos Found`;
+  document.getElementById('resSub').textContent = `Matched from ${data.totalScanned} photos in ${formatEventName(selectedEvent.name)}`;
+
+  // Build photo grid
+  const grid = document.getElementById('photoGrid');
+  grid.innerHTML = '';
+
+  if (matchedPhotos.length === 0) {
+    grid.innerHTML = '<div class="no-photos" style="grid-column:span 3"><span class="ni">😔</span>No matching photos found.<br>Try retaking your selfie in better light.</div>';
+  } else {
+    matchedPhotos.forEach(photo => {
+      const cell = document.createElement('div');
+      cell.className = 'ph-cell';
+      cell.innerHTML = `
+        <img src="${photo.thumbnailLink}" alt="${photo.name}" loading="lazy" onerror="this.style.display='none'">
+        <div class="ph-ov"><span class="ph-open">🔍</span></div>`;
+      cell.onclick = () => window.open(photo.viewLink, '_blank');
+      grid.appendChild(cell);
+    });
+  }
+
+  // Build download card
+  const dlCard = document.getElementById('dlCard');
+  if (matchedPhotos.length > 0) {
+    const firstPhoto = matchedPhotos[0];
+    dlCard.innerHTML = `
+      <div class="dl-row">
+        <div class="dl-icon" style="background:var(--rose-dim)">📥</div>
+        <div class="dl-info">
+          <strong>${count} Matched Photos</strong>
+          <span>Click each photo to view & download</span>
+        </div>
+      </div>
+      <div class="dl-row">
+        <div class="dl-icon" style="background:#1E3A5F">🗂️</div>
+        <div class="dl-info">
+          <strong>Open in Google Drive</strong>
+          <span>View all your photos</span>
+        </div>
+        <a href="https://drive.google.com/drive/folders/${selectedEvent.id}" target="_blank" class="dl-btn dlb-ghost">Open</a>
+      </div>`;
+  } else {
+    dlCard.innerHTML = `<div class="dl-row"><div class="dl-info" style="text-align:center;padding:10px 0;color:var(--muted2)">No photos to download</div></div>`;
+  }
+
+  // Share buttons
+  const shareLink = `https://drive.google.com/drive/folders/${selectedEvent.id}`;
+  document.getElementById('whatsappBtn').onclick = () => window.open(`https://wa.me/?text=Your photos from ${formatEventName(selectedEvent.name)}: ${shareLink}`);
+  document.getElementById('emailBtn').onclick = () => window.open(`mailto:?subject=Your Photos from ${formatEventName(selectedEvent.name)}&body=View your photos here: ${shareLink}`);
+  document.getElementById('copyBtn').onclick = () => { navigator.clipboard.writeText(shareLink); toast('Link copied!'); };
+
+  goTo('s5');
+}
+
+// ── Processing Animation Helpers ──
+function animateStep(doneId, activeId, pct, emoji, title, sub) {
+  if (doneId) {
+    const prev = document.getElementById(doneId);
+    prev.classList.remove('active'); prev.classList.add('done');
+    prev.querySelector('.p-ico').textContent = '✓';
+  }
+  if (activeId) {
+    const el = document.getElementById(activeId);
+    el.classList.add('active');
+    el.querySelector('.p-ico').textContent = '↻';
+  }
+  document.getElementById('orbEmoji').textContent = emoji;
+  document.getElementById('procTitle').textContent = title;
+  document.getElementById('procSub').textContent = sub;
+  animateProg(pct);
+}
+
+function completeStep(id) {
+  const el = document.getElementById(id);
+  el.classList.remove('active'); el.classList.add('done');
+  el.querySelector('.p-ico').textContent = '✓';
+}
+
+function animateProg(target) {
+  const bar = document.getElementById('progBar');
+  const pct = document.getElementById('progPct');
+  let v = parseInt(bar.style.width) || 0;
+  const run = () => { v = Math.min(v + 2, target); bar.style.width = v + '%'; pct.textContent = v + '%'; if (v < target) requestAnimationFrame(run); };
+  requestAnimationFrame(run);
+}
+
+function restart() {
+  // Reset all steps
+  ['pi1','pi2','pi3','pi4','pi5'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('active', 'done');
+    el.querySelector('.p-ico').textContent = '→';
+  });
+  document.getElementById('pi1').classList.add('active');
+  document.getElementById('pi1').querySelector('.p-ico').textContent = '↻';
+  document.getElementById('progBar').style.width = '5%';
+  document.getElementById('progPct').textContent = '5%';
+  capturedBlob = null;
+  matchedPhotos = [];
+  goTo('s2');
+  startCamera();
+}
+
+// ── Helpers ──
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function formatEventName(name) {
+  return name.replace(/^\d{4}-\d{2}-\d{2}_/, '').replace(/-/g, ' ');
+}
+
+function formatDate(dateStr) {
+  return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function showError(msg) {
+  const box = document.getElementById('errorBox');
+  document.getElementById('errorMsg').textContent = msg;
+  box.style.display = 'block';
+}
+
+function toast(msg) {
+  const el = document.getElementById('toastEl');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ── Init ──
+checkServer();
+</script>
+</body>
+</html>
