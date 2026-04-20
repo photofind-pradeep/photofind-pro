@@ -112,6 +112,11 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
     const accessToken = await authClient.getAccessToken();
 
     const selfieBase64 = req.file.buffer.toString('base64');
+    console.log('Selfie base64 length:', selfieBase64.length);
+    console.log('Calling Vision API...');
+    console.log('Vision status:', visionResponse.status);
+    const visionData = await visionResponse.json();
+    console.log('Vision Response:', JSON.stringify(visionData));
 
     const visionResponse = await fetch(
       `https://vision.googleapis.com/v1/images:annotate?key=${process.env.VISION_API_KEY}`,
