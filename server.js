@@ -118,7 +118,7 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
         body: JSON.stringify({
           requests: [{
             image: { content: selfieBase64 },
-            features: [{ type: 'FACE_DETECTION', maxResults: 1 }],
+            features: [{ type: 'FACE_DETECTION', maxResults: 5 }],
           }],
         }),
       }
@@ -195,7 +195,7 @@ if (!faces || faces.length === 0) {
             // Compare face confidence scores — simple matching
             // In production, use Face Recognition API for exact matching
             const hasMatch = photoFaces.some(face =>
-              face.detectionConfidence > 0.85 &&
+              face.detectionConfidence > 0.6 &&
               face.joyLikelihood !== 'VERY_UNLIKELY'
             );
 
