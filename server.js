@@ -103,6 +103,9 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
     }
 
     console.log('🔍 Starting face match for event:', eventId);
+    console.log('Selfie size:', req.file.size, 'bytes');
+    console.log('Vision API Key exists:', !!process.env.VISION_API_KEY);
+    console.log('Credentials exist:', !!process.env.GOOGLE_CREDENTIALS_JSON);
 
     // ── Step 1: Detect face in selfie using Vision API ──
     const authClient = await auth.getClient();
