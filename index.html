@@ -369,7 +369,7 @@ const video = document.getElementById('videoEl');
 // ── Check server on load ──
 async function checkServer() {
   try {
-    const res = await fetch(`${SERVER}/`);
+    const res = await fetch(`${SERVER}/events`);
     const data = await res.json();
     document.getElementById('statusDot').className = 'status-dot online';
     document.getElementById('statusText').textContent = 'Server Online';
@@ -377,7 +377,7 @@ async function checkServer() {
   } catch (e) {
     document.getElementById('statusDot').className = 'status-dot offline';
     document.getElementById('statusText').textContent = 'Server Offline';
-    showError('Server not running. Please start server with: node server.js');
+    showError('Could not connect to server: ' + e.message);
   }
 }
 
