@@ -125,11 +125,11 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
     );
 
     const visionData = await visionResponse.json();
-    const faces = visionData.responses[0]?.faceAnnotations;
+    const faces = visionData?.responses?.[0]?.faceAnnotations;
 
-    if (!faces || faces.length === 0) {
-      return res.status(400).json({ success: false, error: 'No face detected in selfie. Please retake.' });
-    }
+if (!faces || faces.length === 0) {
+  return res.status(400).json({ success: false, error: 'No face detected in selfie. Please retake.' });
+}
 
     console.log('✅ Face detected in selfie');
 
@@ -189,7 +189,7 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
           );
 
           const photoVisionData = await photoVisionRes.json();
-          const photoFaces = photoVisionData.responses[0]?.faceAnnotations;
+          const photoFaces = photoVisionData?.responses?.[0]?.faceAnnotations;
 
           if (photoFaces && photoFaces.length > 0) {
             // Compare face confidence scores — simple matching
