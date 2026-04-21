@@ -379,8 +379,10 @@ async function checkServer() {
     loadEvents();
   } catch (e) {
     document.getElementById('statusDot').className = 'status-dot offline';
-    document.getElementById('statusText').textContent = 'Server Offline';
-    showError('Server not running. Please start server with: node server.js');
+    document.getElementById('statusText').textContent = 'Tap to Retry';
+    document.getElementById('statusText').style.cursor = 'pointer';
+    document.getElementById('statusText').onclick = checkServer;
+    showError('Server is waking up... Please wait 30 seconds and tap "Tap to Retry"');
   }
 }
 
