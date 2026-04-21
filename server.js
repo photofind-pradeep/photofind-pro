@@ -3,10 +3,12 @@ const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
 const { google } = require('googleapis');
-const { RekognitionClient, CompareFacesCommand, DetectFacesCommand } = require('@aws-sdk/client-rekognition');
-const axios = require('axios');
-const FormData = require('form-data');
-const Jimp = require('jimp');
+const { Readable } = require('stream');
+const {
+  RekognitionClient,
+  CompareFacesCommand,
+  DetectFacesCommand,
+} = require('@aws-sdk/client-rekognition');
 
 const app = express();
 app.use(cors({ origin: '*', methods: ['GET', 'POST'], allowedHeaders: ['Content-Type'] }));
@@ -33,13 +35,13 @@ try {
       credentials,
       scopes: ['https://www.googleapis.com/auth/drive'],
     });
-    console.log('✅ Google Auth: Using GOOGLE_CREDENTIALS_JSON');
+    console.log('✅ Google Auth: GOOGLE_CREDENTIALS_JSON');
   } else {
     auth = new google.auth.GoogleAuth({
       keyFile: './service-account.json',
       scopes: ['https://www.googleapis.com/auth/drive'],
     });
-    console.log('✅ Google Auth: Using service-account.json');
+    console.log('✅ Google Auth: service-account.json');
   }
 } catch (e) {
   console.error('❌ Google Auth failed:', e.message);
@@ -48,120 +50,98 @@ try {
 const drive = google.drive({ version: 'v3', auth });
 
 // ════════════════════════════════════════
-//  AI PHOTO EDITING with Stability AI
+//  AI PHOTO EDIT — Stability AI
+//  Uses only built-in fetch, no extra packages
 // ════════════════════════════════════════
-async function editPhotoWithAI(imageBuffer) {
+async function editPhotoWithStabilityAI(imageBuffer) {
+  const stabilityKey = process.env.STABILITY_API_KEY;
+
+  if (!stabilityKey) {
+    console.log('⚠️ No Stability AI key — returning original');
+    return { buffer: imageBuffer, edited: false };
+  }
+
   try {
-    console.log('🎨 Starting AI edit...');
+    console.log('🎨 Calling Stability AI...');
 
-    // Step 1 — Pre-process with Jimp
-    const image = await Jimp.read(imageBuffer);
-    image
-      .brightness(0.08)
-      .contrast(0.1)
-      .color([{ apply: 'saturate', params: [15] }]);
+    // Convert image to base64
+    const base64Image = imageBuffer.toString('base64');
 
-    const preprocessed = await image.getBufferAsync(Jimp.MIME_JPEG);
-    console.log('✅ Jimp preprocessing done');
-
-    // Step 2 — Stability AI
-    const stabilityKey = process.env.STABILITY_API_KEY;
-    if (!stabilityKey) {
-      console.log('⚠️ No Stability key — returning jimp-enhanced photo');
-      return preprocessed;
-    }
-
-    const base64Image = preprocessed.toString('base64');
-
-    const response = await axios.post(
+    // Call Stability AI enhance API
+    const response = await fetch(
       'https://api.stability.ai/v2beta/stable-image/edit/enhance',
       {
-        image: base64Image,
-        prompt: 'professional wedding photo, cinematic lighting, skin smoothing, warm tones, elegant, high quality',
-        negative_prompt: 'blurry, dark, noisy, overexposed',
-        output_format: 'jpeg',
-        strength: 0.25,
-      },
-      {
+        method: 'POST',
         headers: {
-          Authorization: `Bearer ${stabilityKey}`,
+          'Authorization': `Bearer ${stabilityKey}`,
           'Content-Type': 'application/json',
-          Accept: 'image/*',
+          'Accept': 'image/*',
         },
-        responseType: 'arraybuffer',
-        timeout: 60000,
+        body: JSON.stringify({
+          image: base64Image,
+          prompt: 'professional wedding photography, cinematic warm lighting, smooth skin, vibrant colors, sharp details, high quality',
+          negative_prompt: 'blurry, grainy, dark, overexposed, ugly, low quality',
+          output_format: 'jpeg',
+          strength: 0.3,
+        }),
       }
     );
 
-    console.log('✅ Stability AI edit complete');
-    return Buffer.from(response.data);
+    console.log('Stability AI status:', response.status);
 
-  } catch (err) {
-    console.error('⚠️ AI edit error:', err.message);
-    return imageBuffer;
-  }
-}
-    try {
-      const fallback = await sharp(imageBuffer)
-        .modulate({ brightness: 1.08, saturation: 1.15 })
-        .sharpen({ sigma: 0.8 })
-        .toBuffer();
-      return fallback;
-    } catch (sharpErr) {
-      console.error('Sharp fallback failed:', sharpErr.message);
-      return imageBuffer; // return original if all fails
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error('❌ Stability AI error:', errText);
+      return { buffer: imageBuffer, edited: false };
     }
-  }
-}
 
-// ── Upload edited photo to Google Drive ──
-async function uploadEditedPhoto(photoBuffer, fileName, editedFolderId) {
-  try {
-    const { Readable } = require('stream');
-    const stream = Readable.from(photoBuffer);
+    const editedArrayBuffer = await response.arrayBuffer();
+    const editedBuffer = Buffer.from(editedArrayBuffer);
+    console.log('✅ Stability AI edit complete — size:', editedBuffer.length);
+    return { buffer: editedBuffer, edited: true };
 
-    const response = await drive.files.create({
-      requestBody: {
-        name: `edited_${fileName}`,
-        mimeType: 'image/jpeg',
-        parents: [editedFolderId],
-      },
-      media: {
-        mimeType: 'image/jpeg',
-        body: stream,
-      },
-      fields: 'id, name',
-    });
-
-    // Make it publicly accessible
-    await drive.permissions.create({
-      fileId: response.data.id,
-      requestBody: { role: 'reader', type: 'anyone' },
-    });
-
-    return {
-      id: response.data.id,
-      name: response.data.name,
-      viewLink: `https://drive.google.com/file/d/${response.data.id}/view`,
-      downloadLink: `https://drive.google.com/uc?export=download&id=${response.data.id}`,
-      thumbnailLink: `https://drive.google.com/thumbnail?id=${response.data.id}&sz=w400`,
-    };
   } catch (err) {
-    console.error('❌ Upload error:', err.message);
-    throw err;
+    console.error('⚠️ Stability AI failed:', err.message);
+    return { buffer: imageBuffer, edited: false };
   }
 }
 
-// ── Get or Create edited folder ──
-async function getEditedFolder(eventId) {
+// ── Upload photo buffer to Google Drive ──
+async function uploadToDrive(buffer, fileName, folderId) {
+  const stream = Readable.from(buffer);
+  const response = await drive.files.create({
+    requestBody: {
+      name: fileName,
+      mimeType: 'image/jpeg',
+      parents: [folderId],
+    },
+    media: { mimeType: 'image/jpeg', body: stream },
+    fields: 'id, name',
+  });
+
+  await drive.permissions.create({
+    fileId: response.data.id,
+    requestBody: { role: 'reader', type: 'anyone' },
+  });
+
+  return {
+    id: response.data.id,
+    name: response.data.name,
+    viewLink: `https://drive.google.com/file/d/${response.data.id}/view`,
+    downloadLink: `https://drive.google.com/uc?export=download&id=${response.data.id}`,
+    thumbnailLink: `https://drive.google.com/thumbnail?id=${response.data.id}&sz=w400`,
+  };
+}
+
+// ── Get or create edited folder ──
+async function getOrCreateEditedFolder(eventId) {
   const existing = await drive.files.list({
     q: `'${eventId}' in parents and name='edited' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
     fields: 'files(id)',
   });
-
   if (existing.data.files.length > 0) return existing.data.files[0].id;
 
-  const newFolder = await drive.files.create({
+  const folder = await drive.files.create({
     requestBody: {
       name: 'edited',
       mimeType: 'application/vnd.google-apps.folder',
@@ -169,20 +149,15 @@ async function getEditedFolder(eventId) {
     },
     fields: 'id',
   });
-
-  return newFolder.data.id;
+  return folder.data.id;
 }
 
 // ════════════════════════════════════════
 //  ROUTES
 // ════════════════════════════════════════
 
-// ── Home ──
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
-});
+app.get('/', (req, res) => res.sendFile(__dirname + '/index.html'));
 
-// ── Health Check ──
 app.get('/health', (req, res) => {
   res.json({
     status: 'PhotoFind Pro server is running ✅',
@@ -195,7 +170,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-// ── List Events ──
 app.get('/events', async (req, res) => {
   try {
     const response = await drive.files.list({
@@ -205,12 +179,11 @@ app.get('/events', async (req, res) => {
     });
     res.json({ success: true, events: response.data.files });
   } catch (err) {
-    console.error('❌ Events error:', err.message);
+    console.error('❌ Events:', err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// ── Stats ──
 app.get('/stats/:eventId', async (req, res) => {
   try {
     const { eventId } = req.params;
@@ -218,7 +191,6 @@ app.get('/stats/:eventId', async (req, res) => {
       q: `'${eventId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
       fields: 'files(id, name)',
     });
-
     let originalCount = 0, editedCount = 0;
     for (const folder of subfolders.data.files) {
       const photos = await drive.files.list({
@@ -228,17 +200,13 @@ app.get('/stats/:eventId', async (req, res) => {
       if (folder.name === 'original') originalCount = photos.data.files.length;
       if (folder.name === 'edited') editedCount = photos.data.files.length;
     }
-
-    res.json({
-      success: true,
-      stats: { totalPhotos: originalCount, editedPhotos: editedCount, pendingPhotos: originalCount - editedCount },
-    });
+    res.json({ success: true, stats: { totalPhotos: originalCount, editedPhotos: editedCount } });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// ── Face Match + AI Edit (MAIN ROUTE) ──
+// ── MAIN: Face Match + AI Edit ──
 app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
   try {
     const { eventId } = req.params;
@@ -247,19 +215,18 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
       return res.status(400).json({ success: false, error: 'No selfie uploaded' });
     }
 
-    console.log('🔍 Face match + AI edit started for event:', eventId);
-    console.log('📸 Selfie size:', req.file.size, 'bytes');
+    console.log('🔍 Starting face match for event:', eventId);
+    console.log('📸 Selfie:', req.file.size, 'bytes');
 
     const selfieBuffer = req.file.buffer;
 
-    // ── Step 1: Detect face in selfie ──
-    const detectCommand = new DetectFacesCommand({
+    // ── Detect face in selfie ──
+    const detectResult = await rekognition.send(new DetectFacesCommand({
       Image: { Bytes: selfieBuffer },
       Attributes: ['DEFAULT'],
-    });
+    }));
 
-    const detectResult = await rekognition.send(detectCommand);
-    console.log('👤 Faces in selfie:', detectResult.FaceDetails.length);
+    console.log('👤 Faces detected:', detectResult.FaceDetails.length);
 
     if (!detectResult.FaceDetails || detectResult.FaceDetails.length === 0) {
       return res.status(400).json({
@@ -268,30 +235,30 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
       });
     }
 
-    // ── Step 2: Get photos from Drive ──
+    // ── Get event photos ──
     const subfolders = await drive.files.list({
       q: `'${eventId}' in parents and mimeType='application/vnd.google-apps.folder' and name='original' and trashed=false`,
       fields: 'files(id, name)',
     });
 
     if (!subfolders.data.files.length) {
-      return res.status(404).json({ success: false, error: 'Event original folder not found' });
+      return res.status(404).json({ success: false, error: 'Original folder not found' });
     }
 
     const originalFolderId = subfolders.data.files[0].id;
-    const photosResponse = await drive.files.list({
+    const photosRes = await drive.files.list({
       q: `'${originalFolderId}' in parents and mimeType contains 'image/' and trashed=false`,
       fields: 'files(id, name, mimeType)',
       pageSize: 1000,
     });
 
-    const allPhotos = photosResponse.data.files;
-    console.log(`📸 Scanning ${allPhotos.length} photos...`);
+    const allPhotos = photosRes.data.files;
+    console.log(`📸 Total photos: ${allPhotos.length}`);
 
-    // ── Step 3: Get edited folder ──
-    const editedFolderId = await getEditedFolder(eventId);
+    // ── Get edited folder ──
+    const editedFolderId = await getOrCreateEditedFolder(eventId);
 
-    // ── Step 4: Match + Edit each photo ──
+    // ── Match + Edit each photo ──
     const matchedPhotos = [];
 
     for (let i = 0; i < allPhotos.length; i++) {
@@ -305,63 +272,76 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
         const photoBuffer = Buffer.from(photoStream.data);
 
         // Compare faces
-        const compareCommand = new CompareFacesCommand({
+        const compareResult = await rekognition.send(new CompareFacesCommand({
           SourceImage: { Bytes: selfieBuffer },
           TargetImage: { Bytes: photoBuffer },
           SimilarityThreshold: 70,
-        });
-
-        const compareResult = await rekognition.send(compareCommand);
+        }));
 
         if (compareResult.FaceMatches && compareResult.FaceMatches.length > 0) {
           const similarity = compareResult.FaceMatches[0].Similarity;
-          console.log(`✅ Match: ${photo.name} — ${similarity.toFixed(1)}% similar`);
+          console.log(`✅ Match: ${photo.name} — ${similarity.toFixed(1)}%`);
 
-          // AI Edit the photo
-          console.log(`🎨 AI editing: ${photo.name}`);
-          const editedBuffer = await editPhotoWithAI(photoBuffer);
+          // AI Edit
+          const { buffer: editedBuffer, edited } = await editPhotoWithStabilityAI(photoBuffer);
+          console.log(`🎨 AI edit: ${edited ? 'Success' : 'Skipped (original used)'}`);
 
-          // Upload edited photo to Drive
-          const editedPhoto = await uploadEditedPhoto(editedBuffer, photo.name, editedFolderId);
+          // Upload to edited folder
+          const fileName = edited ? `edited_${photo.name}` : photo.name;
+          let uploadedPhoto;
+
+          if (edited) {
+            uploadedPhoto = await uploadToDrive(editedBuffer, fileName, editedFolderId);
+          } else {
+            // Just share original
+            await drive.permissions.create({
+              fileId: photo.id,
+              requestBody: { role: 'reader', type: 'anyone' },
+            });
+            uploadedPhoto = {
+              id: photo.id,
+              name: photo.name,
+              viewLink: `https://drive.google.com/file/d/${photo.id}/view`,
+              downloadLink: `https://drive.google.com/uc?export=download&id=${photo.id}`,
+              thumbnailLink: `https://drive.google.com/thumbnail?id=${photo.id}&sz=w400`,
+            };
+          }
 
           matchedPhotos.push({
-            id: editedPhoto.id,
-            originalId: photo.id,
-            name: editedPhoto.name,
+            ...uploadedPhoto,
             similarity: similarity.toFixed(1),
-            viewLink: editedPhoto.viewLink,
-            downloadLink: editedPhoto.downloadLink,
-            thumbnailLink: editedPhoto.thumbnailLink,
+            aiEdited: edited,
           });
         }
 
         console.log(`Progress: ${i + 1}/${allPhotos.length}`);
+
       } catch (photoErr) {
         if (photoErr.name === 'InvalidParameterException') {
           console.log(`⚠️ No face in: ${photo.name}`);
         } else {
-          console.error(`❌ Error: ${photo.name}:`, photoErr.message);
+          console.error(`❌ Error ${photo.name}:`, photoErr.message);
         }
       }
     }
 
-    console.log(`🎉 Done — ${matchedPhotos.length} photos matched & edited`);
+    console.log(`🎉 Complete — ${matchedPhotos.length} photos matched & edited`);
 
     res.json({
       success: true,
       totalScanned: allPhotos.length,
       matchedCount: matchedPhotos.length,
       photos: matchedPhotos,
-      aiEdited: true,
+      aiEdited: matchedPhotos.some(p => p.aiEdited),
     });
 
   } catch (err) {
-    console.error('❌ Match route error:', err.message);
+    console.error('❌ Match error:', err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// ── Start Server ──
+// ── Start ──
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`
