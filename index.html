@@ -369,7 +369,10 @@ const video = document.getElementById('videoEl');
 // ── Check server on load ──
 async function checkServer() {
   try {
-    const res = await fetch(`${SERVER}/`);
+    document.getElementById('statusText').textContent = 'Connecting...';
+    const res = await fetch(`${SERVER}/events`, { 
+      signal: AbortSignal.timeout(60000) 
+    });
     const data = await res.json();
     document.getElementById('statusDot').className = 'status-dot online';
     document.getElementById('statusText').textContent = 'Server Online';
