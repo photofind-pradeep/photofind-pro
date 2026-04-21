@@ -6,7 +6,7 @@ const { google } = require('googleapis');
 const { RekognitionClient, CompareFacesCommand, DetectFacesCommand } = require('@aws-sdk/client-rekognition');
 const axios = require('axios');
 const FormData = require('form-data');
-const sharp = require('sharp');
+const Jimp = require('jimp');
 
 const app = express();
 app.use(cors({ origin: '*', methods: ['GET', 'POST'], allowedHeaders: ['Content-Type'] }));
@@ -54,36 +54,33 @@ async function editPhotoWithAI(imageBuffer) {
   try {
     console.log('🎨 Starting AI edit...');
 
-    // Step 1 — Pre-process with Sharp (brightness + contrast)
-    const preprocessed = await sharp(imageBuffer)
-      .modulate({
-        brightness: 1.08,   // slight brightness boost
-        saturation: 1.15,   // richer colors
-      })
-      .sharpen({ sigma: 0.8 }) // slight sharpening
-      .toBuffer();
+    // Step 1 — Pre-process with Jimp
+    const image = await Jimp.read(imageBuffer);
+    image
+      .brightness(0.08)
+      .contrast(0.1)
+      .color([{ apply: 'saturate', params: [15] }]);
 
-    console.log('✅ Sharp preprocessing done');
+    const preprocessed = await image.getBufferAsync(Jimp.MIME_JPEG);
+    console.log('✅ Jimp preprocessing done');
 
-    // Step 2 — Stability AI for cinematic enhancement
+    // Step 2 — Stability AI
     const stabilityKey = process.env.STABILITY_API_KEY;
     if (!stabilityKey) {
-      console.log('⚠️ No Stability API key — returning sharp-enhanced photo');
+      console.log('⚠️ No Stability key — returning jimp-enhanced photo');
       return preprocessed;
     }
 
-    // Convert to base64 for Stability AI
     const base64Image = preprocessed.toString('base64');
 
-    // Call Stability AI Image-to-Image API
     const response = await axios.post(
       'https://api.stability.ai/v2beta/stable-image/edit/enhance',
       {
         image: base64Image,
         prompt: 'professional wedding photo, cinematic lighting, skin smoothing, warm tones, elegant, high quality',
-        negative_prompt: 'blurry, dark, noisy, overexposed, underexposed',
+        negative_prompt: 'blurry, dark, noisy, overexposed',
         output_format: 'jpeg',
-        strength: 0.25, // subtle enhancement — keeps original look
+        strength: 0.25,
       },
       {
         headers: {
@@ -100,8 +97,10 @@ async function editPhotoWithAI(imageBuffer) {
     return Buffer.from(response.data);
 
   } catch (err) {
-    console.error('⚠️ AI edit error (using sharp fallback):', err.message);
-    // Fallback — return sharp-processed image
+    console.error('⚠️ AI edit error:', err.message);
+    return imageBuffer;
+  }
+}
     try {
       const fallback = await sharp(imageBuffer)
         .modulate({ brightness: 1.08, saturation: 1.15 })
