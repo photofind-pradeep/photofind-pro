@@ -50,40 +50,79 @@ try {
 const drive = google.drive({ version: 'v3', auth });
 
 // ════════════════════════════════════════
-//  AI PHOTO EDIT — Stability AI
-//  Uses only built-in fetch, no extra packages
+//  AI PHOTO EDIT — Stability AI SD3 Turbo
 // ════════════════════════════════════════
 async function editPhotoWithStabilityAI(imageBuffer) {
   const stabilityKey = process.env.STABILITY_API_KEY;
-
   if (!stabilityKey) {
-    console.log('⚠️ No Stability AI key — returning original');
+    console.log('⚠️ No Stability AI key');
     return { buffer: imageBuffer, edited: false };
   }
 
   try {
-    console.log('🎨 Calling Stability AI...');
+    console.log('🎨 Calling Stability AI SD3 Turbo...');
 
-    // Convert image to base64
-    const base64Image = imageBuffer.toString('base64');
+    const boundary = '----FormBoundary' + Math.random().toString(36).slice(2);
+    const parts = [];
 
-    // Call Stability AI enhance API
+    // image field
+    parts.push(
+      `--${boundary}\r\n` +
+      `Content-Disposition: form-data; name="image"; filename="photo.jpg"\r\n` +
+      `Content-Type: image/jpeg\r\n\r\n`
+    );
+    parts.push(imageBuffer);
+    parts.push('\r\n');
+
+    // mode
+    parts.push(
+      `--${boundary}\r\n` +
+      `Content-Disposition: form-data; name="mode"\r\n\r\n` +
+      `image-to-image\r\n`
+    );
+
+    // prompt
+    parts.push(
+      `--${boundary}\r\n` +
+      `Content-Disposition: form-data; name="prompt"\r\n\r\n` +
+      `professional wedding photo, cinematic warm lighting, smooth skin, vibrant colors, sharp details, high quality photograph\r\n`
+    );
+
+    // model
+    parts.push(
+      `--${boundary}\r\n` +
+      `Content-Disposition: form-data; name="model"\r\n\r\n` +
+      `sd3-turbo\r\n`
+    );
+
+    // strength - 0.3 = subtle enhancement
+    parts.push(
+      `--${boundary}\r\n` +
+      `Content-Disposition: form-data; name="strength"\r\n\r\n` +
+      `0.3\r\n`
+    );
+
+    // output format
+    parts.push(
+      `--${boundary}\r\n` +
+      `Content-Disposition: form-data; name="output_format"\r\n\r\n` +
+      `jpeg\r\n`
+    );
+
+    parts.push(`--${boundary}--\r\n`);
+
+    const body = Buffer.concat(parts.map(p => typeof p === 'string' ? Buffer.from(p) : p));
+
     const response = await fetch(
-      'https://api.stability.ai/v2beta/stable-image/edit/enhance',
+      'https://api.stability.ai/v2beta/stable-image/generate/sd3',
       {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${stabilityKey}`,
-          'Content-Type': 'application/json',
+          'Content-Type': `multipart/form-data; boundary=${boundary}`,
           'Accept': 'image/*',
         },
-        body: JSON.stringify({
-          image: base64Image,
-          prompt: 'professional wedding photography, cinematic warm lighting, smooth skin, vibrant colors, sharp details, high quality',
-          negative_prompt: 'blurry, grainy, dark, overexposed, ugly, low quality',
-          output_format: 'jpeg',
-          strength: 0.3,
-        }),
+        body,
       }
     );
 
@@ -95,8 +134,7 @@ async function editPhotoWithStabilityAI(imageBuffer) {
       return { buffer: imageBuffer, edited: false };
     }
 
-    const editedArrayBuffer = await response.arrayBuffer();
-    const editedBuffer = Buffer.from(editedArrayBuffer);
+    const editedBuffer = Buffer.from(await response.arrayBuffer());
     console.log('✅ Stability AI edit complete — size:', editedBuffer.length);
     return { buffer: editedBuffer, edited: true };
 
@@ -106,7 +144,7 @@ async function editPhotoWithStabilityAI(imageBuffer) {
   }
 }
 
-// ── Upload photo buffer to Google Drive ──
+// ── Upload to Google Drive ──
 async function uploadToDrive(buffer, fileName, folderId) {
   const stream = Readable.from(buffer);
   const response = await drive.files.create({
@@ -156,8 +194,12 @@ async function getOrCreateEditedFolder(eventId) {
 //  ROUTES
 // ════════════════════════════════════════
 
-app.get('/', (req, res) => res.sendFile(__dirname + '/index.html'));
+// ── Home ──
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
+});
 
+// ── Health Check ──
 app.get('/health', (req, res) => {
   res.json({
     status: 'PhotoFind Pro server is running ✅',
@@ -170,6 +212,7 @@ app.get('/health', (req, res) => {
   });
 });
 
+// ── List Events ──
 app.get('/events', async (req, res) => {
   try {
     const response = await drive.files.list({
@@ -179,11 +222,12 @@ app.get('/events', async (req, res) => {
     });
     res.json({ success: true, events: response.data.files });
   } catch (err) {
-    console.error('❌ Events:', err.message);
+    console.error('❌ Events error:', err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
+// ── Stats ──
 app.get('/stats/:eventId', async (req, res) => {
   try {
     const { eventId } = req.params;
@@ -191,6 +235,7 @@ app.get('/stats/:eventId', async (req, res) => {
       q: `'${eventId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
       fields: 'files(id, name)',
     });
+
     let originalCount = 0, editedCount = 0;
     for (const folder of subfolders.data.files) {
       const photos = await drive.files.list({
@@ -200,7 +245,15 @@ app.get('/stats/:eventId', async (req, res) => {
       if (folder.name === 'original') originalCount = photos.data.files.length;
       if (folder.name === 'edited') editedCount = photos.data.files.length;
     }
-    res.json({ success: true, stats: { totalPhotos: originalCount, editedPhotos: editedCount } });
+
+    res.json({
+      success: true,
+      stats: {
+        totalPhotos: originalCount,
+        editedPhotos: editedCount,
+        pendingPhotos: originalCount - editedCount,
+      },
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -215,12 +268,12 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
       return res.status(400).json({ success: false, error: 'No selfie uploaded' });
     }
 
-    console.log('🔍 Starting face match for event:', eventId);
+    console.log('🔍 Face match started for event:', eventId);
     console.log('📸 Selfie:', req.file.size, 'bytes');
 
     const selfieBuffer = req.file.buffer;
 
-    // ── Detect face in selfie ──
+    // ── Step 1: Detect face in selfie ──
     const detectResult = await rekognition.send(new DetectFacesCommand({
       Image: { Bytes: selfieBuffer },
       Attributes: ['DEFAULT'],
@@ -235,7 +288,7 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
       });
     }
 
-    // ── Get event photos ──
+    // ── Step 2: Get event photos ──
     const subfolders = await drive.files.list({
       q: `'${eventId}' in parents and mimeType='application/vnd.google-apps.folder' and name='original' and trashed=false`,
       fields: 'files(id, name)',
@@ -255,10 +308,10 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
     const allPhotos = photosRes.data.files;
     console.log(`📸 Total photos: ${allPhotos.length}`);
 
-    // ── Get edited folder ──
+    // ── Step 3: Get edited folder ──
     const editedFolderId = await getOrCreateEditedFolder(eventId);
 
-    // ── Match + Edit each photo ──
+    // ── Step 4: Match + Edit ──
     const matchedPhotos = [];
 
     for (let i = 0; i < allPhotos.length; i++) {
@@ -284,21 +337,19 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
 
           // AI Edit
           const { buffer: editedBuffer, edited } = await editPhotoWithStabilityAI(photoBuffer);
-          console.log(`🎨 AI edit: ${edited ? 'Success' : 'Skipped (original used)'}`);
+          console.log(`🎨 AI edit: ${edited ? 'Success ✅' : 'Skipped (original used)'}`);
 
-          // Upload to edited folder
-          const fileName = edited ? `edited_${photo.name}` : photo.name;
-          let uploadedPhoto;
-
+          let finalPhoto;
           if (edited) {
-            uploadedPhoto = await uploadToDrive(editedBuffer, fileName, editedFolderId);
+            // Upload edited photo to Drive
+            finalPhoto = await uploadToDrive(editedBuffer, `edited_${photo.name}`, editedFolderId);
           } else {
-            // Just share original
+            // Share original photo
             await drive.permissions.create({
               fileId: photo.id,
               requestBody: { role: 'reader', type: 'anyone' },
             });
-            uploadedPhoto = {
+            finalPhoto = {
               id: photo.id,
               name: photo.name,
               viewLink: `https://drive.google.com/file/d/${photo.id}/view`,
@@ -308,7 +359,7 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
           }
 
           matchedPhotos.push({
-            ...uploadedPhoto,
+            ...finalPhoto,
             similarity: similarity.toFixed(1),
             aiEdited: edited,
           });
@@ -341,7 +392,7 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
   }
 });
 
-// ── Start ──
+// ── Start Server ──
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`
