@@ -242,7 +242,7 @@ select option{background:#151820}
           <div class="form-group"><label>Venue</label><input type="text" id="newVenue" placeholder="The Grand Palace, Delhi"></div>
         </div>
         <div style="display:flex;gap:10px">
-          <button class="btn btn-gold" onclick="createNewEvent()">✦ Create Event</button>
+          <button class="btn btn-gold" onclick="createEvent()">✦ Create Event</button>
           <button class="btn btn-ghost" onclick="hideNewEventForm()">Cancel</button>
         </div>
       </div>
@@ -282,7 +282,7 @@ select option{background:#151820}
           </div>
           <div class="form-group">
             <label>Server URL</label>
-            <input type="text" id="cardServerUrl" value="https://photofind-pro.onrender.com">
+            <input type="text" id="cardServerUrl" value="https://www.templecity.digital">
           </div>
         </div>
         <button class="btn btn-gold" onclick="generateQRCard()">◈ Generate QR Card</button>
@@ -314,7 +314,7 @@ select option{background:#151820}
       <div class="sec-title" style="margin-bottom:16px">✦ Configuration</div>
       <div class="card">
         <div class="form-grid">
-          <div class="form-group full"><label>Server URL</label><input type="text" id="settingsServer" placeholder="https://photofind-pro.onrender.com"></div>
+          <div class="form-group full"><label>Server URL</label><input type="text" id="settingsServer" placeholder="https://www.templecity.digital"></div>
         </div>
         <button class="btn btn-gold" onclick="saveSettings()">Save Settings</button>
       </div>
@@ -360,7 +360,7 @@ select option{background:#151820}
 <div class="toast" id="toastEl"></div>
 
 <script>
-let SERVER = localStorage.getItem('pf_server') || 'https://photofind-pro.onrender.com';
+let SERVER = localStorage.getItem('pf_server') || 'https://www.templecity.digital';
 let allEvents = [];
 let currentModalUrl = '';
 let currentQRUrl = '';
@@ -454,7 +454,7 @@ function populateSelects() {
   });
 }
 
-async function createNewEvent() {
+async function createEvent() {
   const name = document.getElementById('newEventName').value.trim();
   const date = document.getElementById('newEventDate').value;
   if (!name || !date) { toast('Please fill event name and date!'); return; }
