@@ -359,7 +359,7 @@ body::before{content:'';position:fixed;top:-100px;left:50%;transform:translateX(
 <div class="toast" id="toastEl"></div>
 
 <script>
-const SERVER = 'https://photofind-pro.onrender.com';
+const SERVER = 'https://photofind-pro-production.up.railway.app';
 let selectedEvent = null;
 let capturedBlob = null;
 let matchedPhotos = [];
@@ -369,20 +369,16 @@ const video = document.getElementById('videoEl');
 // ── Check server on load ──
 async function checkServer() {
   try {
-    document.getElementById('statusText').textContent = 'Connecting...';
-    const res = await fetch(`${SERVER}/events`, { 
-      signal: AbortSignal.timeout(60000) 
-    });
+    const res = await fetch(`${SERVER}/`);
     const data = await res.json();
     document.getElementById('statusDot').className = 'status-dot online';
     document.getElementById('statusText').textContent = 'Server Online';
     loadEvents();
+    checkEventParam();
   } catch (e) {
     document.getElementById('statusDot').className = 'status-dot offline';
-    document.getElementById('statusText').textContent = 'Tap to Retry';
-    document.getElementById('statusText').style.cursor = 'pointer';
-    document.getElementById('statusText').onclick = checkServer;
-    showError('Server is waking up... Please wait 30 seconds and tap "Tap to Retry"');
+    document.getElementById('statusText').textContent = 'Server Offline';
+    showError('Server not running. Please start server with: node server.js');
   }
 }
 
@@ -690,6 +686,45 @@ function toast(msg) {
   el.textContent = msg;
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ── Check for event parameter in URL ──
+async function checkEventParam() {
+  const params = new URLSearchParams(window.location.search);
+  const eventId = params.get('event');
+
+  if (eventId) {
+    console.log('📍 Event ID from URL:', eventId);
+    // Auto-select this event and skip to camera
+    try {
+      const res = await fetch(`${SERVER}/stats/${eventId}`);
+      const data = await res.json();
+
+      // Get event name from events list
+      const eventsRes = await fetch(`${SERVER}/events`);
+      const eventsData = await eventsRes.json();
+      const event = eventsData.events?.find(e => e.id === eventId);
+
+      if (event) {
+        selectedEvent = event;
+        document.getElementById('heroEventName').textContent = formatEventName(event.name);
+        document.getElementById('heroEventMeta').textContent = formatDate(event.createdTime);
+        document.getElementById('heroPhotoCount').textContent = data.stats?.totalPhotos || '—';
+      } else {
+        // Event not found in list — create minimal object
+        selectedEvent = { id: eventId, name: 'Your Event', createdTime: new Date().toISOString() };
+        document.getElementById('heroEventName').textContent = 'Your Event';
+        document.getElementById('heroPhotoCount').textContent = data.stats?.totalPhotos || '—';
+      }
+
+      // Skip directly to camera
+      goTo('s2');
+      startCamera();
+    } catch (e) {
+      console.error('Error loading event from URL:', e.message);
+      // Fall back to normal flow
+    }
+  }
 }
 
 // ── Init ──
