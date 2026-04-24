@@ -242,7 +242,7 @@ select option{background:#151820}
           <div class="form-group"><label>Venue</label><input type="text" id="newVenue" placeholder="The Grand Palace, Delhi"></div>
         </div>
         <div style="display:flex;gap:10px">
-          <button class="btn btn-gold" onclick="createEvent()">✦ Create Event</button>
+          <button class="btn btn-gold" onclick="createNewEvent()">✦ Create Event</button>
           <button class="btn btn-ghost" onclick="hideNewEventForm()">Cancel</button>
         </div>
       </div>
@@ -454,7 +454,7 @@ function populateSelects() {
   });
 }
 
-async function createEvent() {
+async function createNewEvent() {
   const name = document.getElementById('newEventName').value.trim();
   const date = document.getElementById('newEventDate').value;
   if (!name || !date) { toast('Please fill event name and date!'); return; }
