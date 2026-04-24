@@ -371,22 +371,37 @@ const video = document.getElementById('videoEl');
 // ── Check server on load ──
 async function checkServer() {
   try {
-    const res = await fetch(`${SERVER}/health`);
+    document.getElementById('statusText').textContent = 'Connecting...';
+    
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    
+    const res = await fetch(`${SERVER}/health`, {
+      signal: controller.signal,
+      cache: 'no-cache'
+    });
+    
+    clearTimeout(timeout);
     const data = await res.json();
+    
     if (data.status) {
       document.getElementById('statusDot').className = 'status-dot online';
       document.getElementById('statusText').textContent = 'Server Online';
       loadEvents();
       checkEventParam();
     } else {
-      throw new Error('Invalid response');
+      throw new Error('Bad response');
     }
   } catch (e) {
-    document.getElementById('statusDot').className = 'status-dot offline';
-    document.getElementById('statusText').textContent = 'Tap to Retry';
+    if (e.name === 'AbortError') {
+      document.getElementById('statusText').textContent = 'Tap to Retry';
+    } else {
+      document.getElementById('statusDot').className = 'status-dot offline';
+      document.getElementById('statusText').textContent = 'Tap to Retry';
+    }
     document.getElementById('statusText').style.cursor = 'pointer';
     document.getElementById('statusText').onclick = checkServer;
-    showError('Could not connect. Tap "Tap to Retry" to try again.');
+    showError('Server is waking up. Tap "Tap to Retry" in 30 seconds.');
   }
 }
     const data = await res.json();
