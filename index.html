@@ -378,7 +378,7 @@ async function checkServer() {
   } catch (e) {
     document.getElementById('statusDot').className = 'status-dot offline';
     document.getElementById('statusText').textContent = 'Server Offline';
-    showError('Server not running. Please start server with: node server.js');
+    showError('Connecting to server... Please wait and refresh.');
   }
 }
 
