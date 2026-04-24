@@ -371,7 +371,24 @@ const video = document.getElementById('videoEl');
 // ── Check server on load ──
 async function checkServer() {
   try {
-    const res = await fetch(`${SERVER}/`);
+    const res = await fetch(`${SERVER}/health`);
+    const data = await res.json();
+    if (data.status) {
+      document.getElementById('statusDot').className = 'status-dot online';
+      document.getElementById('statusText').textContent = 'Server Online';
+      loadEvents();
+      checkEventParam();
+    } else {
+      throw new Error('Invalid response');
+    }
+  } catch (e) {
+    document.getElementById('statusDot').className = 'status-dot offline';
+    document.getElementById('statusText').textContent = 'Tap to Retry';
+    document.getElementById('statusText').style.cursor = 'pointer';
+    document.getElementById('statusText').onclick = checkServer;
+    showError('Could not connect. Tap "Tap to Retry" to try again.');
+  }
+}
     const data = await res.json();
     document.getElementById('statusDot').className = 'status-dot online';
     document.getElementById('statusText').textContent = 'Server Online';
