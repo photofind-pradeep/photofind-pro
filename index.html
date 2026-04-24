@@ -167,6 +167,7 @@ body::before{content:'';position:fixed;top:-100px;left:50%;transform:translateX(
 .btn-rose:disabled{opacity:0.5;cursor:not-allowed;transform:none}
 .btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--muted2);margin-top:10px;font-size:13px}
 .btn-ghost:hover{border-color:rgba(255,107,157,0.3);color:var(--rose)}
+.btn-rose{background:linear-gradient(135deg,var(--rose),var(--rose2));color:white;box-shadow:0 4px 20px var(--rose-glow)}
 
 /* ERROR BOX */
 .error-box{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:12px;padding:14px;margin-bottom:14px;font-size:12px;color:#fca5a5;display:none}
@@ -343,7 +344,23 @@ body::before{content:'';position:fixed;top:-100px;left:50%;transform:translateX(
   <div class="card-ttl" style="margin-bottom:10px">✦ Download</div>
   <div class="dl-card" id="dlCard"></div>
 
-  <div class="card-ttl" style="margin-bottom:10px">✦ Share</div>
+  <div class="card-ttl" style="margin-bottom:10px">✦ Send to WhatsApp</div>
+
+  <!-- Phone number input -->
+  <div class="card" style="margin-bottom:14px;border-color:rgba(255,107,157,0.15)">
+    <div style="font-size:11px;color:var(--muted2);margin-bottom:10px;letter-spacing:0.08em;text-transform:uppercase">📱 Enter WhatsApp Number</div>
+    <div style="display:flex;gap:8px">
+      <div style="background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:11px 14px;font-size:13px;color:var(--muted2);flex-shrink:0">+91</div>
+      <input type="tel" id="whatsappNumber" placeholder="Enter your 10-digit number" maxlength="10"
+        style="flex:1;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:11px 14px;color:var(--text);font-family:'Jost',sans-serif;font-size:13px;outline:none">
+    </div>
+    <button class="btn btn-rose" style="width:100%;margin-top:10px;padding:13px" onclick="sendWhatsApp()">
+      💬 &nbsp; Send Photos to My WhatsApp
+    </button>
+  </div>
+
+  <!-- Share with others -->
+  <div class="card-ttl" style="margin-bottom:10px">✦ Share With Family & Friends</div>
   <div class="share-row">
     <button class="sh-btn" id="whatsappBtn"><span class="si">💬</span>WhatsApp</button>
     <button class="sh-btn" id="emailBtn"><span class="si">✉️</span>Email</button>
@@ -359,9 +376,7 @@ body::before{content:'';position:fixed;top:-100px;left:50%;transform:translateX(
 <div class="toast" id="toastEl"></div>
 
 <script>
-const SERVER = window.location.origin.includes('templecity') 
-  ? 'https://www.templecity.digital'
-  : 'https://photofind-pro.onrender.com';
+const SERVER = 'https://templecity.digital';
 let selectedEvent = null;
 let capturedBlob = null;
 let matchedPhotos = [];
@@ -371,33 +386,19 @@ const video = document.getElementById('videoEl');
 // ── Check server on load ──
 async function checkServer() {
   try {
-    document.getElementById('statusDot').className = 'status-dot';
-    document.getElementById('statusText').textContent = 'Connecting...';
-
-    const res = await fetch(`${SERVER}/health`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      mode: 'cors',
-      cache: 'no-store'
-    });
-
-    if (res.ok) {
-      document.getElementById('statusDot').className = 'status-dot online';
-      document.getElementById('statusText').textContent = 'Server Online';
-      loadEvents();
-      checkEventParam();
-    } else {
-      throw new Error('Server error: ' + res.status);
-    }
+    const res = await fetch(`${SERVER}/`);
+    const data = await res.json();
+    document.getElementById('statusDot').className = 'status-dot online';
+    document.getElementById('statusText').textContent = 'Server Online';
+    loadEvents();
+    checkEventParam();
   } catch (e) {
-    console.error('Server check failed:', e.message);
     document.getElementById('statusDot').className = 'status-dot offline';
-    document.getElementById('statusText').textContent = 'Tap to Retry';
-    document.getElementById('statusText').style.cursor = 'pointer';
-    document.getElementById('statusText').onclick = checkServer;
-    showError('Could not connect. Tap retry.');
+    document.getElementById('statusText').textContent = 'Server Offline';
+    showError('Server not running. Please start server with: node server.js');
   }
 }
+
 // ── Load Events from Drive ──
 async function loadEvents() {
   try {
@@ -620,9 +621,21 @@ function showResults(data) {
 
   // Share buttons
   const shareLink = `https://drive.google.com/drive/folders/${selectedEvent.id}`;
-  document.getElementById('whatsappBtn').onclick = () => window.open(`https://wa.me/?text=Your photos from ${formatEventName(selectedEvent.name)}: ${shareLink}`);
-  document.getElementById('emailBtn').onclick = () => window.open(`mailto:?subject=Your Photos from ${formatEventName(selectedEvent.name)}&body=View your photos here: ${shareLink}`);
-  document.getElementById('copyBtn').onclick = () => { navigator.clipboard.writeText(shareLink); toast('Link copied!'); };
+  const eventName = formatEventName(selectedEvent.name);
+  const photoCount = matchedPhotos.length;
+
+  const whatsappMsg = `📸 *My Photos from ${eventName}!*\n\n✨ Found *${photoCount} photos* matching my face\n\n📥 View & Download here:\n${shareLink}\n\n_Powered by Temple City Digital_\n🌐 www.templecity.digital`;
+
+  document.getElementById('whatsappBtn').onclick = () => 
+    window.open(`https://wa.me/?text=${encodeURIComponent(whatsappMsg)}`);
+  
+  document.getElementById('emailBtn').onclick = () => 
+    window.open(`mailto:?subject=My Photos from ${eventName}&body=Hi!\n\nFind my ${photoCount} photos here:\n${shareLink}\n\nPowered by Temple City Digital`);
+  
+  document.getElementById('copyBtn').onclick = () => { 
+    navigator.clipboard.writeText(shareLink); 
+    toast('✅ Link copied!'); 
+  };
 
   goTo('s5');
 }
@@ -677,6 +690,25 @@ function restart() {
 }
 
 // ── Helpers ──
+function sendWhatsApp() {
+  const number = document.getElementById('whatsappNumber').value.trim();
+  
+  if (!number || number.length !== 10) {
+    toast('Please enter valid 10-digit WhatsApp number!');
+    return;
+  }
+
+  const shareLink = `https://drive.google.com/drive/folders/${selectedEvent.id}`;
+  const eventName = formatEventName(selectedEvent.name);
+  const photoCount = matchedPhotos.length;
+
+  const msg = `📸 *Your Photos from ${eventName}!*\n\n✨ We found *${photoCount} photos* of you!\n\n📥 View & Download all your photos here:\n${shareLink}\n\n_Thank you for being part of this special day_ 🎊\n\n_Powered by Temple City Digital_\n🌐 www.templecity.digital`;
+
+  const whatsappUrl = `https://wa.me/91${number}?text=${encodeURIComponent(msg)}`;
+  window.open(whatsappUrl, '_blank');
+  toast('✅ Opening WhatsApp...');
+}
+
 function goTo(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
