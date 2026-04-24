@@ -360,7 +360,7 @@ select option{background:#151820}
 <div class="toast" id="toastEl"></div>
 
 <script>
-let SERVER = localStorage.getItem('pf_server') || 'https://www.templecity.digital';
+let SERVER = localStorage.getItem('pf_server') || window.location.origin;
 let allEvents = [];
 let currentModalUrl = '';
 let currentQRUrl = '';
