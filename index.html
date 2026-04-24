@@ -371,51 +371,33 @@ const video = document.getElementById('videoEl');
 // ── Check server on load ──
 async function checkServer() {
   try {
+    document.getElementById('statusDot').className = 'status-dot';
     document.getElementById('statusText').textContent = 'Connecting...';
-    
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
-    
+
     const res = await fetch(`${SERVER}/health`, {
-      signal: controller.signal,
-      cache: 'no-cache'
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      mode: 'cors',
+      cache: 'no-store'
     });
-    
-    clearTimeout(timeout);
-    const data = await res.json();
-    
-    if (data.status) {
+
+    if (res.ok) {
       document.getElementById('statusDot').className = 'status-dot online';
       document.getElementById('statusText').textContent = 'Server Online';
       loadEvents();
       checkEventParam();
     } else {
-      throw new Error('Bad response');
+      throw new Error('Server error: ' + res.status);
     }
   } catch (e) {
-    if (e.name === 'AbortError') {
-      document.getElementById('statusText').textContent = 'Tap to Retry';
-    } else {
-      document.getElementById('statusDot').className = 'status-dot offline';
-      document.getElementById('statusText').textContent = 'Tap to Retry';
-    }
+    console.error('Server check failed:', e.message);
+    document.getElementById('statusDot').className = 'status-dot offline';
+    document.getElementById('statusText').textContent = 'Tap to Retry';
     document.getElementById('statusText').style.cursor = 'pointer';
     document.getElementById('statusText').onclick = checkServer;
-    showError('Server is waking up. Tap "Tap to Retry" in 30 seconds.');
+    showError('Could not connect. Tap retry.');
   }
 }
-    const data = await res.json();
-    document.getElementById('statusDot').className = 'status-dot online';
-    document.getElementById('statusText').textContent = 'Server Online';
-    loadEvents();
-    checkEventParam();
-  } catch (e) {
-    document.getElementById('statusDot').className = 'status-dot offline';
-    document.getElementById('statusText').textContent = 'Server Offline';
-    showError('Server not running. Please start server with: node server.js');
-  }
-}
-
 // ── Load Events from Drive ──
 async function loadEvents() {
   try {
