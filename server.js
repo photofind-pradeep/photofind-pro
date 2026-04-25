@@ -361,6 +361,37 @@ app.post('/upload-photo', uploadPhoto.single('photo'), async (req, res) => {
 });
 
 // ── MAIN: Face Match + AI Edit ──
+// ── Get Photos ──
+app.get('/photos/:eventId', async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const subfolders = await drive.files.list({
+      q: `'${eventId}' in parents and mimeType='application/vnd.google-apps.folder' and name='original' and trashed=false`,
+      fields: 'files(id, name)',
+    });
+
+    if (!subfolders.data.files.length) {
+      return res.status(404).json({ success: false, error: 'No original folder found' });
+    }
+
+    const originalFolderId = subfolders.data.files[0].id;
+    const photos = await drive.files.list({
+      q: `'${originalFolderId}' in parents and mimeType contains 'image/' and trashed=false`,
+      fields: 'files(id, name, mimeType, thumbnailLink, webViewLink)',
+      pageSize: 1000,
+    });
+
+    res.json({
+      success: true,
+      totalPhotos: photos.data.files.length,
+      originalFolderId,
+      photos: photos.data.files,
+    });
+  } catch (err) {
+    console.error('❌ Photos error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
   try {
     const { eventId } = req.params;
