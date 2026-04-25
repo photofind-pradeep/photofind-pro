@@ -11,16 +11,7 @@ const {
 } = require('@aws-sdk/client-rekognition');
 
 const app = express();
-// Allow ALL origins — no CORS issues ever
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
+app.use(cors({ origin: '*', methods: ['GET', 'POST'], allowedHeaders: ['Content-Type'] }));
 app.use(express.json());
 app.use(express.static(__dirname));
 
@@ -361,37 +352,6 @@ app.post('/upload-photo', uploadPhoto.single('photo'), async (req, res) => {
 });
 
 // ── MAIN: Face Match + AI Edit ──
-// ── Get Photos ──
-app.get('/photos/:eventId', async (req, res) => {
-  try {
-    const { eventId } = req.params;
-    const subfolders = await drive.files.list({
-      q: `'${eventId}' in parents and mimeType='application/vnd.google-apps.folder' and name='original' and trashed=false`,
-      fields: 'files(id, name)',
-    });
-
-    if (!subfolders.data.files.length) {
-      return res.status(404).json({ success: false, error: 'No original folder found' });
-    }
-
-    const originalFolderId = subfolders.data.files[0].id;
-    const photos = await drive.files.list({
-      q: `'${originalFolderId}' in parents and mimeType contains 'image/' and trashed=false`,
-      fields: 'files(id, name, mimeType, thumbnailLink, webViewLink)',
-      pageSize: 1000,
-    });
-
-    res.json({
-      success: true,
-      totalPhotos: photos.data.files.length,
-      originalFolderId,
-      photos: photos.data.files,
-    });
-  } catch (err) {
-    console.error('❌ Photos error:', err.message);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
 app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
   try {
     const { eventId } = req.params;
@@ -452,111 +412,58 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
     // ── Step 4: Get edited folder ──
     const editedFolderId = await getOrCreateEditedFolder(eventId);
 
-    // ── Step 5: Match face in each photo ──
+    // ── Step 5: Match face in each photo (parallel batches of 5) ──
     const matchedPhotos = [];
+    const batchSize = 5;
 
-    // Process photos in batches of 5 simultaneously
-const batchSize = 5;
-for (let i = 0; i < allPhotos.length; i += batchSize) {
-  const batch = allPhotos.slice(i, i + batchSize);
-  
-  await Promise.all(batch.map(async (photo) => {
-    try {
-      const photoStream = await drive.files.get(
-        { fileId: photo.id, alt: 'media' },
-        { responseType: 'arraybuffer' }
-      );
-      const photoBuffer = Buffer.from(photoStream.data);
+    for (let i = 0; i < allPhotos.length; i += batchSize) {
+      const batch = allPhotos.slice(i, i + batchSize);
 
-      const compareResult = await rekognition.send(new CompareFacesCommand({
-        SourceImage: { Bytes: selfieBuffer },
-        TargetImage: { Bytes: photoBuffer },
-        SimilarityThreshold: 70,
+      await Promise.all(batch.map(async (photo) => {
+        try {
+          const photoStream = await drive.files.get(
+            { fileId: photo.id, alt: 'media' },
+            { responseType: 'arraybuffer' }
+          );
+          const photoBuffer = Buffer.from(photoStream.data);
+
+          const compareResult = await rekognition.send(new CompareFacesCommand({
+            SourceImage: { Bytes: selfieBuffer },
+            TargetImage: { Bytes: photoBuffer },
+            SimilarityThreshold: 70,
+          }));
+
+          if (compareResult.FaceMatches && compareResult.FaceMatches.length > 0) {
+            const similarity = compareResult.FaceMatches[0].Similarity;
+            console.log(`✅ Match: ${photo.name} — ${similarity.toFixed(1)}%`);
+
+            const { buffer: editedBuffer, edited } = await editPhotoWithStabilityAI(photoBuffer);
+
+            let finalPhoto;
+            if (edited) {
+              finalPhoto = await uploadToDrive(editedBuffer, `edited_${photo.name}`, editedFolderId);
+              console.log(`🎨 AI edited: edited_${photo.name}`);
+            } else {
+              finalPhoto = await makePublicAndGetLinks(photo.id, photo.name);
+              console.log(`📷 Original: ${photo.name}`);
+            }
+
+            matchedPhotos.push({
+              ...finalPhoto,
+              similarity: similarity.toFixed(1),
+              aiEdited: edited,
+            });
+          }
+        } catch (photoErr) {
+          if (photoErr.name === 'InvalidParameterException') {
+            console.log(`⚠️ No face in: ${photo.name}`);
+          } else {
+            console.error(`❌ Error ${photo.name}:`, photoErr.message);
+          }
+        }
       }));
 
-      if (compareResult.FaceMatches && compareResult.FaceMatches.length > 0) {
-        const similarity = compareResult.FaceMatches[0].Similarity;
-        console.log(`✅ Match: ${photo.name} — ${similarity.toFixed(1)}%`);
-
-        const { buffer: editedBuffer, edited } = await editPhotoWithStabilityAI(photoBuffer);
-
-        let finalPhoto;
-        if (edited) {
-          finalPhoto = await uploadToDrive(editedBuffer, `edited_${photo.name}`, editedFolderId);
-        } else {
-          finalPhoto = await makePublicAndGetLinks(photo.id, photo.name);
-        }
-
-        matchedPhotos.push({
-          ...finalPhoto,
-          similarity: similarity.toFixed(1),
-          aiEdited: edited,
-        });
-      }
-    } catch (photoErr) {
-      if (photoErr.name === 'InvalidParameterException') {
-        console.log(`⚠️ No face in: ${photo.name}`);
-      } else {
-        console.error(`❌ Error ${photo.name}:`, photoErr.message);
-      }
-    }
-  }));
-
-  console.log(`Progress: ${Math.min(i + batchSize, allPhotos.length)}/${allPhotos.length}`);
-}
-      try {
-        // Download from Drive
-        const photoStream = await drive.files.get(
-          { fileId: photo.id, alt: 'media' },
-          { responseType: 'arraybuffer' }
-        );
-        const photoBuffer = Buffer.from(photoStream.data);
-
-        // Compare faces with AWS Rekognition
-        const compareResult = await rekognition.send(new CompareFacesCommand({
-          SourceImage: { Bytes: selfieBuffer },
-          TargetImage: { Bytes: photoBuffer },
-          SimilarityThreshold: 70,
-        }));
-
-        if (compareResult.FaceMatches && compareResult.FaceMatches.length > 0) {
-          const similarity = compareResult.FaceMatches[0].Similarity;
-          console.log(`✅ Match: ${photo.name} — ${similarity.toFixed(1)}%`);
-
-          // ── AI Edit with Stability AI ──
-          const { buffer: editedBuffer, edited } = await editPhotoWithStabilityAI(photoBuffer);
-
-          let finalPhoto;
-          if (edited) {
-            // Upload AI edited photo to edited folder
-            finalPhoto = await uploadToDrive(
-              editedBuffer,
-              `edited_${photo.name}`,
-              editedFolderId
-            );
-            console.log(`🎨 AI edited photo saved: edited_${photo.name}`);
-          } else {
-            // Use original photo — just make it public
-            finalPhoto = await makePublicAndGetLinks(photo.id, photo.name);
-            console.log(`📷 Using original photo: ${photo.name}`);
-          }
-
-          matchedPhotos.push({
-            ...finalPhoto,
-            similarity: similarity.toFixed(1),
-            aiEdited: edited,
-          });
-        }
-
-        console.log(`Progress: ${i + 1}/${allPhotos.length}`);
-
-      } catch (photoErr) {
-        if (photoErr.name === 'InvalidParameterException') {
-          console.log(`⚠️ No face in: ${photo.name}`);
-        } else {
-          console.error(`❌ Error ${photo.name}:`, photoErr.message);
-        }
-      }
+      console.log(`Progress: ${Math.min(i + batchSize, allPhotos.length)}/${allPhotos.length}`);
     }
 
     console.log(`🎉 Done — ${matchedPhotos.length}/${allPhotos.length} matched`);
