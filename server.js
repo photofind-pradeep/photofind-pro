@@ -11,7 +11,16 @@ const {
 } = require('@aws-sdk/client-rekognition');
 
 const app = express();
-app.use(cors({ origin: '*', methods: ['GET', 'POST'], allowedHeaders: ['Content-Type'] }));
+
+// ── CORS ──
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') return res.sendStatus(200);
+  next();
+});
+
 app.use(express.json());
 app.use(express.static(__dirname));
 
@@ -26,7 +35,7 @@ const rekognition = new RekognitionClient({
   },
 });
 
-// ── Google Auth ──
+// ── Google Auth (Service Account) ──
 let auth;
 try {
   if (process.env.GOOGLE_CREDENTIALS_JSON) {
@@ -35,7 +44,7 @@ try {
       credentials,
       scopes: ['https://www.googleapis.com/auth/drive'],
     });
-    console.log('✅ Google Auth: GOOGLE_CREDENTIALS_JSON');
+    console.log('✅ Google Auth: Service Account');
   } else {
     auth = new google.auth.GoogleAuth({
       keyFile: './service-account.json',
@@ -49,115 +58,50 @@ try {
 
 const drive = google.drive({ version: 'v3', auth });
 
-// ════════════════════════════════════════
-//  AI PHOTO EDIT — Stability AI
-// ════════════════════════════════════════
-async function editPhotoWithStabilityAI(imageBuffer) {
-  const stabilityKey = process.env.STABILITY_API_KEY;
-  if (!stabilityKey) {
-    console.log('⚠️ No Stability AI key');
-    return { buffer: imageBuffer, edited: false };
-  }
+// ── OAuth2 Client (for Google Photos) ──
+const oauth2Client = new google.auth.OAuth2(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  process.env.GOOGLE_REDIRECT_URI || 'https://www.templecity.digital/auth/callback'
+);
 
+// Store tokens in memory (in production use a database)
+let photographerTokens = null;
+
+// ── Active sync jobs ──
+const syncJobs = {};
+
+// ════════════════════════════════════════
+//  HELPER FUNCTIONS
+// ════════════════════════════════════════
+
+async function makePublicAndGetLinks(fileId, fileName) {
   try {
-    console.log('🎨 Calling Stability AI...');
-
-    const boundary = '----FormBoundary' + Math.random().toString(36).slice(2);
-    const parts = [];
-
-    parts.push(
-      `--${boundary}\r\n` +
-      `Content-Disposition: form-data; name="image"; filename="photo.jpg"\r\n` +
-      `Content-Type: image/jpeg\r\n\r\n`
-    );
-    parts.push(imageBuffer);
-    parts.push('\r\n');
-
-    parts.push(
-      `--${boundary}\r\n` +
-      `Content-Disposition: form-data; name="mode"\r\n\r\n` +
-      `image-to-image\r\n`
-    );
-
-    parts.push(
-      `--${boundary}\r\n` +
-      `Content-Disposition: form-data; name="prompt"\r\n\r\n` +
-      `professional wedding photo, cinematic warm lighting, smooth skin, vibrant colors, sharp details, high quality photograph\r\n`
-    );
-
-    parts.push(
-      `--${boundary}\r\n` +
-      `Content-Disposition: form-data; name="model"\r\n\r\n` +
-      `sd3-turbo\r\n`
-    );
-
-    parts.push(
-      `--${boundary}\r\n` +
-      `Content-Disposition: form-data; name="strength"\r\n\r\n` +
-      `0.3\r\n`
-    );
-
-    parts.push(
-      `--${boundary}\r\n` +
-      `Content-Disposition: form-data; name="output_format"\r\n\r\n` +
-      `jpeg\r\n`
-    );
-
-    parts.push(`--${boundary}--\r\n`);
-
-    const body = Buffer.concat(parts.map(p =>
-      typeof p === 'string' ? Buffer.from(p) : p
-    ));
-
-    const response = await fetch(
-      'https://api.stability.ai/v2beta/stable-image/generate/sd3',
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${stabilityKey}`,
-          'Content-Type': `multipart/form-data; boundary=${boundary}`,
-          'Accept': 'image/*',
-        },
-        body,
-      }
-    );
-
-    console.log('Stability AI status:', response.status);
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('❌ Stability AI error:', errText);
-      return { buffer: imageBuffer, edited: false };
-    }
-
-    const editedBuffer = Buffer.from(await response.arrayBuffer());
-    console.log('✅ Stability AI edit complete — size:', editedBuffer.length);
-    return { buffer: editedBuffer, edited: true };
-
-  } catch (err) {
-    console.error('⚠️ Stability AI failed:', err.message);
-    return { buffer: imageBuffer, edited: false };
-  }
+    await drive.permissions.create({
+      fileId,
+      requestBody: { role: 'reader', type: 'anyone' },
+    });
+  } catch(e) {}
+  return {
+    id: fileId,
+    name: fileName,
+    viewLink: `https://drive.google.com/file/d/${fileId}/view`,
+    downloadLink: `https://drive.google.com/uc?export=download&id=${fileId}`,
+    thumbnailLink: `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`,
+  };
 }
 
-// ── Upload to Google Drive ──
 async function uploadToDrive(buffer, fileName, folderId) {
   const stream = Readable.from(buffer);
   const response = await drive.files.create({
-    requestBody: {
-      name: fileName,
-      mimeType: 'image/jpeg',
-      parents: [folderId],
-    },
+    requestBody: { name: fileName, mimeType: 'image/jpeg', parents: [folderId] },
     media: { mimeType: 'image/jpeg', body: stream },
     fields: 'id, name',
   });
-
   await drive.permissions.create({
     fileId: response.data.id,
     requestBody: { role: 'reader', type: 'anyone' },
   });
-
   return {
     id: response.data.id,
     name: response.data.name,
@@ -167,38 +111,171 @@ async function uploadToDrive(buffer, fileName, folderId) {
   };
 }
 
-// ── Get or create edited folder ──
 async function getOrCreateEditedFolder(eventId) {
   const existing = await drive.files.list({
     q: `'${eventId}' in parents and name='edited' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
     fields: 'files(id)',
   });
   if (existing.data.files.length > 0) return existing.data.files[0].id;
-
   const folder = await drive.files.create({
-    requestBody: {
-      name: 'edited',
-      mimeType: 'application/vnd.google-apps.folder',
-      parents: [eventId],
-    },
+    requestBody: { name: 'edited', mimeType: 'application/vnd.google-apps.folder', parents: [eventId] },
     fields: 'id',
   });
   return folder.data.id;
 }
 
-// ── Make file public and return links ──
-async function makePublicAndGetLinks(fileId, fileName) {
-  await drive.permissions.create({
-    fileId,
-    requestBody: { role: 'reader', type: 'anyone' },
-  });
-  return {
-    id: fileId,
-    name: fileName,
-    viewLink: `https://drive.google.com/file/d/${fileId}/view`,
-    downloadLink: `https://drive.google.com/uc?export=download&id=${fileId}`,
-    thumbnailLink: `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`,
-  };
+async function editPhotoWithStabilityAI(imageBuffer) {
+  const stabilityKey = process.env.STABILITY_API_KEY;
+  if (!stabilityKey) return { buffer: imageBuffer, edited: false };
+  try {
+    const boundary = '----FormBoundary' + Math.random().toString(36).slice(2);
+    const parts = [];
+    parts.push(`--${boundary}\r\nContent-Disposition: form-data; name="image"; filename="photo.jpg"\r\nContent-Type: image/jpeg\r\n\r\n`);
+    parts.push(imageBuffer);
+    parts.push('\r\n');
+    parts.push(`--${boundary}\r\nContent-Disposition: form-data; name="mode"\r\n\r\nimage-to-image\r\n`);
+    parts.push(`--${boundary}\r\nContent-Disposition: form-data; name="prompt"\r\n\r\nprofessional wedding photo, cinematic warm lighting, smooth skin, vibrant colors\r\n`);
+    parts.push(`--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nsd3-turbo\r\n`);
+    parts.push(`--${boundary}\r\nContent-Disposition: form-data; name="strength"\r\n\r\n0.3\r\n`);
+    parts.push(`--${boundary}\r\nContent-Disposition: form-data; name="output_format"\r\n\r\njpeg\r\n`);
+    parts.push(`--${boundary}--\r\n`);
+    const body = Buffer.concat(parts.map(p => typeof p === 'string' ? Buffer.from(p) : p));
+    const response = await fetch('https://api.stability.ai/v2beta/stable-image/generate/sd3', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${stabilityKey}`, 'Content-Type': `multipart/form-data; boundary=${boundary}`, 'Accept': 'image/*' },
+      body,
+    });
+    if (!response.ok) return { buffer: imageBuffer, edited: false };
+    return { buffer: Buffer.from(await response.arrayBuffer()), edited: true };
+  } catch (err) {
+    return { buffer: imageBuffer, edited: false };
+  }
+}
+
+// ════════════════════════════════════════
+//  GOOGLE PHOTOS SYNC
+// ════════════════════════════════════════
+
+// Sync photos from Google Photos to Drive event folder
+async function syncGooglePhotosToEvent(eventId, eventDate, tokens) {
+  try {
+    oauth2Client.setCredentials(tokens);
+    const photosApi = google.photoslibrary({ version: 'v1', auth: oauth2Client });
+
+    // Get original folder ID for this event
+    const subfolders = await drive.files.list({
+      q: `'${eventId}' in parents and name='original' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+      fields: 'files(id)',
+    });
+
+    if (!subfolders.data.files.length) {
+      console.log('❌ No original folder found for event:', eventId);
+      return { synced: 0, error: 'No original folder found' };
+    }
+
+    const originalFolderId = subfolders.data.files[0].id;
+
+    // Get existing photos in Drive to avoid duplicates
+    const existingPhotos = await drive.files.list({
+      q: `'${originalFolderId}' in parents and mimeType contains 'image/' and trashed=false`,
+      fields: 'files(id, name)',
+      pageSize: 1000,
+    });
+
+    const existingNames = new Set(existingPhotos.data.files.map(f => f.name));
+    console.log(`📁 Existing photos in Drive: ${existingNames.size}`);
+
+    // Search Google Photos for photos from event date
+    const dateFilter = {
+      dateFilter: {
+        dates: [{
+          year: parseInt(eventDate.split('-')[0]),
+          month: parseInt(eventDate.split('-')[1]),
+          day: parseInt(eventDate.split('-')[2]),
+        }],
+      },
+    };
+
+    const photosResponse = await photosApi.mediaItems.search({
+      requestBody: {
+        filters: dateFilter,
+        pageSize: 100,
+      },
+    });
+
+    const mediaItems = photosResponse.data.mediaItems || [];
+    console.log(`📸 Found ${mediaItems.length} photos in Google Photos for ${eventDate}`);
+
+    let synced = 0;
+
+    for (const item of mediaItems) {
+      // Skip if already in Drive
+      if (existingNames.has(item.filename)) {
+        console.log(`⏭️ Already synced: ${item.filename}`);
+        continue;
+      }
+
+      try {
+        // Download from Google Photos
+        const imageUrl = `${item.baseUrl}=d`;
+        const imageResponse = await fetch(imageUrl);
+        if (!imageResponse.ok) continue;
+
+        const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
+
+        // Upload to Drive original folder
+        const stream = Readable.from(imageBuffer);
+        await drive.files.create({
+          requestBody: {
+            name: item.filename,
+            mimeType: item.mimeType || 'image/jpeg',
+            parents: [originalFolderId],
+          },
+          media: { mimeType: item.mimeType || 'image/jpeg', body: stream },
+          fields: 'id',
+        });
+
+        synced++;
+        existingNames.add(item.filename);
+        console.log(`✅ Synced: ${item.filename} (${synced} total)`);
+      } catch (err) {
+        console.error(`❌ Error syncing ${item.filename}:`, err.message);
+      }
+    }
+
+    return { synced, total: mediaItems.length };
+  } catch (err) {
+    console.error('❌ Sync error:', err.message);
+    return { synced: 0, error: err.message };
+  }
+}
+
+// Auto sync every 2 minutes for active events
+function startAutoSync(eventId, eventDate, tokens) {
+  // Clear existing job if any
+  if (syncJobs[eventId]) {
+    clearInterval(syncJobs[eventId]);
+  }
+
+  console.log(`🔄 Auto sync started for event: ${eventId}`);
+
+  // Sync immediately
+  syncGooglePhotosToEvent(eventId, eventDate, tokens);
+
+  // Then every 2 minutes
+  syncJobs[eventId] = setInterval(async () => {
+    console.log(`🔄 Auto syncing event: ${eventId}`);
+    const result = await syncGooglePhotosToEvent(eventId, eventDate, tokens);
+    console.log(`✅ Sync result: ${result.synced} new photos`);
+  }, 2 * 60 * 1000); // 2 minutes
+}
+
+function stopAutoSync(eventId) {
+  if (syncJobs[eventId]) {
+    clearInterval(syncJobs[eventId]);
+    delete syncJobs[eventId];
+    console.log(`⏹️ Auto sync stopped for event: ${eventId}`);
+  }
 }
 
 // ════════════════════════════════════════
@@ -215,10 +292,129 @@ app.get('/health', (req, res) => {
     hasAWSSecret: !!process.env.AWS_SECRET_ACCESS_KEY,
     hasStabilityAI: !!process.env.STABILITY_API_KEY,
     hasEventFolder: !!process.env.EVENT_FOLDER_ID,
+    hasOAuth: !!process.env.GOOGLE_CLIENT_ID,
+    photographerConnected: !!photographerTokens,
+    activeSyncJobs: Object.keys(syncJobs).length,
     awsRegion: process.env.AWS_REGION || 'ap-south-1',
   });
 });
 
+// ── Google OAuth Routes ──
+
+// Step 1: Redirect photographer to Google login
+app.get('/auth/google', (req, res) => {
+  const authUrl = oauth2Client.generateAuthUrl({
+    access_type: 'offline',
+    scope: [
+      'https://www.googleapis.com/auth/photoslibrary.readonly',
+      'https://www.googleapis.com/auth/drive',
+    ],
+    prompt: 'consent',
+  });
+  res.redirect(authUrl);
+});
+
+// Step 2: Handle OAuth callback
+app.get('/auth/callback', async (req, res) => {
+  const { code } = req.query;
+  try {
+    const { tokens } = await oauth2Client.getToken(code);
+    photographerTokens = tokens;
+    oauth2Client.setCredentials(tokens);
+    console.log('✅ Photographer Google account connected!');
+    res.send(`
+      <html>
+      <body style="font-family:sans-serif;text-align:center;padding:50px;background:#07080A;color:white">
+        <h2 style="color:#E8C07A">✅ Google Photos Connected!</h2>
+        <p>Your Google account is now connected to PhotoFind Pro.</p>
+        <p>You can now sync live photos from your camera!</p>
+        <a href="/dashboard.html" style="background:#E8C07A;color:#07080A;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">
+          Go to Dashboard →
+        </a>
+      </body>
+      </html>
+    `);
+  } catch (err) {
+    console.error('❌ OAuth error:', err.message);
+    res.status(500).send('Authentication failed: ' + err.message);
+  }
+});
+
+// Check if photographer is connected
+app.get('/auth/status', (req, res) => {
+  res.json({
+    connected: !!photographerTokens,
+    activeSyncs: Object.keys(syncJobs).length,
+  });
+});
+
+// ── Start Live Sync for Event ──
+app.post('/sync/start', async (req, res) => {
+  try {
+    const { eventId, eventDate } = req.body;
+
+    if (!eventId || !eventDate) {
+      return res.status(400).json({ success: false, error: 'Event ID and date required' });
+    }
+
+    if (!photographerTokens) {
+      return res.status(401).json({
+        success: false,
+        error: 'Photographer not authenticated',
+        authUrl: '/auth/google'
+      });
+    }
+
+    startAutoSync(eventId, eventDate, photographerTokens);
+
+    res.json({
+      success: true,
+      message: `Live sync started for event ${eventId}`,
+      syncInterval: '2 minutes',
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── Stop Live Sync ──
+app.post('/sync/stop', (req, res) => {
+  const { eventId } = req.body;
+  stopAutoSync(eventId);
+  res.json({ success: true, message: 'Sync stopped' });
+});
+
+// ── Manual Sync Now ──
+app.post('/sync/now', async (req, res) => {
+  try {
+    const { eventId, eventDate } = req.body;
+
+    if (!photographerTokens) {
+      return res.status(401).json({
+        success: false,
+        error: 'Not authenticated',
+        authUrl: '/auth/google'
+      });
+    }
+
+    const result = await syncGooglePhotosToEvent(eventId, eventDate, photographerTokens);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── Get Sync Status ──
+app.get('/sync/status/:eventId', (req, res) => {
+  const { eventId } = req.params;
+  res.json({
+    success: true,
+    isActive: !!syncJobs[eventId],
+    eventId,
+  });
+});
+
+// ── Events ──
 app.get('/events', async (req, res) => {
   try {
     const response = await drive.files.list({
@@ -233,6 +429,7 @@ app.get('/events', async (req, res) => {
   }
 });
 
+// ── Stats ──
 app.get('/stats/:eventId', async (req, res) => {
   try {
     const { eventId } = req.params;
@@ -249,153 +446,129 @@ app.get('/stats/:eventId', async (req, res) => {
       if (folder.name === 'original') originalCount = photos.data.files.length;
       if (folder.name === 'edited') editedCount = photos.data.files.length;
     }
-    res.json({ success: true, stats: { totalPhotos: originalCount, editedPhotos: editedCount } });
+    res.json({ success: true, stats: { totalPhotos: originalCount, editedPhotos: editedCount, pendingPhotos: originalCount - editedCount, isSyncing: !!syncJobs[eventId] } });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// ── ROUTE: Create New Event ──
+// ── Photos ──
+app.get('/photos/:eventId', async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const subfolders = await drive.files.list({
+      q: `'${eventId}' in parents and mimeType='application/vnd.google-apps.folder' and name='original' and trashed=false`,
+      fields: 'files(id, name)',
+    });
+    if (!subfolders.data.files.length) {
+      return res.status(404).json({ success: false, error: 'No original folder found' });
+    }
+    const originalFolderId = subfolders.data.files[0].id;
+    const photos = await drive.files.list({
+      q: `'${originalFolderId}' in parents and mimeType contains 'image/' and trashed=false`,
+      fields: 'files(id, name, mimeType, thumbnailLink, webViewLink)',
+      pageSize: 1000,
+    });
+    res.json({ success: true, totalPhotos: photos.data.files.length, originalFolderId, photos: photos.data.files });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── Create Event ──
 app.post('/create-event', async (req, res) => {
   try {
-    const { name, date, clientName, venue } = req.body;
-    if (!name) return res.status(400).json({ success: false, error: 'Event name required' });
+    const { name, displayName, date } = req.body;
+    if (!name) return res.status(400).json({ success: false, error: 'Name required' });
 
-    const eventFolderName = `${date || new Date().toISOString().slice(0,10)}_${name}`;
-
-    // Create event folder inside Events folder
     const eventFolder = await drive.files.create({
-      requestBody: {
-        name: eventFolderName,
-        mimeType: 'application/vnd.google-apps.folder',
-        parents: [process.env.EVENT_FOLDER_ID],
-      },
+      requestBody: { name, mimeType: 'application/vnd.google-apps.folder', parents: [process.env.EVENT_FOLDER_ID] },
       fields: 'id, name',
     });
 
-    // Create original subfolder
     await drive.files.create({
-      requestBody: {
-        name: 'original',
-        mimeType: 'application/vnd.google-apps.folder',
-        parents: [eventFolder.data.id],
-      },
+      requestBody: { name: 'original', mimeType: 'application/vnd.google-apps.folder', parents: [eventFolder.data.id] },
+      fields: 'id',
     });
 
-    // Create edited subfolder
     await drive.files.create({
-      requestBody: {
-        name: 'edited',
-        mimeType: 'application/vnd.google-apps.folder',
-        parents: [eventFolder.data.id],
-      },
+      requestBody: { name: 'edited', mimeType: 'application/vnd.google-apps.folder', parents: [eventFolder.data.id] },
+      fields: 'id',
     });
 
-    console.log(`✅ Event created: ${eventFolderName}`);
-    res.json({ success: true, eventId: eventFolder.data.id, name: eventFolderName });
-
+    console.log(`✅ Event created: ${name} (${eventFolder.data.id})`);
+    res.json({ success: true, eventId: eventFolder.data.id, name: eventFolder.data.name });
   } catch (err) {
     console.error('❌ Create event error:', err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// ── ROUTE: Upload Photo to Event ──
-const uploadPhoto = multer({ storage: multer.memoryStorage() });
-app.post('/upload-photo', uploadPhoto.single('photo'), async (req, res) => {
+// ── Upload Photo ──
+app.post('/upload-photo', upload.single('photo'), async (req, res) => {
   try {
     const { eventId } = req.body;
-    if (!req.file) return res.status(400).json({ success: false, error: 'No photo uploaded' });
-    if (!eventId) return res.status(400).json({ success: false, error: 'No event ID provided' });
+    if (!req.file) return res.status(400).json({ success: false, error: 'No photo' });
+    if (!eventId) return res.status(400).json({ success: false, error: 'No event ID' });
 
-    // Find original folder
     const subfolders = await drive.files.list({
       q: `'${eventId}' in parents and name='original' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
       fields: 'files(id)',
     });
 
-    let originalFolderId;
+    let folderId;
     if (subfolders.data.files.length > 0) {
-      originalFolderId = subfolders.data.files[0].id;
+      folderId = subfolders.data.files[0].id;
     } else {
-      // Create original folder if missing
-      const folder = await drive.files.create({
-        requestBody: {
-          name: 'original',
-          mimeType: 'application/vnd.google-apps.folder',
-          parents: [eventId],
-        },
+      const f = await drive.files.create({
+        requestBody: { name: 'original', mimeType: 'application/vnd.google-apps.folder', parents: [eventId] },
         fields: 'id',
       });
-      originalFolderId = folder.data.id;
+      folderId = f.data.id;
     }
 
-    // Upload photo
-    const stream = Readable.from(req.file.buffer);
     const uploaded = await drive.files.create({
-      requestBody: {
-        name: req.file.originalname || `photo_${Date.now()}.jpg`,
-        mimeType: req.file.mimetype || 'image/jpeg',
-        parents: [originalFolderId],
-      },
-      media: { mimeType: req.file.mimetype || 'image/jpeg', body: stream },
+      requestBody: { name: req.file.originalname, mimeType: req.file.mimetype, parents: [folderId] },
+      media: { mimeType: req.file.mimetype, body: Readable.from(req.file.buffer) },
       fields: 'id, name',
     });
 
-    console.log(`📸 Photo uploaded: ${uploaded.data.name}`);
-    res.json({ success: true, fileId: uploaded.data.id, name: uploaded.data.name });
-
+    console.log(`✅ Uploaded: ${uploaded.data.name}`);
+    res.json({ success: true, fileId: uploaded.data.id, fileName: uploaded.data.name });
   } catch (err) {
     console.error('❌ Upload error:', err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// ── MAIN: Face Match + AI Edit ──
+// ── Face Match ──
 app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
   try {
     const { eventId } = req.params;
-
-    if (!req.file) {
-      return res.status(400).json({ success: false, error: 'No selfie uploaded' });
-    }
+    if (!req.file) return res.status(400).json({ success: false, error: 'No selfie uploaded' });
 
     console.log('🔍 Face match started:', eventId);
-    console.log('📸 Selfie size:', req.file.size, 'bytes');
-
     const selfieBuffer = req.file.buffer;
 
-    // ── Step 1: Detect face in selfie ──
     const detectResult = await rekognition.send(new DetectFacesCommand({
       Image: { Bytes: selfieBuffer },
       Attributes: ['DEFAULT'],
     }));
 
-    console.log('👤 Faces detected:', detectResult.FaceDetails.length);
-
     if (!detectResult.FaceDetails || detectResult.FaceDetails.length === 0) {
-      return res.status(400).json({
-        success: false,
-        error: 'No face detected. Please retake in good lighting.',
-      });
+      return res.status(400).json({ success: false, error: 'No face detected. Please retake in good lighting.' });
     }
 
-    // ── Step 2: Get ALL subfolders (original + edited) ──
     const subfolders = await drive.files.list({
-      q: `'${eventId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+      q: `'${eventId}' in parents and mimeType='application/vnd.google-apps.folder' and name='original' and trashed=false`,
       fields: 'files(id, name)',
     });
 
-    let originalFolderId = null;
-    for (const folder of subfolders.data.files) {
-      if (folder.name === 'original') originalFolderId = folder.id;
-    }
-
-    if (!originalFolderId) {
+    if (!subfolders.data.files.length) {
       return res.status(404).json({ success: false, error: 'Original folder not found' });
     }
 
-    // ── Step 3: Get all photos from original folder ──
+    const originalFolderId = subfolders.data.files[0].id;
     const photosRes = await drive.files.list({
       q: `'${originalFolderId}' in parents and mimeType contains 'image/' and trashed=false`,
       fields: 'files(id, name, mimeType)',
@@ -403,16 +576,9 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
     });
 
     const allPhotos = photosRes.data.files;
-    console.log(`📸 Total photos to scan: ${allPhotos.length}`);
+    console.log(`📸 Scanning ${allPhotos.length} photos...`);
 
-    if (allPhotos.length === 0) {
-      return res.status(404).json({ success: false, error: 'No photos found in event folder' });
-    }
-
-    // ── Step 4: Get edited folder ──
     const editedFolderId = await getOrCreateEditedFolder(eventId);
-
-    // ── Step 5: Match face in each photo (parallel batches of 5) ──
     const matchedPhotos = [];
     const batchSize = 5;
 
@@ -438,26 +604,18 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
             console.log(`✅ Match: ${photo.name} — ${similarity.toFixed(1)}%`);
 
             const { buffer: editedBuffer, edited } = await editPhotoWithStabilityAI(photoBuffer);
-
             let finalPhoto;
+
             if (edited) {
               finalPhoto = await uploadToDrive(editedBuffer, `edited_${photo.name}`, editedFolderId);
-              console.log(`🎨 AI edited: edited_${photo.name}`);
             } else {
               finalPhoto = await makePublicAndGetLinks(photo.id, photo.name);
-              console.log(`📷 Original: ${photo.name}`);
             }
 
-            matchedPhotos.push({
-              ...finalPhoto,
-              similarity: similarity.toFixed(1),
-              aiEdited: edited,
-            });
+            matchedPhotos.push({ ...finalPhoto, similarity: similarity.toFixed(1), aiEdited: edited });
           }
         } catch (photoErr) {
-          if (photoErr.name === 'InvalidParameterException') {
-            console.log(`⚠️ No face in: ${photo.name}`);
-          } else {
+          if (photoErr.name !== 'InvalidParameterException') {
             console.error(`❌ Error ${photo.name}:`, photoErr.message);
           }
         }
@@ -466,139 +624,11 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
       console.log(`Progress: ${Math.min(i + batchSize, allPhotos.length)}/${allPhotos.length}`);
     }
 
-    console.log(`🎉 Done — ${matchedPhotos.length}/${allPhotos.length} matched`);
-    console.log(`🎨 AI edited: ${matchedPhotos.filter(p => p.aiEdited).length} photos`);
-
-    if (matchedPhotos.length === 0) {
-      return res.json({
-        success: true,
-        totalScanned: allPhotos.length,
-        matchedCount: 0,
-        photos: [],
-        message: 'No matching photos found. Try retaking selfie in better lighting.',
-      });
-    }
-
-    res.json({
-      success: true,
-      totalScanned: allPhotos.length,
-      matchedCount: matchedPhotos.length,
-      photos: matchedPhotos,
-      aiEdited: matchedPhotos.some(p => p.aiEdited),
-    });
+    console.log(`🎉 Done — ${matchedPhotos.length} photos matched`);
+    res.json({ success: true, totalScanned: allPhotos.length, matchedCount: matchedPhotos.length, photos: matchedPhotos });
 
   } catch (err) {
     console.error('❌ Match error:', err.message);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// ── ROUTE: Create Event Folder ──
-app.post('/create-event', async (req, res) => {
-  try {
-    const { name, displayName, date } = req.body;
-    if (!name) return res.status(400).json({ success: false, error: 'Event name required' });
-
-    // Create event folder inside Events folder
-    const eventFolder = await drive.files.create({
-      requestBody: {
-        name,
-        mimeType: 'application/vnd.google-apps.folder',
-        parents: [process.env.EVENT_FOLDER_ID],
-      },
-      fields: 'id, name',
-    });
-
-    // Create original subfolder
-    await drive.files.create({
-      requestBody: {
-        name: 'original',
-        mimeType: 'application/vnd.google-apps.folder',
-        parents: [eventFolder.data.id],
-      },
-      fields: 'id',
-    });
-
-    // Create edited subfolder
-    await drive.files.create({
-      requestBody: {
-        name: 'edited',
-        mimeType: 'application/vnd.google-apps.folder',
-        parents: [eventFolder.data.id],
-      },
-      fields: 'id',
-    });
-
-    console.log(`✅ Event created: ${name} (${eventFolder.data.id})`);
-
-    res.json({
-      success: true,
-      eventId: eventFolder.data.id,
-      name: eventFolder.data.name,
-    });
-  } catch (err) {
-    console.error('❌ Create event error:', err.message);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// ── ROUTE: Upload Photo to Event ──
-app.post('/upload-photo', upload.single('photo'), async (req, res) => {
-  try {
-    const { eventId } = req.body;
-    if (!req.file) return res.status(400).json({ success: false, error: 'No photo uploaded' });
-    if (!eventId) return res.status(400).json({ success: false, error: 'Event ID required' });
-
-    console.log(`📸 Uploading: ${req.file.originalname} to event: ${eventId}`);
-
-    // Find original folder
-    const subfolders = await drive.files.list({
-      q: `'${eventId}' in parents and name='original' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-      fields: 'files(id)',
-    });
-
-    let originalFolderId;
-    if (subfolders.data.files.length > 0) {
-      originalFolderId = subfolders.data.files[0].id;
-    } else {
-      // Create original folder if missing
-      const newFolder = await drive.files.create({
-        requestBody: {
-          name: 'original',
-          mimeType: 'application/vnd.google-apps.folder',
-          parents: [eventId],
-        },
-        fields: 'id',
-      });
-      originalFolderId = newFolder.data.id;
-    }
-
-    // Upload photo to original folder
-    const { Readable } = require('stream');
-    const stream = Readable.from(req.file.buffer);
-
-    const uploaded = await drive.files.create({
-      requestBody: {
-        name: req.file.originalname,
-        mimeType: req.file.mimetype,
-        parents: [originalFolderId],
-      },
-      media: {
-        mimeType: req.file.mimetype,
-        body: stream,
-      },
-      fields: 'id, name',
-    });
-
-    console.log(`✅ Uploaded: ${uploaded.data.name}`);
-
-    res.json({
-      success: true,
-      fileId: uploaded.data.id,
-      fileName: uploaded.data.name,
-    });
-  } catch (err) {
-    console.error('❌ Upload error:', err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });
@@ -610,7 +640,7 @@ app.listen(PORT, '0.0.0.0', () => {
   ╔══════════════════════════════════════════╗
   ║   PhotoFind Pro Server Running           ║
   ║   http://localhost:${PORT}                  ║
-  ║   AWS Rekognition + Stability AI 🧠🎨   ║
+  ║   AWS Rekognition + Google Photos Sync  ║
   ╚══════════════════════════════════════════╝
   `);
 });
