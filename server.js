@@ -455,8 +455,55 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
     // ── Step 5: Match face in each photo ──
     const matchedPhotos = [];
 
-    for (let i = 0; i < allPhotos.length; i++) {
-      const photo = allPhotos[i];
+    // Process photos in batches of 5 simultaneously
+const batchSize = 5;
+for (let i = 0; i < allPhotos.length; i += batchSize) {
+  const batch = allPhotos.slice(i, i + batchSize);
+  
+  await Promise.all(batch.map(async (photo) => {
+    try {
+      const photoStream = await drive.files.get(
+        { fileId: photo.id, alt: 'media' },
+        { responseType: 'arraybuffer' }
+      );
+      const photoBuffer = Buffer.from(photoStream.data);
+
+      const compareResult = await rekognition.send(new CompareFacesCommand({
+        SourceImage: { Bytes: selfieBuffer },
+        TargetImage: { Bytes: photoBuffer },
+        SimilarityThreshold: 70,
+      }));
+
+      if (compareResult.FaceMatches && compareResult.FaceMatches.length > 0) {
+        const similarity = compareResult.FaceMatches[0].Similarity;
+        console.log(`✅ Match: ${photo.name} — ${similarity.toFixed(1)}%`);
+
+        const { buffer: editedBuffer, edited } = await editPhotoWithStabilityAI(photoBuffer);
+
+        let finalPhoto;
+        if (edited) {
+          finalPhoto = await uploadToDrive(editedBuffer, `edited_${photo.name}`, editedFolderId);
+        } else {
+          finalPhoto = await makePublicAndGetLinks(photo.id, photo.name);
+        }
+
+        matchedPhotos.push({
+          ...finalPhoto,
+          similarity: similarity.toFixed(1),
+          aiEdited: edited,
+        });
+      }
+    } catch (photoErr) {
+      if (photoErr.name === 'InvalidParameterException') {
+        console.log(`⚠️ No face in: ${photo.name}`);
+      } else {
+        console.error(`❌ Error ${photo.name}:`, photoErr.message);
+      }
+    }
+  }));
+
+  console.log(`Progress: ${Math.min(i + batchSize, allPhotos.length)}/${allPhotos.length}`);
+}
       try {
         // Download from Drive
         const photoStream = await drive.files.get(
