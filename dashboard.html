@@ -96,6 +96,10 @@ body::after{content:'';position:fixed;top:-200px;left:50%;transform:translateX(-
 .ev-btn-gold{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(232,192,122,0.2)}
 .ev-btn-ghost{background:var(--s2);color:var(--muted2);border:1px solid var(--border)}
 .ev-btn-ghost:hover{border-color:var(--border2);color:var(--text)}
+.ev-btn-green{background:rgba(93,214,138,0.08);color:#5DD68A;border:1px solid rgba(93,214,138,0.2)}
+.ev-btn-green.syncing{background:rgba(93,214,138,0.15);animation:pulse 1.5s ease infinite}
+.ev-btn-rose{background:rgba(224,122,143,0.08);color:#E07A8F;border:1px solid rgba(224,122,143,0.2)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
 
 /* FORM */
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
@@ -282,7 +286,7 @@ select option{background:#151820}
           </div>
           <div class="form-group">
             <label>Server URL</label>
-            <input type="text" id="cardServerUrl" value="https://www.templecity.digital">
+            <input type="text" id="cardServerUrl" value="https://photofind-pro.onrender.com">
           </div>
         </div>
         <button class="btn btn-gold" onclick="generateQRCard()">◈ Generate QR Card</button>
@@ -314,7 +318,7 @@ select option{background:#151820}
       <div class="sec-title" style="margin-bottom:16px">✦ Configuration</div>
       <div class="card">
         <div class="form-grid">
-          <div class="form-group full"><label>Server URL</label><input type="text" id="settingsServer" placeholder="https://www.templecity.digital"></div>
+          <div class="form-group full"><label>Server URL</label><input type="text" id="settingsServer" placeholder="https://photofind-pro.onrender.com"></div>
         </div>
         <button class="btn btn-gold" onclick="saveSettings()">Save Settings</button>
       </div>
@@ -360,7 +364,7 @@ select option{background:#151820}
 <div class="toast" id="toastEl"></div>
 
 <script>
-let SERVER = localStorage.getItem('pf_server') || 'https://www.templecity.digital';
+let SERVER = localStorage.getItem('pf_server') || 'https://photofind-pro.onrender.com';
 let allEvents = [];
 let currentModalUrl = '';
 let currentQRUrl = '';
@@ -420,6 +424,8 @@ function renderEvents() {
     const edited = event.stats?.editedPhotos || 0;
     const date = new Date(event.createdTime).toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'});
     const name = formatName(event.name);
+    const isSyncing = event.stats?.isSyncing || false;
+    const eventDate = event.name.match(/^(\d{4}-\d{2}-\d{2})/)?.[1] || new Date().toISOString().split('T')[0];
     return `<div class="event-row">
       <div class="event-color"></div>
       <div class="event-info">
@@ -433,6 +439,10 @@ function renderEvents() {
       <div class="event-actions">
         <button class="ev-btn ev-btn-gold" onclick="openQRModal('${event.id}','${name}')">◈ QR Card</button>
         <button class="ev-btn ev-btn-ghost" onclick="goUpload('${event.id}')">↑ Upload</button>
+        <button class="ev-btn ${isSyncing ? 'ev-btn-rose' : 'ev-btn-green'}" id="sync-btn-${event.id}"
+          onclick="${isSyncing ? `stopSync('${event.id}')` : `startSync('${event.id}','${eventDate}')`}">
+          ${isSyncing ? '⏹ Stop' : '🔄 Live Sync'}
+        </button>
       </div>
     </div>`;
   };
@@ -639,6 +649,68 @@ function saveSettings() {
   document.getElementById('cardServerUrl').value = SERVER;
   toast('✅ Settings saved!');
   checkServer();
+}
+
+async function startSync(eventId, eventDate) {
+  const btn = document.getElementById(`sync-btn-${eventId}`);
+  if (btn) { btn.textContent = '⏳ Starting...'; btn.disabled = true; }
+
+  try {
+    // Check auth first
+    const authRes = await fetch(`${SERVER}/auth/status`);
+    const authData = await authRes.json();
+
+    if (!authData.connected) {
+      toast('⚠️ Google Photos not connected!');
+      if (confirm('Connect Google Photos now?')) {
+        window.open(`${SERVER}/auth/google`, '_blank');
+      }
+      if (btn) { btn.textContent = '🔄 Live Sync'; btn.disabled = false; }
+      return;
+    }
+
+    const res = await fetch(`${SERVER}/sync/start`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ eventId, eventDate }),
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      toast(`✅ Live sync started! Photos sync every 2 minutes`);
+      if (btn) {
+        btn.textContent = '⏹ Stop';
+        btn.className = 'ev-btn ev-btn-rose';
+        btn.onclick = () => stopSync(eventId);
+        btn.disabled = false;
+      }
+    } else {
+      toast('Error: ' + data.error);
+      if (btn) { btn.textContent = '🔄 Live Sync'; btn.disabled = false; }
+    }
+  } catch(e) {
+    toast('Error: ' + e.message);
+    if (btn) { btn.textContent = '🔄 Live Sync'; btn.disabled = false; }
+  }
+}
+
+async function stopSync(eventId) {
+  try {
+    await fetch(`${SERVER}/sync/stop`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ eventId }),
+    });
+    toast('⏹ Sync stopped');
+    const btn = document.getElementById(`sync-btn-${eventId}`);
+    if (btn) {
+      btn.textContent = '🔄 Live Sync';
+      btn.className = 'ev-btn ev-btn-green';
+      btn.onclick = () => startSync(eventId, '');
+    }
+  } catch(e) {
+    toast('Error: ' + e.message);
+  }
 }
 
 function formatName(name) {
