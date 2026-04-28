@@ -31,10 +31,16 @@ const upload = multer({ storage: multer.memoryStorage() });
 // ── Razorpay ──
 let razorpay;
 try {
-  if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+  const keyId = (process.env.RAZORPAY_KEY_ID || '').trim();
+  const keySecret = (process.env.RAZORPAY_KEY_SECRET || '').trim();
+  
+  console.log('Razorpay Key ID length:', keyId.length);
+  console.log('Razorpay Key ID prefix:', keyId.substring(0, 8));
+  
+  if (keyId && keySecret) {
     razorpay = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID,
-      key_secret: process.env.RAZORPAY_KEY_SECRET,
+      key_id: keyId,
+      key_secret: keySecret,
     });
     console.log('✅ Razorpay initialized');
   } else {
