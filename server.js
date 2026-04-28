@@ -263,13 +263,22 @@ app.get('/health', (req, res) => {
 // Create Razorpay Order
 app.post('/payment/create-order', async (req, res) => {
   try {
+    console.log('💳 Creating order...');
+    console.log('Razorpay Key ID:', process.env.RAZORPAY_KEY_ID ? 'Present ✅' : 'MISSING ❌');
+    console.log('Razorpay Secret:', process.env.RAZORPAY_KEY_SECRET ? 'Present ✅' : 'MISSING ❌');
+
     const { eventName, eventDate, studioName, phone, package: pkg } = req.body;
+    console.log('Order details:', { eventName, eventDate, studioName, phone, pkg });
 
     if (!eventName || !eventDate || !studioName || !phone) {
       return res.status(400).json({ success: false, error: 'All fields required' });
     }
 
-    const amount = pkg === 'standard' ? 499900 : pkg === 'premium' ? 799900 : 299900; // in paise
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      return res.status(500).json({ success: false, error: 'Razorpay keys not configured' });
+    }
+
+    const amount = pkg === 'standard' ? 499900 : pkg === 'premium' ? 799900 : 299900;
 
     const order = await razorpay.orders.create({
       amount,
@@ -278,10 +287,19 @@ app.post('/payment/create-order', async (req, res) => {
       notes: { eventName, eventDate, studioName, phone },
     });
 
-    res.json({ success: true, orderId: order.id, amount: order.amount, currency: order.currency, keyId: process.env.RAZORPAY_KEY_ID });
+    console.log('✅ Order created:', order.id);
+
+    res.json({
+      success: true,
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      keyId: process.env.RAZORPAY_KEY_ID,
+    });
   } catch (err) {
     console.error('❌ Payment order error:', err.message);
-    res.status(500).json({ success: false, error: err.message });
+    console.error('Full error:', JSON.stringify(err));
+    res.status(500).json({ success: false, error: err.message || 'Payment order creation failed' });
   }
 });
 
