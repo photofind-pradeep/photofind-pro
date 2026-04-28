@@ -9,6 +9,8 @@ const {
   CompareFacesCommand,
   DetectFacesCommand,
 } = require('@aws-sdk/client-rekognition');
+const Razorpay = require('razorpay');
+const crypto = require('crypto');
 
 const app = express();
 
@@ -26,6 +28,12 @@ app.use(express.static(__dirname));
 
 const upload = multer({ storage: multer.memoryStorage() });
 
+// ── Razorpay ──
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
+
 // ── AWS Rekognition ──
 const rekognition = new RekognitionClient({
   region: process.env.AWS_REGION || 'ap-south-1',
@@ -35,7 +43,7 @@ const rekognition = new RekognitionClient({
   },
 });
 
-// ── Google Auth (Service Account) ──
+// ── Google Auth ──
 let auth;
 try {
   if (process.env.GOOGLE_CREDENTIALS_JSON) {
@@ -44,36 +52,39 @@ try {
       credentials,
       scopes: ['https://www.googleapis.com/auth/drive'],
     });
-    console.log('✅ Google Auth: Service Account');
   } else {
     auth = new google.auth.GoogleAuth({
       keyFile: './service-account.json',
       scopes: ['https://www.googleapis.com/auth/drive'],
     });
-    console.log('✅ Google Auth: service-account.json');
   }
+  console.log('✅ Google Auth ready');
 } catch (e) {
   console.error('❌ Google Auth failed:', e.message);
 }
 
 const drive = google.drive({ version: 'v3', auth });
 
-// ── OAuth2 Client (for Google Photos) ──
+// ── OAuth2 for Google Photos ──
 const oauth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
   process.env.GOOGLE_REDIRECT_URI || 'https://www.templecity.digital/auth/callback'
 );
 
-// Store tokens in memory (in production use a database)
 let photographerTokens = null;
-
-// ── Active sync jobs ──
 const syncJobs = {};
+
+// ── In-memory client database (use real DB later) ──
+let clients = [];
 
 // ════════════════════════════════════════
 //  HELPER FUNCTIONS
 // ════════════════════════════════════════
+
+function generateOrderId() {
+  return 'TC' + Date.now() + Math.random().toString(36).slice(2, 6).toUpperCase();
+}
 
 async function makePublicAndGetLinks(fileId, fileName) {
   try {
@@ -83,8 +94,7 @@ async function makePublicAndGetLinks(fileId, fileName) {
     });
   } catch(e) {}
   return {
-    id: fileId,
-    name: fileName,
+    id: fileId, name: fileName,
     viewLink: `https://drive.google.com/file/d/${fileId}/view`,
     downloadLink: `https://drive.google.com/uc?export=download&id=${fileId}`,
     thumbnailLink: `https://drive.google.com/thumbnail?id=${fileId}&sz=w400`,
@@ -103,8 +113,7 @@ async function uploadToDrive(buffer, fileName, folderId) {
     requestBody: { role: 'reader', type: 'anyone' },
   });
   return {
-    id: response.data.id,
-    name: response.data.name,
+    id: response.data.id, name: response.data.name,
     viewLink: `https://drive.google.com/file/d/${response.data.id}/view`,
     downloadLink: `https://drive.google.com/uc?export=download&id=${response.data.id}`,
     thumbnailLink: `https://drive.google.com/thumbnail?id=${response.data.id}&sz=w400`,
@@ -124,120 +133,78 @@ async function getOrCreateEditedFolder(eventId) {
   return folder.data.id;
 }
 
-async function editPhotoWithStabilityAI(imageBuffer) {
-  const stabilityKey = process.env.STABILITY_API_KEY;
-  if (!stabilityKey) return { buffer: imageBuffer, edited: false };
-  try {
-    const boundary = '----FormBoundary' + Math.random().toString(36).slice(2);
-    const parts = [];
-    parts.push(`--${boundary}\r\nContent-Disposition: form-data; name="image"; filename="photo.jpg"\r\nContent-Type: image/jpeg\r\n\r\n`);
-    parts.push(imageBuffer);
-    parts.push('\r\n');
-    parts.push(`--${boundary}\r\nContent-Disposition: form-data; name="mode"\r\n\r\nimage-to-image\r\n`);
-    parts.push(`--${boundary}\r\nContent-Disposition: form-data; name="prompt"\r\n\r\nprofessional wedding photo, cinematic warm lighting, smooth skin, vibrant colors\r\n`);
-    parts.push(`--${boundary}\r\nContent-Disposition: form-data; name="model"\r\n\r\nsd3-turbo\r\n`);
-    parts.push(`--${boundary}\r\nContent-Disposition: form-data; name="strength"\r\n\r\n0.3\r\n`);
-    parts.push(`--${boundary}\r\nContent-Disposition: form-data; name="output_format"\r\n\r\njpeg\r\n`);
-    parts.push(`--${boundary}--\r\n`);
-    const body = Buffer.concat(parts.map(p => typeof p === 'string' ? Buffer.from(p) : p));
-    const response = await fetch('https://api.stability.ai/v2beta/stable-image/generate/sd3', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${stabilityKey}`, 'Content-Type': `multipart/form-data; boundary=${boundary}`, 'Accept': 'image/*' },
-      body,
-    });
-    if (!response.ok) return { buffer: imageBuffer, edited: false };
-    return { buffer: Buffer.from(await response.arrayBuffer()), edited: true };
-  } catch (err) {
-    return { buffer: imageBuffer, edited: false };
+async function createEventFolders(name) {
+  const eventFolder = await drive.files.create({
+    requestBody: { name, mimeType: 'application/vnd.google-apps.folder', parents: [process.env.EVENT_FOLDER_ID] },
+    fields: 'id, name',
+  });
+  await drive.files.create({
+    requestBody: { name: 'original', mimeType: 'application/vnd.google-apps.folder', parents: [eventFolder.data.id] },
+    fields: 'id',
+  });
+  await drive.files.create({
+    requestBody: { name: 'edited', mimeType: 'application/vnd.google-apps.folder', parents: [eventFolder.data.id] },
+    fields: 'id',
+  });
+  return eventFolder.data;
+}
+
+// ── Admin Auth Middleware ──
+function adminAuth(req, res, next) {
+  const token = req.headers['x-admin-token'];
+  if (token === process.env.ADMIN_PASSWORD) {
+    next();
+  } else {
+    res.status(401).json({ success: false, error: 'Unauthorized' });
   }
 }
 
-// ════════════════════════════════════════
-//  GOOGLE PHOTOS SYNC
-// ════════════════════════════════════════
-
-// Sync photos from Google Photos to Drive event folder
+// ── Google Photos Sync ──
 async function syncGooglePhotosToEvent(eventId, eventDate, tokens) {
   try {
     oauth2Client.setCredentials(tokens);
     const photosApi = google.photoslibrary({ version: 'v1', auth: oauth2Client });
 
-    // Get original folder ID for this event
     const subfolders = await drive.files.list({
       q: `'${eventId}' in parents and name='original' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
       fields: 'files(id)',
     });
 
-    if (!subfolders.data.files.length) {
-      console.log('❌ No original folder found for event:', eventId);
-      return { synced: 0, error: 'No original folder found' };
-    }
+    if (!subfolders.data.files.length) return { synced: 0, error: 'No original folder' };
 
     const originalFolderId = subfolders.data.files[0].id;
-
-    // Get existing photos in Drive to avoid duplicates
     const existingPhotos = await drive.files.list({
       q: `'${originalFolderId}' in parents and mimeType contains 'image/' and trashed=false`,
-      fields: 'files(id, name)',
-      pageSize: 1000,
+      fields: 'files(id, name)', pageSize: 1000,
     });
 
     const existingNames = new Set(existingPhotos.data.files.map(f => f.name));
-    console.log(`📁 Existing photos in Drive: ${existingNames.size}`);
 
-    // Search Google Photos for photos from event date
-    const dateFilter = {
-      dateFilter: {
-        dates: [{
-          year: parseInt(eventDate.split('-')[0]),
-          month: parseInt(eventDate.split('-')[1]),
-          day: parseInt(eventDate.split('-')[2]),
-        }],
-      },
-    };
-
+    const dateParts = eventDate.split('-');
     const photosResponse = await photosApi.mediaItems.search({
       requestBody: {
-        filters: dateFilter,
+        filters: { dateFilter: { dates: [{ year: parseInt(dateParts[0]), month: parseInt(dateParts[1]), day: parseInt(dateParts[2]) }] } },
         pageSize: 100,
       },
     });
 
     const mediaItems = photosResponse.data.mediaItems || [];
-    console.log(`📸 Found ${mediaItems.length} photos in Google Photos for ${eventDate}`);
-
     let synced = 0;
 
     for (const item of mediaItems) {
-      // Skip if already in Drive
-      if (existingNames.has(item.filename)) {
-        console.log(`⏭️ Already synced: ${item.filename}`);
-        continue;
-      }
-
+      if (existingNames.has(item.filename)) continue;
       try {
-        // Download from Google Photos
-        const imageUrl = `${item.baseUrl}=d`;
-        const imageResponse = await fetch(imageUrl);
+        const imageResponse = await fetch(`${item.baseUrl}=d`);
         if (!imageResponse.ok) continue;
-
         const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
-
-        // Upload to Drive original folder
         const stream = Readable.from(imageBuffer);
         await drive.files.create({
-          requestBody: {
-            name: item.filename,
-            mimeType: item.mimeType || 'image/jpeg',
-            parents: [originalFolderId],
-          },
+          requestBody: { name: item.filename, mimeType: item.mimeType || 'image/jpeg', parents: [originalFolderId] },
           media: { mimeType: item.mimeType || 'image/jpeg', body: stream },
           fields: 'id',
         });
-
         synced++;
         existingNames.add(item.filename);
-        console.log(`✅ Synced: ${item.filename} (${synced} total)`);
       } catch (err) {
         console.error(`❌ Error syncing ${item.filename}:`, err.message);
       }
@@ -245,45 +212,33 @@ async function syncGooglePhotosToEvent(eventId, eventDate, tokens) {
 
     return { synced, total: mediaItems.length };
   } catch (err) {
-    console.error('❌ Sync error:', err.message);
     return { synced: 0, error: err.message };
   }
 }
 
-// Auto sync every 2 minutes for active events
 function startAutoSync(eventId, eventDate, tokens) {
-  // Clear existing job if any
-  if (syncJobs[eventId]) {
-    clearInterval(syncJobs[eventId]);
-  }
-
-  console.log(`🔄 Auto sync started for event: ${eventId}`);
-
-  // Sync immediately
+  if (syncJobs[eventId]) clearInterval(syncJobs[eventId]);
   syncGooglePhotosToEvent(eventId, eventDate, tokens);
-
-  // Then every 2 minutes
   syncJobs[eventId] = setInterval(async () => {
-    console.log(`🔄 Auto syncing event: ${eventId}`);
-    const result = await syncGooglePhotosToEvent(eventId, eventDate, tokens);
-    console.log(`✅ Sync result: ${result.synced} new photos`);
-  }, 2 * 60 * 1000); // 2 minutes
+    await syncGooglePhotosToEvent(eventId, eventDate, tokens);
+  }, 2 * 60 * 1000);
+  console.log(`🔄 Auto sync started: ${eventId}`);
 }
 
 function stopAutoSync(eventId) {
   if (syncJobs[eventId]) {
     clearInterval(syncJobs[eventId]);
     delete syncJobs[eventId];
-    console.log(`⏹️ Auto sync stopped for event: ${eventId}`);
   }
 }
 
 // ════════════════════════════════════════
-//  ROUTES
+//  ROUTES — PAGES
 // ════════════════════════════════════════
 
 app.get('/', (req, res) => res.sendFile(__dirname + '/index.html'));
 
+// ── Health ──
 app.get('/health', (req, res) => {
   res.json({
     status: 'PhotoFind Pro server is running ✅',
@@ -293,110 +248,266 @@ app.get('/health', (req, res) => {
     hasStabilityAI: !!process.env.STABILITY_API_KEY,
     hasEventFolder: !!process.env.EVENT_FOLDER_ID,
     hasOAuth: !!process.env.GOOGLE_CLIENT_ID,
+    hasRazorpay: !!process.env.RAZORPAY_KEY_ID,
     photographerConnected: !!photographerTokens,
     activeSyncJobs: Object.keys(syncJobs).length,
+    totalClients: clients.length,
     awsRegion: process.env.AWS_REGION || 'ap-south-1',
   });
 });
 
-// ── Google OAuth Routes ──
+// ════════════════════════════════════════
+//  PAYMENT ROUTES
+// ════════════════════════════════════════
 
-// Step 1: Redirect photographer to Google login
-app.get('/auth/google', (req, res) => {
-  const authUrl = oauth2Client.generateAuthUrl({
-    access_type: 'offline',
-    scope: [
-      'https://www.googleapis.com/auth/photoslibrary.readonly',
-      'https://www.googleapis.com/auth/drive',
-    ],
-    prompt: 'consent',
-  });
-  res.redirect(authUrl);
-});
-
-// Step 2: Handle OAuth callback
-app.get('/auth/callback', async (req, res) => {
-  const { code } = req.query;
+// Create Razorpay Order
+app.post('/payment/create-order', async (req, res) => {
   try {
-    const { tokens } = await oauth2Client.getToken(code);
-    photographerTokens = tokens;
-    oauth2Client.setCredentials(tokens);
-    console.log('✅ Photographer Google account connected!');
-    res.send(`
-      <html>
-      <body style="font-family:sans-serif;text-align:center;padding:50px;background:#07080A;color:white">
-        <h2 style="color:#E8C07A">✅ Google Photos Connected!</h2>
-        <p>Your Google account is now connected to PhotoFind Pro.</p>
-        <p>You can now sync live photos from your camera!</p>
-        <a href="/dashboard.html" style="background:#E8C07A;color:#07080A;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">
-          Go to Dashboard →
-        </a>
-      </body>
-      </html>
-    `);
+    const { eventName, eventDate, studioName, phone, package: pkg } = req.body;
+
+    if (!eventName || !eventDate || !studioName || !phone) {
+      return res.status(400).json({ success: false, error: 'All fields required' });
+    }
+
+    const amount = pkg === 'standard' ? 499900 : pkg === 'premium' ? 799900 : 299900; // in paise
+
+    const order = await razorpay.orders.create({
+      amount,
+      currency: 'INR',
+      receipt: generateOrderId(),
+      notes: { eventName, eventDate, studioName, phone },
+    });
+
+    res.json({ success: true, orderId: order.id, amount: order.amount, currency: order.currency, keyId: process.env.RAZORPAY_KEY_ID });
   } catch (err) {
-    console.error('❌ OAuth error:', err.message);
-    res.status(500).send('Authentication failed: ' + err.message);
+    console.error('❌ Payment order error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// Check if photographer is connected
-app.get('/auth/status', (req, res) => {
-  res.json({
-    connected: !!photographerTokens,
-    activeSyncs: Object.keys(syncJobs).length,
-  });
-});
-
-// ── Start Live Sync for Event ──
-app.post('/sync/start', async (req, res) => {
+// Verify Payment & Create Event
+app.post('/payment/verify', async (req, res) => {
   try {
-    const { eventId, eventDate } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, eventName, eventDate, studioName, phone, amount } = req.body;
 
-    if (!eventId || !eventDate) {
-      return res.status(400).json({ success: false, error: 'Event ID and date required' });
+    // Verify signature
+    const sign = razorpay_order_id + '|' + razorpay_payment_id;
+    const expectedSign = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET).update(sign).digest('hex');
+
+    if (expectedSign !== razorpay_signature) {
+      return res.status(400).json({ success: false, error: 'Payment verification failed' });
     }
 
-    if (!photographerTokens) {
-      return res.status(401).json({
-        success: false,
-        error: 'Photographer not authenticated',
-        authUrl: '/auth/google'
-      });
-    }
+    console.log(`✅ Payment verified: ${razorpay_payment_id}`);
 
-    startAutoSync(eventId, eventDate, photographerTokens);
+    // Create event folder in Drive
+    const studioSuffix = studioName ? `__${studioName.replace(/\s+/g, '-')}__${phone}` : '';
+    const folderName = `${eventDate}_${eventName.replace(/\s+/g, '-').replace(/&/g, 'and')}${studioSuffix}`;
+    const eventFolder = await createEventFolders(folderName);
+
+    // Generate links
+    const baseUrl = 'https://www.templecity.digital';
+    const uploadLink = `${baseUrl}/upload.html?event=${eventFolder.id}`;
+    const guestLink = `${baseUrl}?event=${eventFolder.id}`;
+    const whatsappMsg = `📸 *PhotoFind Pro — Setup Complete!*\n\n*Event:* ${eventName}\n*Date:* ${eventDate}\n*Studio:* ${studioName}\n\n*📤 Upload Photos:*\n${uploadLink}\n\n*🎊 Guest QR Link:*\n${guestLink}\n\n*Instructions:*\n1️⃣ Upload photos via upload link\n2️⃣ Share guest QR link or print QR card\n3️⃣ Guests scan → find their photos instantly!\n\n_Powered by Temple City Digital_\n🌐 www.templecity.digital`;
+    const waLink = `https://wa.me/91${phone}?text=${encodeURIComponent(whatsappMsg)}`;
+
+    // Save client
+    const client = {
+      id: eventFolder.id,
+      eventName,
+      eventDate,
+      studioName,
+      phone,
+      amount: amount / 100,
+      paymentId: razorpay_payment_id,
+      orderId: razorpay_order_id,
+      uploadLink,
+      guestLink,
+      createdAt: new Date().toISOString(),
+      status: 'active',
+      photoCount: 0,
+    };
+    clients.push(client);
+
+    console.log(`✅ Event created: ${folderName} (${eventFolder.id})`);
 
     res.json({
       success: true,
-      message: `Live sync started for event ${eventId}`,
-      syncInterval: '2 minutes',
+      eventId: eventFolder.id,
+      eventName,
+      studioName,
+      uploadLink,
+      guestLink,
+      waLink,
+      whatsappMsg,
+    });
+  } catch (err) {
+    console.error('❌ Payment verify error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ════════════════════════════════════════
+//  ADMIN ROUTES
+// ════════════════════════════════════════
+
+// Admin Login
+app.post('/admin/login', (req, res) => {
+  const { password } = req.body;
+  if (password === process.env.ADMIN_PASSWORD) {
+    res.json({ success: true, token: process.env.ADMIN_PASSWORD });
+  } else {
+    res.status(401).json({ success: false, error: 'Invalid password' });
+  }
+});
+
+// Get All Clients
+app.get('/admin/clients', adminAuth, async (req, res) => {
+  try {
+    // Update photo counts from Drive
+    for (const client of clients) {
+      try {
+        const statsRes = await fetch(`http://localhost:${process.env.PORT || 8080}/stats/${client.id}`);
+        const statsData = await statsRes.json();
+        client.photoCount = statsData.stats?.totalPhotos || 0;
+        client.isSyncing = !!syncJobs[client.id];
+      } catch(e) {}
+    }
+
+    // Also get events from Drive not in clients list
+    const driveEvents = await drive.files.list({
+      q: `'${process.env.EVENT_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+      fields: 'files(id, name, createdTime)',
+      orderBy: 'createdTime desc',
+    });
+
+    res.json({ success: true, clients, driveEvents: driveEvents.data.files });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Delete Event
+app.delete('/admin/event/:eventId', adminAuth, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+
+    // Stop sync if running
+    stopAutoSync(eventId);
+
+    // Move to trash in Drive
+    await drive.files.update({
+      fileId: eventId,
+      requestBody: { trashed: true },
+    });
+
+    // Remove from clients
+    clients = clients.filter(c => c.id !== eventId);
+
+    console.log(`🗑️ Event deleted: ${eventId}`);
+    res.json({ success: true, message: 'Event deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Update Client Status
+app.put('/admin/client/:eventId', adminAuth, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const { status } = req.body;
+    const client = clients.find(c => c.id === eventId);
+    if (client) {
+      client.status = status;
+      res.json({ success: true, client });
+    } else {
+      res.status(404).json({ success: false, error: 'Client not found' });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Get Dashboard Stats
+app.get('/admin/stats', adminAuth, async (req, res) => {
+  try {
+    const totalRevenue = clients.reduce((sum, c) => sum + (c.amount || 0), 0);
+    const activeEvents = clients.filter(c => c.status === 'active').length;
+    const syncingEvents = Object.keys(syncJobs).length;
+
+    res.json({
+      success: true,
+      stats: {
+        totalClients: clients.length,
+        totalRevenue,
+        activeEvents,
+        syncingEvents,
+      }
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// ── Stop Live Sync ──
+// ════════════════════════════════════════
+//  GOOGLE OAUTH ROUTES
+// ════════════════════════════════════════
+
+app.get('/auth/google', (req, res) => {
+  const authUrl = oauth2Client.generateAuthUrl({
+    access_type: 'offline',
+    scope: ['https://www.googleapis.com/auth/photoslibrary.readonly', 'https://www.googleapis.com/auth/drive'],
+    prompt: 'consent',
+  });
+  res.redirect(authUrl);
+});
+
+app.get('/auth/callback', async (req, res) => {
+  try {
+    const { tokens } = await oauth2Client.getToken(req.query.code);
+    photographerTokens = tokens;
+    oauth2Client.setCredentials(tokens);
+    res.send(`
+      <html><body style="font-family:sans-serif;text-align:center;padding:50px;background:#07080A;color:white">
+        <h2 style="color:#E8C07A">✅ Google Photos Connected!</h2>
+        <p>Your Google account is now connected.</p>
+        <a href="/dashboard.html" style="background:#E8C07A;color:#07080A;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600">Go to Dashboard →</a>
+      </body></html>
+    `);
+  } catch (err) {
+    res.status(500).send('Authentication failed: ' + err.message);
+  }
+});
+
+app.get('/auth/status', (req, res) => {
+  res.json({ connected: !!photographerTokens, activeSyncs: Object.keys(syncJobs).length });
+});
+
+// ════════════════════════════════════════
+//  SYNC ROUTES
+// ════════════════════════════════════════
+
+app.post('/sync/start', async (req, res) => {
+  try {
+    const { eventId, eventDate } = req.body;
+    if (!photographerTokens) return res.status(401).json({ success: false, error: 'Not authenticated', authUrl: '/auth/google' });
+    startAutoSync(eventId, eventDate, photographerTokens);
+    res.json({ success: true, message: 'Live sync started', syncInterval: '2 minutes' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.post('/sync/stop', (req, res) => {
-  const { eventId } = req.body;
-  stopAutoSync(eventId);
+  stopAutoSync(req.body.eventId);
   res.json({ success: true, message: 'Sync stopped' });
 });
 
-// ── Manual Sync Now ──
 app.post('/sync/now', async (req, res) => {
   try {
     const { eventId, eventDate } = req.body;
-
-    if (!photographerTokens) {
-      return res.status(401).json({
-        success: false,
-        error: 'Not authenticated',
-        authUrl: '/auth/google'
-      });
-    }
-
+    if (!photographerTokens) return res.status(401).json({ success: false, error: 'Not authenticated', authUrl: '/auth/google' });
     const result = await syncGooglePhotosToEvent(eventId, eventDate, photographerTokens);
     res.json({ success: true, ...result });
   } catch (err) {
@@ -404,17 +515,14 @@ app.post('/sync/now', async (req, res) => {
   }
 });
 
-// ── Get Sync Status ──
 app.get('/sync/status/:eventId', (req, res) => {
-  const { eventId } = req.params;
-  res.json({
-    success: true,
-    isActive: !!syncJobs[eventId],
-    eventId,
-  });
+  res.json({ success: true, isActive: !!syncJobs[req.params.eventId] });
 });
 
-// ── Events ──
+// ════════════════════════════════════════
+//  EVENT ROUTES
+// ════════════════════════════════════════
+
 app.get('/events', async (req, res) => {
   try {
     const response = await drive.files.list({
@@ -424,12 +532,10 @@ app.get('/events', async (req, res) => {
     });
     res.json({ success: true, events: response.data.files });
   } catch (err) {
-    console.error('❌ Events error:', err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// ── Stats ──
 app.get('/stats/:eventId', async (req, res) => {
   try {
     const { eventId } = req.params;
@@ -452,7 +558,6 @@ app.get('/stats/:eventId', async (req, res) => {
   }
 });
 
-// ── Photos ──
 app.get('/photos/:eventId', async (req, res) => {
   try {
     const { eventId } = req.params;
@@ -460,9 +565,7 @@ app.get('/photos/:eventId', async (req, res) => {
       q: `'${eventId}' in parents and mimeType='application/vnd.google-apps.folder' and name='original' and trashed=false`,
       fields: 'files(id, name)',
     });
-    if (!subfolders.data.files.length) {
-      return res.status(404).json({ success: false, error: 'No original folder found' });
-    }
+    if (!subfolders.data.files.length) return res.status(404).json({ success: false, error: 'No original folder found' });
     const originalFolderId = subfolders.data.files[0].id;
     const photos = await drive.files.list({
       q: `'${originalFolderId}' in parents and mimeType contains 'image/' and trashed=false`,
@@ -475,36 +578,17 @@ app.get('/photos/:eventId', async (req, res) => {
   }
 });
 
-// ── Create Event ──
 app.post('/create-event', async (req, res) => {
   try {
-    const { name, displayName, date } = req.body;
+    const { name } = req.body;
     if (!name) return res.status(400).json({ success: false, error: 'Name required' });
-
-    const eventFolder = await drive.files.create({
-      requestBody: { name, mimeType: 'application/vnd.google-apps.folder', parents: [process.env.EVENT_FOLDER_ID] },
-      fields: 'id, name',
-    });
-
-    await drive.files.create({
-      requestBody: { name: 'original', mimeType: 'application/vnd.google-apps.folder', parents: [eventFolder.data.id] },
-      fields: 'id',
-    });
-
-    await drive.files.create({
-      requestBody: { name: 'edited', mimeType: 'application/vnd.google-apps.folder', parents: [eventFolder.data.id] },
-      fields: 'id',
-    });
-
-    console.log(`✅ Event created: ${name} (${eventFolder.data.id})`);
-    res.json({ success: true, eventId: eventFolder.data.id, name: eventFolder.data.name });
+    const eventFolder = await createEventFolders(name);
+    res.json({ success: true, eventId: eventFolder.id, name: eventFolder.name });
   } catch (err) {
-    console.error('❌ Create event error:', err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// ── Upload Photo ──
 app.post('/upload-photo', upload.single('photo'), async (req, res) => {
   try {
     const { eventId } = req.body;
@@ -533,114 +617,88 @@ app.post('/upload-photo', upload.single('photo'), async (req, res) => {
       fields: 'id, name',
     });
 
-    console.log(`✅ Uploaded: ${uploaded.data.name}`);
     res.json({ success: true, fileId: uploaded.data.id, fileName: uploaded.data.name });
   } catch (err) {
-    console.error('❌ Upload error:', err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// ── Face Match ──
+// ════════════════════════════════════════
+//  FACE MATCH ROUTE
+// ════════════════════════════════════════
+
 app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
   try {
     const { eventId } = req.params;
     if (!req.file) return res.status(400).json({ success: false, error: 'No selfie uploaded' });
 
-    console.log('🔍 Face match started:', eventId);
     const selfieBuffer = req.file.buffer;
-
     const detectResult = await rekognition.send(new DetectFacesCommand({
-      Image: { Bytes: selfieBuffer },
-      Attributes: ['DEFAULT'],
+      Image: { Bytes: selfieBuffer }, Attributes: ['DEFAULT'],
     }));
 
-    if (!detectResult.FaceDetails || detectResult.FaceDetails.length === 0) {
+    if (!detectResult.FaceDetails?.length) {
       return res.status(400).json({ success: false, error: 'No face detected. Please retake in good lighting.' });
     }
 
     const subfolders = await drive.files.list({
       q: `'${eventId}' in parents and mimeType='application/vnd.google-apps.folder' and name='original' and trashed=false`,
-      fields: 'files(id, name)',
+      fields: 'files(id)',
     });
 
-    if (!subfolders.data.files.length) {
-      return res.status(404).json({ success: false, error: 'Original folder not found' });
-    }
+    if (!subfolders.data.files.length) return res.status(404).json({ success: false, error: 'Original folder not found' });
 
     const originalFolderId = subfolders.data.files[0].id;
     const photosRes = await drive.files.list({
       q: `'${originalFolderId}' in parents and mimeType contains 'image/' and trashed=false`,
-      fields: 'files(id, name, mimeType)',
-      pageSize: 1000,
+      fields: 'files(id, name, mimeType)', pageSize: 1000,
     });
 
     const allPhotos = photosRes.data.files;
-    console.log(`📸 Scanning ${allPhotos.length} photos...`);
-
     const editedFolderId = await getOrCreateEditedFolder(eventId);
     const matchedPhotos = [];
     const batchSize = 5;
 
     for (let i = 0; i < allPhotos.length; i += batchSize) {
       const batch = allPhotos.slice(i, i + batchSize);
-
       await Promise.all(batch.map(async (photo) => {
         try {
-          const photoStream = await drive.files.get(
-            { fileId: photo.id, alt: 'media' },
-            { responseType: 'arraybuffer' }
-          );
+          const photoStream = await drive.files.get({ fileId: photo.id, alt: 'media' }, { responseType: 'arraybuffer' });
           const photoBuffer = Buffer.from(photoStream.data);
-
           const compareResult = await rekognition.send(new CompareFacesCommand({
             SourceImage: { Bytes: selfieBuffer },
             TargetImage: { Bytes: photoBuffer },
             SimilarityThreshold: 70,
           }));
 
-          if (compareResult.FaceMatches && compareResult.FaceMatches.length > 0) {
+          if (compareResult.FaceMatches?.length > 0) {
             const similarity = compareResult.FaceMatches[0].Similarity;
-            console.log(`✅ Match: ${photo.name} — ${similarity.toFixed(1)}%`);
-
-            const { buffer: editedBuffer, edited } = await editPhotoWithStabilityAI(photoBuffer);
-            let finalPhoto;
-
-            if (edited) {
-              finalPhoto = await uploadToDrive(editedBuffer, `edited_${photo.name}`, editedFolderId);
-            } else {
-              finalPhoto = await makePublicAndGetLinks(photo.id, photo.name);
-            }
-
-            matchedPhotos.push({ ...finalPhoto, similarity: similarity.toFixed(1), aiEdited: edited });
+            const finalPhoto = await makePublicAndGetLinks(photo.id, photo.name);
+            matchedPhotos.push({ ...finalPhoto, similarity: similarity.toFixed(1) });
           }
         } catch (photoErr) {
           if (photoErr.name !== 'InvalidParameterException') {
-            console.error(`❌ Error ${photo.name}:`, photoErr.message);
+            console.error(`❌ ${photo.name}:`, photoErr.message);
           }
         }
       }));
-
       console.log(`Progress: ${Math.min(i + batchSize, allPhotos.length)}/${allPhotos.length}`);
     }
 
-    console.log(`🎉 Done — ${matchedPhotos.length} photos matched`);
     res.json({ success: true, totalScanned: allPhotos.length, matchedCount: matchedPhotos.length, photos: matchedPhotos });
-
   } catch (err) {
-    console.error('❌ Match error:', err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
-// ── Start Server ──
+// ── Start ──
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`
-  ╔══════════════════════════════════════════╗
-  ║   PhotoFind Pro Server Running           ║
-  ║   http://localhost:${PORT}                  ║
-  ║   AWS Rekognition + Google Photos Sync  ║
-  ╚══════════════════════════════════════════╝
+  ╔══════════════════════════════════════════════╗
+  ║   PhotoFind Pro Server Running               ║
+  ║   http://localhost:${PORT}                      ║
+  ║   Razorpay + Admin + Sync + AWS + Drive     ║
+  ╚══════════════════════════════════════════════╝
   `);
 });
