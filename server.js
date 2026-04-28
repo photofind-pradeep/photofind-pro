@@ -29,10 +29,20 @@ app.use(express.static(__dirname));
 const upload = multer({ storage: multer.memoryStorage() });
 
 // ── Razorpay ──
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+let razorpay;
+try {
+  if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+    razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+    console.log('✅ Razorpay initialized');
+  } else {
+    console.error('❌ Razorpay keys missing!');
+  }
+} catch(e) {
+  console.error('❌ Razorpay init error:', e.message);
+}
 
 // ── AWS Rekognition ──
 const rekognition = new RekognitionClient({
