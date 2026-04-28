@@ -306,12 +306,12 @@ app.post('/payment/create-order', async (req, res) => {
     console.log('✅ Order created:', order.id);
 
     res.json({
-      success: true,
-      orderId: order.id,
-      amount: order.amount,
-      currency: order.currency,
-      keyId: process.env.RAZORPAY_KEY_ID,
-    });
+  success: true,
+  orderId: order.id,
+  amount: order.amount,
+  currency: order.currency,
+  keyId: (process.env.RAZORPAY_KEY_ID || '').trim(),
+});
   } catch (err) {
     console.error('❌ Payment order error:', err.message);
     console.error('Full error:', JSON.stringify(err));
