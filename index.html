@@ -532,6 +532,7 @@ async function startMatch() {
     // Create form data with selfie
     const formData = new FormData();
     formData.append('selfie', capturedBlob, 'selfie.jpg');
+    formData.append('package', selectedEvent.package || 'basic');
 
     // Animate step 2
     setTimeout(() => animateStep('pi2', 'pi3', 40, '🧠', 'Scanning photos...', `Checking all photos in ${formatEventName(selectedEvent.name)}`), 1500);
@@ -625,17 +626,48 @@ function showResults(data) {
   const eventName = formatEventName(selectedEvent.name);
   const photoCount = matchedPhotos.length;
 
-  const whatsappMsg = `📸 *My Photos from ${eventName}!*\n\n✨ Found *${photoCount} photos* matching my face\n\n📥 View & Download here:\n${shareLink}\n\n_Powered by Temple City Digital_\n🌐 www.templecity.digital`;
+  // Show reel if available
+  if (data.reelLink) {
+    const reelDiv = document.createElement('div');
+    reelDiv.style.marginBottom = '18px';
+    reelDiv.innerHTML = `
+      <div class="card-ttl" style="margin-bottom:10px">✦ Your Wedding Reel 🎬</div>
+      <div style="background:var(--rose-dim);border:1px solid rgba(255,107,157,0.2);border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px">
+        <span style="font-size:32px">🎬</span>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:500;margin-bottom:3px">Your Wedding Reel is Ready!</div>
+          <div style="font-size:11px;color:var(--muted2)">Best photos + Auto BGM selected by AI</div>
+        </div>
+        <a href="${data.reelLink}" target="_blank" style="padding:8px 14px;background:var(--rose);color:white;border-radius:8px;text-decoration:none;font-size:12px;font-weight:600;flex-shrink:0">▶ Watch</a>
+      </div>`;
+    document.getElementById('s5').querySelector('.wrap').insertBefore(reelDiv,
+      document.getElementById('s5').querySelector('.wrap').children[2]);
+  }
 
-  document.getElementById('whatsappBtn').onclick = () => 
+  // Show AI edit badge
+  if (data.aiEdited) {
+    document.getElementById('resPill').textContent = `✨ AI Edited — ${photoCount} Photos Found`;
+    document.getElementById('resPill').style.background = 'var(--rose-dim)';
+    document.getElementById('resPill').style.color = 'var(--rose)';
+    document.getElementById('resPill').style.borderColor = 'rgba(255,107,157,0.2)';
+  }
+
+  const studioInfo = selectedEvent.name.split('__');
+  const studioName = studioInfo[1] ? studioInfo[1].replace(/-/g, ' ') : '';
+  const studioPhone = studioInfo[2] || '';
+  const studioLine = studioName ? `\n\n📷 *${studioName}*${studioPhone ? '\n📞 ' + studioPhone : ''}` : '';
+
+  const whatsappMsg = `📸 *Your Photos from ${eventName}!*\n\n✨ We found *${photoCount} photos* of you!${data.aiEdited ? '\n✨ AI enhanced & color graded!' : ''}${data.reelLink ? '\n🎬 Your wedding reel is ready!' : ''}\n\n📥 View & Download:\n${shareLink}${data.reelLink ? `\n\n🎬 Your Reel:\n${data.reelLink}` : ''}\n\n_Thank you for being part of this special day_ 🎊${studioLine}\n\n_Powered by Temple City Digital_\n🌐 www.templecity.digital`;
+
+  document.getElementById('whatsappBtn').onclick = () =>
     window.open(`https://wa.me/?text=${encodeURIComponent(whatsappMsg)}`);
-  
-  document.getElementById('emailBtn').onclick = () => 
+
+  document.getElementById('emailBtn').onclick = () =>
     window.open(`mailto:?subject=My Photos from ${eventName}&body=Hi!\n\nFind my ${photoCount} photos here:\n${shareLink}\n\nPowered by Temple City Digital`);
-  
-  document.getElementById('copyBtn').onclick = () => { 
-    navigator.clipboard.writeText(shareLink); 
-    toast('✅ Link copied!'); 
+
+  document.getElementById('copyBtn').onclick = () => {
+    navigator.clipboard.writeText(shareLink);
+    toast('✅ Link copied!');
   };
 
   goTo('s5');
