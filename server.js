@@ -18,7 +18,23 @@ const ffmpeg = require('fluent-ffmpeg');
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
 const axios = require('axios');
 
-// ── FFmpeg setup ──
+const sharp = require('sharp');
+
+// ── Resize image for AWS Rekognition (5MB limit) ──
+async function resizeForRekognition(buffer) {
+  if (buffer.length <= 4 * 1024 * 1024) return buffer;
+  try {
+    const resized = await sharp(buffer)
+      .resize(1920, 1920, { fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: 85 })
+      .toBuffer();
+    console.log(`📐 Resized: ${(buffer.length/1024/1024).toFixed(1)}MB → ${(resized.length/1024/1024).toFixed(1)}MB`);
+    return resized;
+  } catch(e) {
+    console.error('⚠️ Resize failed:', e.message);
+    return buffer;
+  }
+}
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 // ── Cloudinary setup ──
@@ -196,20 +212,27 @@ function adminAuth(req, res, next) {
 // ════════════════════════════════════════
 async function editPhotoWithCloudinary(imageBuffer, eventType = 'wedding') {
   try {
-    console.log('🎨 Starting Cloudinary AI edit...');
+    console.log(`🎨 Cloudinary AI edit starting... (${eventType}) Buffer size: ${(imageBuffer.length/1024).toFixed(0)}KB`);
+
+    if (!process.env.CLOUDINARY_CLOUD_NAME) {
+      console.error('❌ Cloudinary not configured!');
+      return { buffer: imageBuffer, edited: false };
+    }
 
     // Upload to Cloudinary
     const uploadResult = await new Promise((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
-        {
-          folder: 'photofind-temp',
-          resource_type: 'image',
-        },
+      const uploadStream = cloudinary.uploader.upload_stream(
+        { folder: 'photofind-temp', resource_type: 'image' },
         (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
+          if (error) {
+            console.error('❌ Cloudinary upload error:', error.message);
+            reject(error);
+          } else {
+            resolve(result);
+          }
         }
-      ).end(imageBuffer);
+      );
+      uploadStream.end(imageBuffer);
     });
 
     console.log('✅ Uploaded to Cloudinary:', uploadResult.public_id);
@@ -248,20 +271,16 @@ async function editPhotoWithCloudinary(imageBuffer, eventType = 'wedding') {
     };
 
     const transforms = transformations[eventType] || transformations.wedding;
+    const editedUrl = cloudinary.url(uploadResult.public_id, { transformation: transforms });
+    console.log('🎨 Downloading edited image from Cloudinary...');
 
-    // Get edited image URL
-    const editedUrl = cloudinary.url(uploadResult.public_id, {
-      transformation: transforms,
-    });
-
-    // Download edited image
-    const editedResponse = await axios.get(editedUrl, { responseType: 'arraybuffer' });
+    const editedResponse = await axios.get(editedUrl, { responseType: 'arraybuffer', timeout: 30000 });
     const editedBuffer = Buffer.from(editedResponse.data);
 
     // Clean up from Cloudinary
     await cloudinary.uploader.destroy(uploadResult.public_id);
 
-    console.log('✅ Cloudinary AI edit complete');
+    console.log(`✅ Cloudinary AI edit complete! Size: ${(editedBuffer.length/1024).toFixed(0)}KB`);
     return { buffer: editedBuffer, edited: true };
 
   } catch (err) {
@@ -770,9 +789,12 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
 
     const selfieBuffer = req.file.buffer;
 
+    // Resize selfie if too large
+    const selfieResizedForDetect = await resizeForRekognition(selfieBuffer);
+
     // Detect face
     const detectResult = await rekognition.send(new DetectFacesCommand({
-      Image: { Bytes: selfieBuffer }, Attributes: ['DEFAULT'],
+      Image: { Bytes: selfieResizedForDetect }, Attributes: ['DEFAULT'],
     }));
 
     if (!detectResult.FaceDetails?.length) {
@@ -814,10 +836,12 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
         try {
           const photoStream = await drive.files.get({ fileId: photo.id, alt: 'media' }, { responseType: 'arraybuffer' });
           const photoBuffer = Buffer.from(photoStream.data);
+          const photoResized = await resizeForRekognition(photoBuffer);
+          const selfieResized = await resizeForRekognition(selfieBuffer);
 
           const compareResult = await rekognition.send(new CompareFacesCommand({
-            SourceImage: { Bytes: selfieBuffer },
-            TargetImage: { Bytes: photoBuffer },
+            SourceImage: { Bytes: selfieResized },
+            TargetImage: { Bytes: photoResized },
             SimilarityThreshold: 70,
           }));
 
