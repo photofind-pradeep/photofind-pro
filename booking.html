@@ -230,10 +230,18 @@ select option{background:#151820}
         <div class="link-row">
           <span class="link-icon">📤</span>
           <div class="link-info">
-            <strong>Photo Upload Link</strong>
+            <strong>Option 1 — Upload Link</strong>
             <a id="uploadLinkDisplay" href="#" target="_blank">Loading...</a>
           </div>
           <button class="copy-btn" onclick="copyLink('uploadLink')">Copy</button>
+        </div>
+        <div class="link-row">
+          <span class="link-icon">📁</span>
+          <div class="link-info">
+            <strong>Option 2 — Google Drive Folder</strong>
+            <a id="driveLinkDisplay" href="#" target="_blank">Loading...</a>
+          </div>
+          <button class="copy-btn" onclick="copyLink('driveLink')">Copy</button>
         </div>
         <div class="link-row">
           <span class="link-icon">🎊</span>
@@ -468,21 +476,26 @@ function showSuccess(data) {
   document.getElementById('bookingPage').style.display = 'none';
   document.getElementById('successPage').style.display = 'block';
 
+  const driveLink = `https://drive.google.com/drive/folders/${data.eventId}`;
+
   document.getElementById('uploadLinkDisplay').textContent = data.uploadLink;
   document.getElementById('uploadLinkDisplay').href = data.uploadLink;
+  document.getElementById('driveLinkDisplay').textContent = driveLink;
+  document.getElementById('driveLinkDisplay').href = driveLink;
   document.getElementById('guestLinkDisplay').textContent = data.guestLink;
   document.getElementById('guestLinkDisplay').href = data.guestLink;
 
   document.getElementById('waBtn').onclick = () => window.open(data.waLink, '_blank');
-
   window.scrollTo(0, 0);
 }
 
 function copyLink(type) {
-  const link = type === 'uploadLink'
-    ? document.getElementById('uploadLinkDisplay').textContent
-    : document.getElementById('guestLinkDisplay').textContent;
-  navigator.clipboard.writeText(link);
+  const links = {
+    uploadLink: document.getElementById('uploadLinkDisplay').textContent,
+    driveLink: document.getElementById('driveLinkDisplay').textContent,
+    guestLink: document.getElementById('guestLinkDisplay').textContent,
+  };
+  navigator.clipboard.writeText(links[type]);
   toast('✅ Link copied!');
 }
 
