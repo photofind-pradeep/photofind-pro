@@ -618,11 +618,56 @@ app.post('/payment/verify', async (req, res) => {
     const folderName = `${eventDate}_${eventName.replace(/\s+/g, '-').replace(/&/g, 'and')}${studioSuffix}`;
     const eventFolder = await createEventFolders(folderName);
 
+    // ── Auto share Drive folder with photographer ──
+    let driveFolderShared = false;
+    try {
+      const subfolders = await drive.files.list({
+        q: `'${eventFolder.id}' in parents and name='original' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+        fields: 'files(id)',
+      });
+      if (subfolders.data.files.length > 0) {
+        // Make folder publicly accessible via link (anyone with link can upload)
+        await drive.permissions.create({
+          fileId: subfolders.data.files[0].id,
+          requestBody: { role: 'writer', type: 'anyone' },
+        });
+        // Also share with their email if gmail
+        if (email && email.toLowerCase().includes('gmail.com')) {
+          await drive.permissions.create({
+            fileId: subfolders.data.files[0].id,
+            requestBody: { role: 'writer', type: 'user', emailAddress: email },
+            sendNotificationEmail: true,
+          });
+        }
+        driveFolderShared = true;
+        console.log(`✅ Drive folder auto-shared!`);
+      }
+    } catch(e) {
+      console.log(`⚠️ Drive share warning: ${e.message}`);
+    }
+
     const baseUrl = 'https://www.templecity.digital';
     const uploadLink = `${baseUrl}/upload.html?event=${eventFolder.id}`;
     const guestLink = `${baseUrl}?event=${eventFolder.id}`;
+    const driveLink = `https://drive.google.com/drive/folders/${eventFolder.id}`;
 
-    const whatsappMsg = `📸 *PhotoFind Pro — ${pkgConfig.name} Package Ready!*\n\n*Event:* ${eventName}\n*Date:* ${eventDate}\n*Studio:* ${studioName}\n*Package:* ${pkgConfig.name} (${pkgConfig.maxPhotos === Infinity ? 'Unlimited' : pkgConfig.maxPhotos} photos)\n\n*📤 Upload Photos:*\n${uploadLink}\n\n*🎊 Guest QR Link:*\n${guestLink}\n\n${pkgConfig.aiEdit ? '✨ AI Photo Editing included!\n' : ''}${pkgConfig.reel ? '🎬 Wedding Reel included!\n' : ''}\n_Powered by Temple City Digital_\n🌐 www.templecity.digital`;
+    const whatsappMsg =
+      `📸 *PhotoFind Pro — ${pkgConfig.name} Package Ready!*\n\n` +
+      `*Event:* ${eventName}\n` +
+      `*Date:* ${eventDate}\n` +
+      `*Studio:* ${studioName}\n\n` +
+      `*━━━ UPLOAD YOUR PHOTOS ━━━*\n\n` +
+      `*📤 Option 1 — Upload Link:*\n${uploadLink}\n` +
+      `_Open link → Select photos → Upload directly_\n\n` +
+      `*📁 Option 2 — Google Drive Folder:*\n${driveLink}\n` +
+      `_Open Drive app → Upload to this folder_\n\n` +
+      `*━━━ SHARE WITH GUESTS ━━━*\n\n` +
+      `*🎊 Guest QR Link:*\n${guestLink}\n` +
+      `_Guests scan face → find their photos instantly!_\n\n` +
+      `${pkgConfig.aiEdit ? '✨ AI Photo Editing included!\n' : ''}` +
+      `${pkgConfig.reel ? '🎬 Auto Instagram Reels included!\n' : ''}` +
+      `\n*Plan:* ${pkgConfig.maxPhotos === Infinity ? 'Unlimited' : pkgConfig.maxPhotos} photos — ${pkgConfig.validity} days validity\n\n` +
+      `_Powered by Temple City Digital_\n🌐 www.templecity.digital`;
 
     const waLink = `https://wa.me/91${phone}?text=${encodeURIComponent(whatsappMsg)}`;
 
