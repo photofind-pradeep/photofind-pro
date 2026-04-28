@@ -183,6 +183,14 @@ select option{background:#151820}
           <label>Email Address *</label>
           <input type="email" id="email" placeholder="you@example.com">
         </div>
+        <div class="form-group full">
+          <label>Coupon Code (Optional)</label>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="couponCode" placeholder="Enter coupon code" style="text-transform:uppercase;flex:1">
+            <button onclick="validateCoupon()" style="padding:11px 16px;background:var(--gold-dim);border:1px solid rgba(232,192,122,0.3);border-radius:8px;color:var(--gold);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap">Apply</button>
+          </div>
+          <div id="couponMsg" style="font-size:12px;margin-top:6px;display:none"></div>
+        </div>
       </div>
     </div>
 
@@ -252,12 +260,16 @@ select option{background:#151820}
 const SERVER = 'https://www.templecity.digital';
 let selectedPkg = 'basic';
 let bookingData = null;
+let appliedCoupon = null;
 
 const prices = { basic: 2999, standard: 4999, premium: 7999 };
-const pkgNames = { basic: 'Basic', standard: 'Standard', premium: 'Premium' };
+const pkgNames = { basic: 'Moments', standard: 'Memories', premium: 'Magic' };
 
 function selectPackage(pkg) {
   selectedPkg = pkg;
+  appliedCoupon = null;
+  document.getElementById('couponCode').value = '';
+  document.getElementById('couponMsg').style.display = 'none';
   document.querySelectorAll('.pkg').forEach(p => {
     p.style.borderColor = 'var(--border)';
     p.style.background = 'var(--s1)';
@@ -267,13 +279,71 @@ function selectPackage(pkg) {
   updateTotal();
 }
 
+async function validateCoupon() {
+  const code = document.getElementById('couponCode').value.trim();
+  const msgEl = document.getElementById('couponMsg');
+
+  if (!code) { toast('Please enter a coupon code!'); return; }
+
+  try {
+    const res = await fetch(`${SERVER}/coupon/validate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ couponCode: code, package: selectedPkg }),
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      appliedCoupon = data;
+      msgEl.style.display = 'block';
+      msgEl.style.color = 'var(--green)';
+      msgEl.textContent = `✅ Coupon applied! You save ${data.savings}`;
+      updateTotal();
+      toast(`✅ Coupon applied — ${data.description}`);
+    } else {
+      appliedCoupon = null;
+      msgEl.style.display = 'block';
+      msgEl.style.color = 'var(--rose)';
+      msgEl.textContent = '❌ ' + data.error;
+      updateTotal();
+    }
+  } catch(e) {
+    toast('Error validating coupon: ' + e.message);
+  }
+}
+
 function updateTotal() {
   const price = prices[selectedPkg];
-  const gst = Math.round(price * 0.18);
-  const total = price + gst;
+  let finalPrice = price;
+  let discountAmt = 0;
+
+  if (appliedCoupon) {
+    finalPrice = appliedCoupon.finalAmount / 100;
+    discountAmt = appliedCoupon.discount / 100;
+  }
+
+  const gst = Math.round(finalPrice * 0.18);
+  const total = finalPrice + gst;
+
   document.getElementById('pkgName').textContent = pkgNames[selectedPkg];
   document.getElementById('gstAmount').textContent = `₹${gst.toLocaleString('en-IN')}`;
-  document.getElementById('totalAmount').textContent = `₹${total.toLocaleString('en-IN')}`;
+  document.getElementById('totalAmount').textContent = finalPrice === 0 ? 'FREE' : `₹${total.toLocaleString('en-IN')}`;
+
+  // Show/hide discount row
+  let discountRow = document.getElementById('discountRow');
+  if (!discountRow) {
+    discountRow = document.createElement('div');
+    discountRow.id = 'discountRow';
+    discountRow.className = 'total-row';
+    document.querySelector('.total-card').insertBefore(discountRow, document.querySelector('.total-card .total-row:last-child'));
+  }
+
+  if (appliedCoupon) {
+    discountRow.innerHTML = `<span>Discount (${appliedCoupon.couponCode})</span><span style="color:var(--green)">-₹${discountAmt.toLocaleString('en-IN')}</span>`;
+    discountRow.style.display = 'flex';
+  } else {
+    discountRow.style.display = 'none';
+  }
 }
 
 async function proceedToPayment() {
@@ -295,14 +365,44 @@ async function proceedToPayment() {
     const orderRes = await fetch(`${SERVER}/payment/create-order`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ eventName, eventDate, studioName, phone, package: selectedPkg }),
+      body: JSON.stringify({
+        eventName, eventDate, studioName, phone,
+        package: selectedPkg,
+        couponCode: appliedCoupon?.couponCode || '',
+      }),
     });
 
     const orderData = await orderRes.json();
     console.log('Order response:', orderData);
 
-    if (!orderData.success || !orderData.orderId) {
+    if (!orderData.success) {
       toast('Error: ' + (orderData.error || 'Could not create order'));
+      return;
+    }
+
+    // Handle FREE orders (100% coupon)
+    if (orderData.isFree) {
+      toast('🎉 Free order! Creating your event...');
+      const verifyRes = await fetch(`${SERVER}/payment/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          razorpay_order_id: orderData.orderId,
+          razorpay_payment_id: 'free_' + Date.now(),
+          razorpay_signature: 'free',
+          isFree: true,
+          eventName, eventDate, studioName, phone, email,
+          amount: 0,
+          package: selectedPkg,
+        }),
+      });
+      const verifyData = await verifyRes.json();
+      if (verifyData.success) {
+        bookingData = verifyData;
+        showSuccess(verifyData);
+      } else {
+        toast('Error: ' + verifyData.error);
+      }
       return;
     }
 
