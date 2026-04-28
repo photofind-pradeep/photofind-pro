@@ -17,6 +17,9 @@
     "multer": "^1.4.5-lts.1",
     "@aws-sdk/client-rekognition": "^3.758.0",
     "razorpay": "^2.9.0",
-    "axios": "^1.6.0"
+    "cloudinary": "^1.41.0",
+    "axios": "^1.6.0",
+    "fluent-ffmpeg": "^2.1.2",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0"
   }
 }
