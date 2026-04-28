@@ -121,6 +121,37 @@ const PACKAGES = {
   premium: { name: 'Magic', price: 799900, maxPhotos: Infinity, aiEdit: true, reel: true, validity: 90 },
 };
 
+// ── Coupon System ──
+const COUPONS = {
+  'DISCOUNT1000': { discount: 100000, description: '₹1,000 off', type: 'fixed' },
+  'DISCOUNT2000': { discount: 200000, description: '₹2,000 off', type: 'fixed' },
+  'DISCOUNT3000': { discount: 300000, description: '₹3,000 off', type: 'fixed' },
+  'PREMIUM50': { discount: 50, description: '50% off', type: 'percent' },
+  'TRYFREE': { discount: 100, description: '100% off — Free Trial', type: 'percent' },
+};
+
+function applyCoupon(couponCode, originalAmount) {
+  const code = (couponCode || '').toUpperCase().trim();
+  const coupon = COUPONS[code];
+  if (!coupon) return { valid: false, error: 'Invalid coupon code' };
+
+  let discount = 0;
+  if (coupon.type === 'fixed') {
+    discount = Math.min(coupon.discount, originalAmount);
+  } else if (coupon.type === 'percent') {
+    discount = Math.round(originalAmount * coupon.discount / 100);
+  }
+
+  const finalAmount = Math.max(0, originalAmount - discount);
+  return {
+    valid: true,
+    discount,
+    finalAmount,
+    description: coupon.description,
+    isFree: finalAmount === 0,
+  };
+}
+
 // ════════════════════════════════════════
 //  HELPER FUNCTIONS
 // ════════════════════════════════════════
@@ -450,11 +481,54 @@ app.get('/health', (req, res) => {
   });
 });
 
+// ── Validate Coupon ──
+app.post('/coupon/validate', (req, res) => {
+  const { couponCode, package: pkg } = req.body;
+  const pkgConfig = PACKAGES[pkg] || PACKAGES.basic;
+  const result = applyCoupon(couponCode, pkgConfig.price);
+
+  if (!result.valid) {
+    return res.json({ success: false, error: result.error });
+  }
+
+  res.json({
+    success: true,
+    couponCode: couponCode.toUpperCase().trim(),
+    description: result.description,
+    originalAmount: pkgConfig.price,
+    discount: result.discount,
+    finalAmount: result.finalAmount,
+    isFree: result.isFree,
+    savings: `₹${(result.discount / 100).toLocaleString('en-IN')}`,
+  });
+});
+
+// ── Add Coupon (Admin only) ──
+app.post('/admin/coupon/add', adminAuth, (req, res) => {
+  const { code, discount, type, description } = req.body;
+  if (!code || !discount || !type) {
+    return res.status(400).json({ success: false, error: 'Code, discount and type required' });
+  }
+  COUPONS[code.toUpperCase()] = { discount: type === 'fixed' ? discount * 100 : discount, type, description: description || `₹${discount} off` };
+  res.json({ success: true, message: `Coupon ${code.toUpperCase()} added`, coupons: Object.keys(COUPONS) });
+});
+
+// ── List Coupons (Admin only) ──
+app.get('/admin/coupons', adminAuth, (req, res) => {
+  const couponList = Object.entries(COUPONS).map(([code, details]) => ({
+    code,
+    discount: details.type === 'fixed' ? `₹${details.discount / 100}` : `${details.discount}%`,
+    type: details.type,
+    description: details.description,
+  }));
+  res.json({ success: true, coupons: couponList });
+});
+
 // ── Payment Routes ──
 app.post('/payment/create-order', async (req, res) => {
   try {
     console.log('💳 Creating order...');
-    const { eventName, eventDate, studioName, phone, package: pkg } = req.body;
+    const { eventName, eventDate, studioName, phone, package: pkg, couponCode } = req.body;
 
     if (!eventName || !eventDate || !studioName || !phone) {
       return res.status(400).json({ success: false, error: 'All fields required' });
@@ -465,23 +539,56 @@ app.post('/payment/create-order', async (req, res) => {
     }
 
     const pkgConfig = PACKAGES[pkg] || PACKAGES.basic;
+    let finalAmount = pkgConfig.price;
+    let couponApplied = null;
+
+    // Apply coupon if provided
+    if (couponCode) {
+      const couponResult = applyCoupon(couponCode, pkgConfig.price);
+      if (couponResult.valid) {
+        finalAmount = couponResult.finalAmount;
+        couponApplied = couponResult;
+        console.log(`🎟️ Coupon applied: ${couponCode} — ${couponResult.description} — Final: ₹${finalAmount/100}`);
+      } else {
+        return res.status(400).json({ success: false, error: couponResult.error });
+      }
+    }
+
+    // If 100% discount — skip Razorpay and create event directly
+    if (finalAmount === 0) {
+      console.log('🆓 Free order — skipping Razorpay');
+      return res.json({
+        success: true,
+        isFree: true,
+        orderId: 'FREE_' + generateOrderId(),
+        amount: 0,
+        currency: 'INR',
+        keyId: (process.env.RAZORPAY_KEY_ID || '').trim(),
+        package: pkg,
+        packageName: pkgConfig.name,
+        couponApplied,
+      });
+    }
+
     const order = await razorpay.orders.create({
-      amount: pkgConfig.price,
+      amount: finalAmount,
       currency: 'INR',
       receipt: generateOrderId(),
-      notes: { eventName, eventDate, studioName, phone, package: pkg },
+      notes: { eventName, eventDate, studioName, phone, package: pkg, couponCode: couponCode || '' },
     });
 
-    console.log('✅ Order created:', order.id);
+    console.log('✅ Order created:', order.id, '— Amount: ₹' + finalAmount/100);
 
     res.json({
       success: true,
+      isFree: false,
       orderId: order.id,
       amount: order.amount,
       currency: order.currency,
       keyId: (process.env.RAZORPAY_KEY_ID || '').trim(),
       package: pkg,
       packageName: pkgConfig.name,
+      couponApplied,
     });
   } catch (err) {
     console.error('❌ Order error:', err.message);
@@ -491,16 +598,19 @@ app.post('/payment/create-order', async (req, res) => {
 
 app.post('/payment/verify', async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, eventName, eventDate, studioName, phone, email, amount, package: pkg } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, eventName, eventDate, studioName, phone, email, amount, package: pkg, isFree } = req.body;
 
-    const sign = razorpay_order_id + '|' + razorpay_payment_id;
-    const expectedSign = crypto.createHmac('sha256', (process.env.RAZORPAY_KEY_SECRET || '').trim()).update(sign).digest('hex');
-
-    if (expectedSign !== razorpay_signature) {
-      return res.status(400).json({ success: false, error: 'Payment verification failed' });
+    // Skip signature verification for free orders
+    if (!isFree) {
+      const sign = razorpay_order_id + '|' + razorpay_payment_id;
+      const expectedSign = crypto.createHmac('sha256', (process.env.RAZORPAY_KEY_SECRET || '').trim()).update(sign).digest('hex');
+      if (expectedSign !== razorpay_signature) {
+        return res.status(400).json({ success: false, error: 'Payment verification failed' });
+      }
+      console.log(`✅ Payment verified: ${razorpay_payment_id}`);
+    } else {
+      console.log('🆓 Free order — skipping verification');
     }
-
-    console.log(`✅ Payment verified: ${razorpay_payment_id}`);
 
     const pkgConfig = PACKAGES[pkg] || PACKAGES.basic;
     const eventType = detectEventType(eventName);
