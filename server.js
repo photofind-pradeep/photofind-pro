@@ -116,7 +116,7 @@ let clients = [];
 
 // ── Package Config ──
 const PACKAGES = {
-  basic: { name: 'Moments', price: 299900, maxPhotos: 500, aiEdit: false, reel: false, validity: 7 },
+  basic: { name: 'Moments', price: 299900, maxPhotos: 500, aiEdit: false, reel: false, validity: 15 },
   standard: { name: 'Memories', price: 499900, maxPhotos: 1000, aiEdit: true, reel: false, validity: 30 },
   premium: { name: 'Magic', price: 799900, maxPhotos: Infinity, aiEdit: true, reel: true, validity: 90 },
 };
@@ -703,7 +703,73 @@ app.put('/admin/client/:eventId', adminAuth, (req, res) => {
   else res.status(404).json({ success: false, error: 'Not found' });
 });
 
-// ── OAuth Routes ──
+// ── Share Drive Folder with Photographer ──
+app.post('/share-folder', async (req, res) => {
+  try {
+    const { eventId, email } = req.body;
+    if (!eventId || !email) return res.status(400).json({ success: false, error: 'Event ID and email required' });
+
+    // Find original folder
+    const subfolders = await drive.files.list({
+      q: `'${eventId}' in parents and name='original' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+      fields: 'files(id)',
+    });
+
+    if (!subfolders.data.files.length) {
+      return res.status(404).json({ success: false, error: 'Event folder not found' });
+    }
+
+    const originalFolderId = subfolders.data.files[0].id;
+
+    // Share original folder with photographer (writer access)
+    await drive.permissions.create({
+      fileId: originalFolderId,
+      requestBody: {
+        role: 'writer',
+        type: 'user',
+        emailAddress: email,
+      },
+      sendNotificationEmail: true,
+    });
+
+    console.log(`✅ Folder shared with ${email}: ${originalFolderId}`);
+
+    res.json({
+      success: true,
+      message: `Folder shared with ${email}`,
+      folderId: originalFolderId,
+    });
+  } catch (err) {
+    console.error('❌ Share folder error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── Auto Delete Expired Events ──
+app.get('/admin/check-expiry', adminAuth, async (req, res) => {
+  try {
+    const expired = [];
+    const expiringSoon = [];
+
+    for (const client of clients) {
+      const pkg = client.package || 'basic';
+      const validity = pkg === 'premium' ? 90 : pkg === 'standard' ? 30 : 7;
+      const createdDate = new Date(client.createdAt);
+      const expiryDate = new Date(createdDate.getTime() + validity * 24 * 60 * 60 * 1000);
+      const daysLeft = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
+
+      client.daysLeft = daysLeft;
+      client.expiryDate = expiryDate.toISOString().split('T')[0];
+
+      if (daysLeft <= 0) expired.push(client);
+      else if (daysLeft <= 3) expiringSoon.push(client);
+    }
+
+    res.json({ success: true, expired, expiringSoon, total: clients.length });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 app.get('/auth/google', (req, res) => {
   const authUrl = oauth2Client.generateAuthUrl({
     access_type: 'offline',
