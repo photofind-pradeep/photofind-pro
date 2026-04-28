@@ -289,53 +289,74 @@ async function proceedToPayment() {
   if (phone.length !== 10) { toast('Enter valid 10-digit phone number!'); return; }
 
   try {
+    toast('Creating order...');
+
     // Create order
     const orderRes = await fetch(`${SERVER}/payment/create-order`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ eventName, eventDate, studioName, phone, package: selectedPkg }),
     });
-    const orderData = await orderRes.json();
-    if (!orderData.success) { toast('Error: ' + orderData.error); return; }
 
-    // Open Razorpay
+    const orderData = await orderRes.json();
+    console.log('Order response:', orderData);
+
+    if (!orderData.success || !orderData.orderId) {
+      toast('Error: ' + (orderData.error || 'Could not create order'));
+      return;
+    }
+
+    // Open Razorpay checkout
     const options = {
       key: orderData.keyId,
       amount: orderData.amount,
-      currency: orderData.currency,
+      currency: orderData.currency || 'INR',
       name: 'Temple City Digital',
       description: `PhotoFind Pro — ${pkgNames[selectedPkg]} Package`,
       order_id: orderData.orderId,
-      prefill: { name: studioName, email, contact: '91' + phone },
+      prefill: { name: studioName, email, contact: phone },
       theme: { color: '#E8C07A' },
       handler: async (response) => {
-        // Verify payment
-        const verifyRes = await fetch(`${SERVER}/payment/verify`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ...response,
-            eventName, eventDate, studioName, phone, email,
-            amount: orderData.amount,
-            package: selectedPkg,
-          }),
-        });
-        const verifyData = await verifyRes.json();
-        if (verifyData.success) {
-          bookingData = verifyData;
-          showSuccess(verifyData);
-        } else {
-          toast('Payment verification failed: ' + verifyData.error);
+        try {
+          toast('Verifying payment...');
+          const verifyRes = await fetch(`${SERVER}/payment/verify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              eventName, eventDate, studioName, phone, email,
+              amount: orderData.amount,
+              package: selectedPkg,
+            }),
+          });
+          const verifyData = await verifyRes.json();
+          console.log('Verify response:', verifyData);
+          if (verifyData.success) {
+            bookingData = verifyData;
+            showSuccess(verifyData);
+          } else {
+            toast('Verification failed: ' + (verifyData.error || 'Unknown error'));
+          }
+        } catch(verifyErr) {
+          console.error('Verify error:', verifyErr);
+          toast('Verification error: ' + verifyErr.message);
         }
       },
       modal: { ondismiss: () => toast('Payment cancelled') }
     };
 
     const rzp = new Razorpay(options);
+    rzp.on('payment.failed', (response) => {
+      console.error('Payment failed:', response.error);
+      toast('Payment failed: ' + response.error.description);
+    });
     rzp.open();
 
   } catch(e) {
-    toast('Error: ' + e.message);
+    console.error('Payment error:', e);
+    toast('Error: ' + (e.message || 'Something went wrong. Please try again.'));
   }
 }
 
