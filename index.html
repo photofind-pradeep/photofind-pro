@@ -133,6 +133,9 @@ body::before{content:'';position:fixed;top:-100px;left:50%;transform:translateX(
 .ph-cell{aspect-ratio:1;position:relative;cursor:pointer;overflow:hidden;background:var(--s2)}
 .ph-cell img{width:100%;height:100%;object-fit:cover;transition:transform 0.3s}
 .ph-cell:hover img{transform:scale(1.08)}
+.size-opt{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;cursor:pointer;transition:all 0.2s}
+.size-opt.selected{border-color:var(--gold);background:var(--gold-dim)}
+.size-opt:hover{border-color:var(--border2)}
 .ph-ov{position:absolute;inset:0;background:rgba(8,6,8,0);transition:background 0.2s;display:flex;align-items:center;justify-content:center}
 .ph-cell:hover .ph-ov{background:rgba(8,6,8,0.4)}
 .ph-open{opacity:0;font-size:20px;transition:opacity 0.2s}
@@ -372,6 +375,78 @@ body::before{content:'';position:fixed;top:-100px;left:50%;transform:translateX(
 </div>
 </div>
 
+<!-- PRINT ORDER MODAL -->
+<div class="modal-overlay" id="printModal" onclick="closePrintModal(event)">
+  <div class="modal" style="max-height:90vh;overflow-y:auto">
+    <div style="text-align:center;margin-bottom:16px;font-size:36px">🖨️</div>
+    <div class="modal-title" style="text-align:center;margin-bottom:4px">Order Prints</div>
+    <div class="modal-sub" style="text-align:center;margin-bottom:20px">Get your favourite photos printed & delivered!</div>
+
+    <!-- Photo Selection -->
+    <div style="font-size:11px;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;font-weight:700">✦ Select Photo</div>
+    <div id="printPhotoGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:16px"></div>
+
+    <!-- Size Selection -->
+    <div style="font-size:11px;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;font-weight:700">✦ Select Size</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px" id="sizeGrid">
+      <div class="size-opt" onclick="selectSize(this,'4x6','4×6 inch')" data-size="4x6">
+        <div style="font-size:13px;font-weight:700;color:white">4×6"</div>
+        <div style="font-size:10px;color:var(--muted2)">Wallet</div>
+      </div>
+      <div class="size-opt" onclick="selectSize(this,'5x7','5×7 inch')" data-size="5x7">
+        <div style="font-size:13px;font-weight:700;color:white">5×7"</div>
+        <div style="font-size:10px;color:var(--muted2)">Medium</div>
+      </div>
+      <div class="size-opt" onclick="selectSize(this,'8x10','8×10 inch')" data-size="8x10">
+        <div style="font-size:13px;font-weight:700;color:white">8×10"</div>
+        <div style="font-size:10px;color:var(--muted2)">Large</div>
+      </div>
+      <div class="size-opt" onclick="selectSize(this,'10x12','10×12 inch')" data-size="10x12">
+        <div style="font-size:13px;font-weight:700;color:white">10×12"</div>
+        <div style="font-size:10px;color:var(--muted2)">XL</div>
+      </div>
+      <div class="size-opt" onclick="selectSize(this,'12x18','12×18 inch')" data-size="12x18">
+        <div style="font-size:13px;font-weight:700;color:white">12×18"</div>
+        <div style="font-size:10px;color:var(--muted2)">Poster</div>
+      </div>
+      <div class="size-opt" onclick="selectSize(this,'canvas','Canvas Print')" data-size="canvas">
+        <div style="font-size:13px;font-weight:700;color:white">Canvas</div>
+        <div style="font-size:10px;color:var(--muted2)">Premium</div>
+      </div>
+      <div class="size-opt" onclick="selectSize(this,'6x6','6×6 inch')" data-size="6x6">
+        <div style="font-size:13px;font-weight:700;color:white">6×6"</div>
+        <div style="font-size:10px;color:var(--muted2)">Square</div>
+      </div>
+      <div class="size-opt" onclick="selectSize(this,'panoramic','Panoramic')" data-size="panoramic">
+        <div style="font-size:13px;font-weight:700;color:white">Panoramic</div>
+        <div style="font-size:10px;color:var(--muted2)">Wide</div>
+      </div>
+    </div>
+
+    <!-- Quantity -->
+    <div style="font-size:11px;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;font-weight:700">✦ Quantity</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <button onclick="changeQty(-1)" style="width:36px;height:36px;background:var(--s2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">−</button>
+      <div id="qtyDisplay" style="font-size:20px;font-weight:700;color:white;min-width:30px;text-align:center">1</div>
+      <button onclick="changeQty(1)" style="width:36px;height:36px;background:var(--s2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center">+</button>
+    </div>
+
+    <!-- Delivery Details -->
+    <div style="font-size:11px;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;font-weight:700">✦ Delivery Details</div>
+    <input type="text" id="printName" placeholder="Your Name *" style="width:100%;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;margin-bottom:8px">
+    <input type="tel" id="printPhone" placeholder="WhatsApp Number * (10 digits)" maxlength="10" style="width:100%;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;margin-bottom:8px">
+    <textarea id="printAddress" placeholder="Delivery Address *" rows="3" style="width:100%;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:none;margin-bottom:8px"></textarea>
+    <textarea id="printNotes" placeholder="Special instructions (optional)" rows="2" style="width:100%;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:none;margin-bottom:16px"></textarea>
+
+    <button onclick="submitPrintOrder()" style="width:100%;padding:14px;background:linear-gradient(135deg,#D4AF72,#B8935A);border:none;border-radius:10px;color:#0A0806;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.05em">
+      📦 Place Order via WhatsApp
+    </button>
+    <button onclick="closePrintModal()" style="width:100%;margin-top:10px;padding:12px;background:var(--s2);color:var(--muted2);border:1px solid var(--border2);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer">
+      Cancel
+    </button>
+  </div>
+</div>
+
 <div class="toast" id="toastEl"></div>
 
 <script>
@@ -547,7 +622,7 @@ async function startMatch() {
     const data = await res.json();
 
     // Animate final steps
-    animateStep('pi4', 'pi5', 85, '✅', 'Match complete!', `Found ${data.matchedCount || 0} photos`);
+    animateStep('pi4', 'pi5', 85, '✅', 'Match complete!', `Found ${data.matchedCount || 0} solo + ${data.groupCount || 0} group photos`);
     setTimeout(() => {
       completeStep('pi5');
       animateProg(100);
@@ -573,28 +648,59 @@ async function startMatch() {
 
 function showResults(data) {
   const count = data.matchedCount || 0;
+  const groupCount = data.groupCount || 0;
   matchedPhotos = data.photos || [];
+  const groupPhotos = data.groupPhotos || [];
+  const totalCount = count + groupCount;
 
-  document.getElementById('resCount').textContent = count;
-  document.getElementById('resPill').textContent = `✓ ${count} Photos Found`;
+  document.getElementById('resCount').textContent = totalCount;
+  document.getElementById('resPill').textContent = `✓ ${totalCount} Photos Found`;
   document.getElementById('resSub').textContent = `Matched from ${data.totalScanned} photos in ${formatEventName(selectedEvent.name)}`;
 
   // Build photo grid
   const grid = document.getElementById('photoGrid');
   grid.innerHTML = '';
 
-  if (matchedPhotos.length === 0) {
+  if (count === 0 && groupCount === 0) {
     grid.innerHTML = '<div class="no-photos" style="grid-column:span 3"><span class="ni">😔</span>No matching photos found.<br>Try retaking your selfie in better light.</div>';
   } else {
-    matchedPhotos.forEach(photo => {
-      const cell = document.createElement('div');
-      cell.className = 'ph-cell';
-      cell.innerHTML = `
-        <img src="${photo.thumbnailLink}" alt="${photo.name}" loading="lazy" onerror="this.style.display='none'">
-        <div class="ph-ov"><span class="ph-open">🔍</span></div>`;
-      cell.onclick = () => window.open(photo.viewLink, '_blank');
-      grid.appendChild(cell);
-    });
+    // Solo photos section
+    if (count > 0) {
+      const soloLabel = document.createElement('div');
+      soloLabel.style.cssText = 'grid-column:span 3;padding:10px 0 6px;font-size:11px;font-weight:700;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase';
+      soloLabel.textContent = `📸 Your Photos (${count})`;
+      grid.appendChild(soloLabel);
+
+      matchedPhotos.forEach(photo => {
+        const cell = document.createElement('div');
+        cell.className = 'ph-cell';
+        cell.innerHTML = `
+          <img src="${photo.thumbnailLink}" alt="${photo.name}" loading="lazy" onerror="this.style.display='none'">
+          <div class="ph-ov"><span class="ph-open">🔍</span></div>
+          ${photo.aiEdited ? '<div style="position:absolute;bottom:2px;right:2px;background:rgba(212,175,114,0.9);border-radius:4px;padding:1px 4px;font-size:8px;color:#000">AI✨</div>' : ''}`;
+        cell.onclick = () => window.open(photo.viewLink, '_blank');
+        grid.appendChild(cell);
+      });
+    }
+
+    // Group photos section
+    if (groupCount > 0) {
+      const groupLabel = document.createElement('div');
+      groupLabel.style.cssText = 'grid-column:span 3;padding:14px 0 6px;font-size:11px;font-weight:700;color:var(--muted2);letter-spacing:0.1em;text-transform:uppercase';
+      groupLabel.textContent = `👥 Group Photos (${groupCount})`;
+      grid.appendChild(groupLabel);
+
+      groupPhotos.forEach(photo => {
+        const cell = document.createElement('div');
+        cell.className = 'ph-cell';
+        cell.style.opacity = '0.85';
+        cell.innerHTML = `
+          <img src="${photo.thumbnailLink}" alt="${photo.name}" loading="lazy" onerror="this.style.display='none'">
+          <div class="ph-ov"><span class="ph-open">🔍</span></div>`;
+        cell.onclick = () => window.open(photo.viewLink, '_blank');
+        grid.appendChild(cell);
+      });
+    }
   }
 
   // Build download card
@@ -616,6 +722,14 @@ function showResults(data) {
           <span>View all your photos</span>
         </div>
         <a href="https://drive.google.com/drive/folders/${selectedEvent.id}" target="_blank" class="dl-btn dlb-ghost">Open</a>
+      </div>
+      <div class="dl-row" onclick="openPrintOrder()" style="cursor:pointer">
+        <div class="dl-icon" style="background:rgba(212,175,114,0.1)">🖨️</div>
+        <div class="dl-info">
+          <strong>Order Prints</strong>
+          <span>Get physical prints delivered to you!</span>
+        </div>
+        <div class="dl-btn" style="background:rgba(212,175,114,0.15);color:#D4AF72;border:1px solid rgba(212,175,114,0.3);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600">Order</div>
       </div>`;
   } else {
     dlCard.innerHTML = `<div class="dl-row"><div class="dl-info" style="text-align:center;padding:10px 0;color:var(--muted2)">No photos to download</div></div>`;
@@ -625,6 +739,7 @@ function showResults(data) {
   const shareLink = `https://drive.google.com/drive/folders/${selectedEvent.id}`;
   const eventName = formatEventName(selectedEvent.name);
   const photoCount = matchedPhotos.length;
+  const groupCount = (data.groupPhotos || []).length;
 
   // Show reel if available
   if (data.reelLink) {
@@ -657,7 +772,7 @@ function showResults(data) {
   const studioPhone = studioInfo[2] || '';
   const studioLine = studioName ? `\n\n📷 *${studioName}*${studioPhone ? '\n📞 ' + studioPhone : ''}` : '';
 
-  const whatsappMsg = `📸 *Your Photos from ${eventName}!*\n\n✨ We found *${photoCount} photos* of you!${data.aiEdited ? '\n✨ AI enhanced & color graded!' : ''}${data.reelLink ? '\n🎬 Your wedding reel is ready!' : ''}\n\n📥 View & Download:\n${shareLink}${data.reelLink ? `\n\n🎬 Your Reel:\n${data.reelLink}` : ''}\n\n_Thank you for being part of this special day_ 🎊${studioLine}\n\n_Powered by Temple City Digital_\n🌐 www.templecity.digital`;
+  const whatsappMsg = `📸 *Your Photos from ${eventName}!*\n\n✨ We found *${count} solo photos* of you!${groupCount > 0 ? `\n👥 *${groupCount} group photos* included!` : ''}${data.aiEdited ? '\n✨ AI enhanced & color graded!' : ''}${data.reelLink ? '\n🎬 Your Instagram reel is ready!' : ''}\n\n📥 View & Download:\n${shareLink}${data.reelLink ? `\n\n🎬 Your Reel:\n${data.reelLink}` : ''}\n\n_Thank you for being part of this special day_ 🎊${studioLine}\n\n_Powered by Temple City Digital_\n🌐 www.templecity.digital`;
 
   document.getElementById('whatsappBtn').onclick = () =>
     window.open(`https://wa.me/?text=${encodeURIComponent(whatsappMsg)}`);
@@ -760,6 +875,91 @@ function showError(msg) {
   const box = document.getElementById('errorBox');
   document.getElementById('errorMsg').textContent = msg;
   box.style.display = 'block';
+}
+
+// ── PRINT ORDER ──
+let selectedPrintPhoto = null;
+let selectedSize = null;
+let printQty = 1;
+
+function openPrintOrder() {
+  if (matchedPhotos.length === 0) { toast('No photos to print!'); return; }
+
+  const grid = document.getElementById('printPhotoGrid');
+  grid.innerHTML = '';
+  matchedPhotos.forEach((photo, i) => {
+    const div = document.createElement('div');
+    div.style.cssText = 'border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;aspect-ratio:1;transition:all 0.2s';
+    div.innerHTML = `<img src="${photo.thumbnailLink}" style="width:100%;height:100%;object-fit:cover">`;
+    div.onclick = () => {
+      document.querySelectorAll('#printPhotoGrid div').forEach(d => d.style.borderColor = 'transparent');
+      div.style.borderColor = '#D4AF72';
+      selectedPrintPhoto = photo;
+    };
+    if (i === 0) {
+      div.style.borderColor = '#D4AF72';
+      selectedPrintPhoto = photo;
+    }
+    grid.appendChild(div);
+  });
+
+  selectedSize = null;
+  printQty = 1;
+  document.getElementById('qtyDisplay').textContent = '1';
+  document.querySelectorAll('.size-opt').forEach(s => s.classList.remove('selected'));
+  document.getElementById('printModal').classList.add('open');
+}
+
+function selectSize(el, size, label) {
+  document.querySelectorAll('.size-opt').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedSize = { code: size, label };
+}
+
+function changeQty(delta) {
+  printQty = Math.max(1, Math.min(10, printQty + delta));
+  document.getElementById('qtyDisplay').textContent = printQty;
+}
+
+function submitPrintOrder() {
+  const name = document.getElementById('printName').value.trim();
+  const phone = document.getElementById('printPhone').value.trim();
+  const address = document.getElementById('printAddress').value.trim();
+  const notes = document.getElementById('printNotes').value.trim();
+
+  if (!name) { toast('Please enter your name!'); return; }
+  if (!phone || phone.length !== 10) { toast('Enter valid 10-digit number!'); return; }
+  if (!address) { toast('Please enter delivery address!'); return; }
+  if (!selectedSize) { toast('Please select a print size!'); return; }
+  if (!selectedPrintPhoto) { toast('Please select a photo!'); return; }
+
+  const eventName = formatEventName(selectedEvent.name);
+  const studioInfo = selectedEvent.name.split('__');
+  const studioPhone = studioInfo[2] || '';
+
+  const msg =
+    `🖨️ *New Print Order — PhotoFind Pro*\n\n` +
+    `*Event:* ${eventName}\n\n` +
+    `*📸 Photo:* ${selectedPrintPhoto.name}\n` +
+    `*📐 Size:* ${selectedSize.label}\n` +
+    `*🔢 Quantity:* ${printQty} copies\n\n` +
+    `*👤 Customer Name:* ${name}\n` +
+    `*📞 WhatsApp:* ${phone}\n` +
+    `*📍 Address:* ${address}\n` +
+    `${notes ? `*📝 Notes:* ${notes}\n` : ''}` +
+    `\n*🔗 Photo Link:*\n${selectedPrintPhoto.viewLink}\n\n` +
+    `_Powered by PhotoFind Pro_\n🌐 www.templecity.digital`;
+
+  const waNumber = studioPhone || '8895195862';
+  window.open(`https://wa.me/91${waNumber}?text=${encodeURIComponent(msg)}`, '_blank');
+  closePrintModal();
+  toast('✅ Order sent to photographer on WhatsApp!');
+}
+
+function closePrintModal(e) {
+  if (!e || e.target === document.getElementById('printModal')) {
+    document.getElementById('printModal').classList.remove('open');
+  }
 }
 
 function toast(msg) {
