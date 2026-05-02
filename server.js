@@ -1091,7 +1091,7 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
 
     const photosRes = await drive.files.list({
       q: `'${subfolders.data.files[0].id}' in parents and mimeType contains 'image/' and trashed=false`,
-      fields: 'files(id, name, mimeType)', pageSize: pkgConfig.maxPhotos === Infinity ? 1000 : pkgConfig.maxPhotos,
+      fields: 'files(id, name, mimeType, size)', pageSize: 1000,
     });
 
     const allPhotos = photosRes.data.files;
@@ -1106,8 +1106,11 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
     const eventType = detectEventType(eventFile?.name || '');
 
     const editedFolderId = await getOrCreateFolder(eventId, 'edited');
-    const matchedPhotos = [];
-    const matchedBuffers = [];
+
+    // ── PHASE 1: Match solo photos (70% threshold) ──
+    const soloMatches = [];
+    const soloBuffers = [];
+    const groupMatches = [];
     const batchSize = 5;
 
     for (let i = 0; i < allPhotos.length; i += batchSize) {
@@ -1119,6 +1122,7 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
           const photoResized = await resizeForRekognition(photoBuffer);
           const selfieResized = await resizeForRekognition(selfieBuffer);
 
+          // Solo match — 70% threshold
           const compareResult = await rekognition.send(new CompareFacesCommand({
             SourceImage: { Bytes: selfieResized },
             TargetImage: { Bytes: photoResized },
@@ -1129,29 +1133,23 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
             const similarity = compareResult.FaceMatches[0].Similarity;
             console.log(`✅ Match: ${photo.name} — ${similarity.toFixed(1)}%`);
 
-            let finalPhoto;
+            soloMatches.push({ photo, photoBuffer, similarity });
+            soloBuffers.push(photoBuffer);
+          } else if (pkgConfig.groupPhotos) {
+            // Group match — 50% threshold
+            try {
+              const groupResult = await rekognition.send(new CompareFacesCommand({
+                SourceImage: { Bytes: selfieResized },
+                TargetImage: { Bytes: photoResized },
+                SimilarityThreshold: 50,
+              }));
 
-            if (pkgConfig.aiEdit) {
-              // AI Edit with Cloudinary
-              const { buffer: editedBuffer, edited } = await editPhotoWithCloudinary(photoBuffer, eventType);
-              if (edited) {
-                finalPhoto = await uploadBufferToDrive(editedBuffer, `edited_${photo.name}`, editedFolderId);
-                matchedBuffers.push(editedBuffer);
-                console.log(`🎨 AI edited: ${photo.name}`);
-              } else {
-                finalPhoto = await makePublicAndGetLinks(photo.id, photo.name);
-                matchedBuffers.push(photoBuffer);
+              if (groupResult.FaceMatches?.length > 0) {
+                const similarity = groupResult.FaceMatches[0].Similarity;
+                console.log(`👥 Group match: ${photo.name} — ${similarity.toFixed(1)}%`);
+                groupMatches.push({ photo, photoBuffer, similarity });
               }
-            } else {
-              finalPhoto = await makePublicAndGetLinks(photo.id, photo.name);
-              matchedBuffers.push(photoBuffer);
-            }
-
-            matchedPhotos.push({
-              ...finalPhoto,
-              similarity: similarity.toFixed(1),
-              aiEdited: pkgConfig.aiEdit,
-            });
+            } catch (e) {}
           }
         } catch (photoErr) {
           if (photoErr.name !== 'InvalidParameterException') {
@@ -1162,10 +1160,75 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
       console.log(`Progress: ${Math.min(i + batchSize, allPhotos.length)}/${allPhotos.length}`);
     }
 
-    console.log(`🎉 Done — ${matchedPhotos.length} matched`);
+    // ── PHASE 2: Duplicate Detection (medium sensitivity) ──
+    function removeDuplicates(matches) {
+      const unique = [];
+      const seen = new Set();
 
-    // Check if reel should be created
-    const reelEligible = pkgConfig.reel && matchedBuffers.length >= 5;
+      for (const match of matches) {
+        // Simple duplicate check by file size similarity
+        const sizeKey = Math.round(match.photo.size / 50000); // Group by ~50KB buckets
+        const nameKey = match.photo.name.replace(/\d+/g, '').substring(0, 10);
+        const key = `${nameKey}_${sizeKey}`;
+
+        if (!seen.has(key)) {
+          seen.add(key);
+          unique.push(match);
+        } else {
+          console.log(`🗑️ Duplicate removed: ${match.photo.name}`);
+        }
+      }
+      return unique;
+    }
+
+    const uniqueSoloMatches = removeDuplicates(soloMatches);
+    const uniqueGroupMatches = removeDuplicates(groupMatches);
+    console.log(`✅ After duplicate detection: ${uniqueSoloMatches.length} solo, ${uniqueGroupMatches.length} group`);
+
+    // ── PHASE 3: Process and deliver photos ──
+    const matchedPhotos = [];
+    const matchedBuffers = [];
+
+    // Process solo matches
+    for (const { photo, photoBuffer, similarity } of uniqueSoloMatches) {
+      let finalPhoto;
+      if (pkgConfig.aiEdit) {
+        const { buffer: editedBuffer, edited } = await editPhotoWithCloudinary(photoBuffer, eventType);
+        if (edited) {
+          finalPhoto = await uploadBufferToDrive(editedBuffer, `edited_${photo.name}`, editedFolderId);
+          matchedBuffers.push(editedBuffer);
+        } else {
+          finalPhoto = await makePublicAndGetLinks(photo.id, photo.name);
+          matchedBuffers.push(photoBuffer);
+        }
+      } else {
+        finalPhoto = await makePublicAndGetLinks(photo.id, photo.name);
+        matchedBuffers.push(photoBuffer);
+      }
+
+      matchedPhotos.push({
+        ...finalPhoto,
+        similarity: similarity.toFixed(1),
+        aiEdited: pkgConfig.aiEdit,
+        type: 'solo',
+      });
+    }
+
+    // Process group matches
+    const groupPhotos = [];
+    for (const { photo, photoBuffer, similarity } of uniqueGroupMatches) {
+      const finalPhoto = await makePublicAndGetLinks(photo.id, photo.name);
+      groupPhotos.push({
+        ...finalPhoto,
+        similarity: similarity.toFixed(1),
+        type: 'group',
+      });
+    }
+
+    console.log(`🎉 Done — ${matchedPhotos.length} solo + ${groupPhotos.length} group matched`);
+
+    // ── Reel generation ──
+    const reelEligible = pkgConfig.reel && matchedBuffers.length >= 3;
     let reelLink = null;
 
     if (reelEligible) {
@@ -1188,7 +1251,9 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
       success: true,
       totalScanned: allPhotos.length,
       matchedCount: matchedPhotos.length,
+      groupCount: groupPhotos.length,
       photos: matchedPhotos,
+      groupPhotos,
       aiEdited: pkgConfig.aiEdit,
       reelLink,
       reelEligible,
