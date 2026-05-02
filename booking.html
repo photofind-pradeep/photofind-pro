@@ -124,41 +124,34 @@ select option{background:#151820}
     <!-- PACKAGES -->
     <div class="packages">
       <div class="pkg" id="pkg-basic" onclick="selectPackage('basic')" style="border-color:var(--gold);background:var(--gold-dim)">
-        <div class="pkg-name">Moments</div>
-        <div class="pkg-price">₹2,999 <span>/event</span></div>
+        <div class="pkg-name">Basic</div>
+        <div class="pkg-price">₹3,000 <span>/event</span></div>
         <div class="pkg-features">
-          ✓ Face recognition<br>
-          ✓ Google Drive delivery<br>
-          ✓ WhatsApp sharing<br>
-          ✓ QR card included<br>
-          ✓ Up to 500 photos<br>
-          ✓ 15 days access
-        </div>
-      </div>
-      <div class="pkg" id="pkg-standard" onclick="selectPackage('standard')" style="position:relative">
-        <div class="pkg-popular">POPULAR</div>
-        <div class="pkg-name">Memories</div>
-        <div class="pkg-price">₹4,999 <span>/event</span></div>
-        <div class="pkg-features">
-          ✓ Everything in Moments<br>
-          ✓ AI photo editing<br>
-          ✓ Cinematic color grade<br>
-          ✓ Up to 1000 photos<br>
-          ✓ Same day delivery<br>
-          ✓ 30 days access
-        </div>
-      </div>
-      <div class="pkg" id="pkg-premium" onclick="selectPackage('premium')">
-        <div class="pkg-name">Magic</div>
-        <div class="pkg-price">₹7,999 <span>/event</span></div>
-        <div class="pkg-features">
-          ✓ Everything in Memories<br>
+          ✓ AI Face Recognition<br>
+          ✓ Solo + Group Photos<br>
+          ✓ Instagram Reels + BGM<br>
+          ✓ Duplicate Detection<br>
+          ✓ Best Photo AI<br>
+          ✓ Multi Photographer<br>
+          ✓ Face Swap<br>
+          ✓ Print Order<br>
+          ✓ WhatsApp Bot<br>
           ✓ Unlimited photos<br>
-          ✓ Auto Instagram Reels Generate<br>
-          ✓ Auto BGM selection<br>
-          ✓ AI selects best photos<br>
-          ✓ 90 days access<br>
-          ✓ Priority support
+          ✓ 45 days access
+        </div>
+      </div>
+      <div class="pkg" id="pkg-advanced" onclick="selectPackage('advanced')" style="position:relative">
+        <div class="pkg-popular">POPULAR</div>
+        <div class="pkg-name">Advanced</div>
+        <div class="pkg-price">₹5,000 <span>/event</span></div>
+        <div class="pkg-features">
+          ✓ Everything in Basic<br>
+          ✓ AI Photo Enhancement<br>
+          ✓ Cinematic Color Grade<br>
+          ✓ Digital Flip Book Album<br>
+          ✓ Final Video Delivery<br>
+          ✓ Virtual Exhibition<br>
+          ✓ 90 days access
         </div>
       </div>
     </div>
@@ -274,8 +267,8 @@ let selectedPkg = 'basic';
 let bookingData = null;
 let appliedCoupon = null;
 
-const prices = { basic: 2999, standard: 4999, premium: 7999 };
-const pkgNames = { basic: 'Moments', standard: 'Memories', premium: 'Magic' };
+const prices = { basic: 3000, advanced: 5000 };
+const pkgNames = { basic: 'Basic', advanced: 'Advanced' };
 
 function selectPackage(pkg) {
   selectedPkg = pkg;
@@ -290,8 +283,6 @@ function selectPackage(pkg) {
   document.getElementById(`pkg-${pkg}`).style.background = 'var(--gold-dim)';
   updateTotal();
 }
-
-async function validateCoupon() {
   const code = document.getElementById('couponCode').value.trim();
   const msgEl = document.getElementById('couponMsg');
 
