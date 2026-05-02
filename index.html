@@ -739,7 +739,7 @@ function showResults(data) {
   const shareLink = `https://drive.google.com/drive/folders/${selectedEvent.id}`;
   const eventName = formatEventName(selectedEvent.name);
   const photoCount = matchedPhotos.length;
-  const groupCount = (data.groupPhotos || []).length;
+  const groupCount2 = (data.groupPhotos || []).length;
 
   // Show reel if available
   if (data.reelLink) {
@@ -772,7 +772,7 @@ function showResults(data) {
   const studioPhone = studioInfo[2] || '';
   const studioLine = studioName ? `\n\n📷 *${studioName}*${studioPhone ? '\n📞 ' + studioPhone : ''}` : '';
 
-  const whatsappMsg = `📸 *Your Photos from ${eventName}!*\n\n✨ We found *${count} solo photos* of you!${groupCount > 0 ? `\n👥 *${groupCount} group photos* included!` : ''}${data.aiEdited ? '\n✨ AI enhanced & color graded!' : ''}${data.reelLink ? '\n🎬 Your Instagram reel is ready!' : ''}\n\n📥 View & Download:\n${shareLink}${data.reelLink ? `\n\n🎬 Your Reel:\n${data.reelLink}` : ''}\n\n_Thank you for being part of this special day_ 🎊${studioLine}\n\n_Powered by Temple City Digital_\n🌐 www.templecity.digital`;
+  const whatsappMsg = `📸 *Your Photos from ${eventName}!*\n\n✨ We found *${count} solo photos* of you!${groupCount2 > 0 ? `\n👥 *${groupCount2} group photos* included!` : ''}${data.aiEdited ? '\n✨ AI enhanced & color graded!' : ''}${data.reelLink ? '\n🎬 Your Instagram reel is ready!' : ''}\n\n📥 View & Download:\n${shareLink}${data.reelLink ? `\n\n🎬 Your Reel:\n${data.reelLink}` : ''}\n\n_Thank you for being part of this special day_ 🎊${studioLine}\n\n_Powered by Temple City Digital_\n🌐 www.templecity.digital`;
 
   document.getElementById('whatsappBtn').onclick = () =>
     window.open(`https://wa.me/?text=${encodeURIComponent(whatsappMsg)}`);
