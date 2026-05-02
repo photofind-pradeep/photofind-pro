@@ -376,7 +376,7 @@ body::before{content:'';position:fixed;top:-100px;left:50%;transform:translateX(
 </div>
 
 <!-- PRINT ORDER MODAL -->
-<div class="modal-overlay" id="printModal" onclick="closePrintModal(event)">
+<div class="modal-overlay" id="printModal" onclick="closePrintModal(event)" style="display:none">
   <div class="modal" style="max-height:90vh;overflow-y:auto">
     <div style="text-align:center;margin-bottom:16px;font-size:36px">🖨️</div>
     <div class="modal-title" style="text-align:center;margin-bottom:4px">Order Prints</div>
@@ -882,6 +882,12 @@ let selectedPrintPhoto = null;
 let selectedSize = null;
 let printQty = 1;
 
+function closePrintModal(e) {
+  if (!e || e.target === document.getElementById('printModal')) {
+    document.getElementById('printModal').style.display = 'none';
+  }
+}
+
 function openPrintOrder() {
   if (matchedPhotos.length === 0) { toast('No photos to print!'); return; }
 
@@ -907,59 +913,7 @@ function openPrintOrder() {
   printQty = 1;
   document.getElementById('qtyDisplay').textContent = '1';
   document.querySelectorAll('.size-opt').forEach(s => s.classList.remove('selected'));
-  document.getElementById('printModal').classList.add('open');
-}
-
-function selectSize(el, size, label) {
-  document.querySelectorAll('.size-opt').forEach(s => s.classList.remove('selected'));
-  el.classList.add('selected');
-  selectedSize = { code: size, label };
-}
-
-function changeQty(delta) {
-  printQty = Math.max(1, Math.min(10, printQty + delta));
-  document.getElementById('qtyDisplay').textContent = printQty;
-}
-
-function submitPrintOrder() {
-  const name = document.getElementById('printName').value.trim();
-  const phone = document.getElementById('printPhone').value.trim();
-  const address = document.getElementById('printAddress').value.trim();
-  const notes = document.getElementById('printNotes').value.trim();
-
-  if (!name) { toast('Please enter your name!'); return; }
-  if (!phone || phone.length !== 10) { toast('Enter valid 10-digit number!'); return; }
-  if (!address) { toast('Please enter delivery address!'); return; }
-  if (!selectedSize) { toast('Please select a print size!'); return; }
-  if (!selectedPrintPhoto) { toast('Please select a photo!'); return; }
-
-  const eventName = formatEventName(selectedEvent.name);
-  const studioInfo = selectedEvent.name.split('__');
-  const studioPhone = studioInfo[2] || '';
-
-  const msg =
-    `🖨️ *New Print Order — PhotoFind Pro*\n\n` +
-    `*Event:* ${eventName}\n\n` +
-    `*📸 Photo:* ${selectedPrintPhoto.name}\n` +
-    `*📐 Size:* ${selectedSize.label}\n` +
-    `*🔢 Quantity:* ${printQty} copies\n\n` +
-    `*👤 Customer Name:* ${name}\n` +
-    `*📞 WhatsApp:* ${phone}\n` +
-    `*📍 Address:* ${address}\n` +
-    `${notes ? `*📝 Notes:* ${notes}\n` : ''}` +
-    `\n*🔗 Photo Link:*\n${selectedPrintPhoto.viewLink}\n\n` +
-    `_Powered by PhotoFind Pro_\n🌐 www.templecity.digital`;
-
-  const waNumber = studioPhone || '8895195862';
-  window.open(`https://wa.me/91${waNumber}?text=${encodeURIComponent(msg)}`, '_blank');
-  closePrintModal();
-  toast('✅ Order sent to photographer on WhatsApp!');
-}
-
-function closePrintModal(e) {
-  if (!e || e.target === document.getElementById('printModal')) {
-    document.getElementById('printModal').classList.remove('open');
-  }
+  document.getElementById('printModal').style.display = 'flex';
 }
 
 function toast(msg) {
