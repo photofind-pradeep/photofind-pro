@@ -129,9 +129,44 @@ let clients = [];
 
 // ── Package Config ──
 const PACKAGES = {
-  basic: { name: 'Moments', price: 299900, maxPhotos: 500, aiEdit: false, reel: false, validity: 15 },
-  standard: { name: 'Memories', price: 499900, maxPhotos: 1000, aiEdit: true, reel: false, validity: 30 },
-  premium: { name: 'Magic', price: 799900, maxPhotos: Infinity, aiEdit: true, reel: true, validity: 90 },
+  basic: {
+    name: 'Basic',
+    price: 300000, // ₹3,000
+    maxPhotos: Infinity,
+    aiEdit: false,
+    reel: true,
+    bgm: true,
+    groupPhotos: true,
+    duplicateDetection: true,
+    bestPhotoAI: true,
+    multiPhotographer: true,
+    printOrder: true,
+    whatsappBot: true,
+    faceSwap: true,
+    digitalAlbum: false,
+    videoDelivery: false,
+    virtualExhibition: false,
+    validity: 45
+  },
+  advanced: {
+    name: 'Advanced',
+    price: 500000, // ₹5,000
+    maxPhotos: Infinity,
+    aiEdit: true,
+    reel: true,
+    bgm: true,
+    groupPhotos: true,
+    duplicateDetection: true,
+    bestPhotoAI: true,
+    multiPhotographer: true,
+    printOrder: true,
+    whatsappBot: true,
+    faceSwap: true,
+    digitalAlbum: true,
+    videoDelivery: true,
+    virtualExhibition: true,
+    validity: 90
+  },
 };
 
 // ── Coupon System ──
@@ -665,7 +700,7 @@ app.post('/payment/verify', async (req, res) => {
     const driveLink = `https://drive.google.com/drive/folders/${eventFolder.id}`;
 
     const whatsappMsg =
-      `📸 *PhotoFind Pro — ${pkgConfig.name} Package Ready!*\n\n` +
+      `📸 *PhotoFind Pro — ${pkgConfig.name} Plan Ready!*\n\n` +
       `*Event:* ${eventName}\n` +
       `*Date:* ${eventDate}\n` +
       `*Studio:* ${studioName}\n\n` +
@@ -676,10 +711,21 @@ app.post('/payment/verify', async (req, res) => {
       `_Open Drive app → Upload to this folder_\n\n` +
       `*━━━ SHARE WITH GUESTS ━━━*\n\n` +
       `*🎊 Guest QR Link:*\n${guestLink}\n` +
-      `_Guests scan face → find their photos instantly!_\n\n` +
-      `${pkgConfig.aiEdit ? '✨ AI Photo Editing included!\n' : ''}` +
-      `${pkgConfig.reel ? '🎬 Auto Instagram Reels included!\n' : ''}` +
-      `\n*Plan:* ${pkgConfig.maxPhotos === Infinity ? 'Unlimited' : pkgConfig.maxPhotos} photos — ${pkgConfig.validity} days validity\n\n` +
+      `_Guests scan face → find photos instantly!_\n\n` +
+      `*━━━ YOUR PLAN INCLUDES ━━━*\n\n` +
+      `✅ AI Face Recognition\n` +
+      `✅ Solo + Group Photos\n` +
+      `✅ Instagram Reels + BGM\n` +
+      `✅ Duplicate Detection\n` +
+      `✅ Best Photo AI\n` +
+      `✅ Multi Photographer\n` +
+      `✅ Print Order\n` +
+      `✅ Face Swap\n` +
+      `${pkgConfig.aiEdit ? '✅ AI Photo Enhancement\n' : ''}` +
+      `${pkgConfig.digitalAlbum ? '✅ Digital Flip Book Album\n' : ''}` +
+      `${pkgConfig.videoDelivery ? '✅ Video Delivery Page\n' : ''}` +
+      `${pkgConfig.virtualExhibition ? '✅ Virtual Exhibition\n' : ''}` +
+      `\n*Plan:* ${pkgConfig.name} — ${pkgConfig.validity} days validity\n\n` +
       `_Powered by Temple City Digital_\n🌐 www.templecity.digital`;
 
     const waLink = `https://wa.me/91${phone}?text=${encodeURIComponent(whatsappMsg)}`;
@@ -811,7 +857,7 @@ app.get('/admin/check-expiry', adminAuth, async (req, res) => {
 
     for (const client of clients) {
       const pkg = client.package || 'basic';
-      const validity = pkg === 'premium' ? 90 : pkg === 'standard' ? 30 : 7;
+      const validity = pkg === 'advanced' ? 90 : 45;
       const createdDate = new Date(client.createdAt);
       const expiryDate = new Date(createdDate.getTime() + validity * 24 * 60 * 60 * 1000);
       const daysLeft = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
