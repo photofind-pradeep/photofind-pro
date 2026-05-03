@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PhotoFind Pro — Fun Zone</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gold:#E8C87A;--gold2:#C9A84C;--gold3:#A07830;
+  --dark:#0C0A07;--dark2:#1A1208;
+  --rose:#E8A0B0;--purple:#9B89D4;--blue:#89B4D4;
+}
+body{
+  font-family:'Montserrat',sans-serif;
+  background:var(--dark);
+  min-height:100vh;color:white;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* HEADER */
+.header{
+  padding:14px 18px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(12,10,7,0.95);backdrop-filter:blur(10px);
+  border-bottom:0.5px solid rgba(232,200,122,0.1);
+  position:sticky;top:0;z-index:100;
+}
+.logo{font-family:'Playfair Display',serif;font-size:17px;font-weight:900}
+.logo em{color:var(--gold);font-style:normal}
+.fun-badge{
+  background:linear-gradient(135deg,var(--gold3),var(--gold));
+  color:var(--dark);font-size:9px;font-weight:700;
+  padding:4px 10px;border-radius:10px;letter-spacing:0.1em;
+}
+
+/* TABS */
+.tabs{
+  display:flex;
+  background:rgba(255,255,255,0.03);
+  border-bottom:0.5px solid rgba(255,255,255,0.06);
+}
+.tab{
+  flex:1;padding:13px 8px;text-align:center;
+  font-size:11px;font-weight:600;
+  color:rgba(255,255,255,0.35);
+  cursor:pointer;transition:all 0.2s;
+  border-bottom:2px solid transparent;
+  letter-spacing:0.05em;
+}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* SECTIONS */
+.section{display:none;padding:16px}
+.section.active{display:block}
+
+/* PHOTO UPLOAD */
+.upload-zone{
+  background:rgba(232,200,122,0.04);
+  border:1.5px dashed rgba(232,200,122,0.2);
+  border-radius:14px;padding:20px;text-align:center;
+  cursor:pointer;margin-bottom:14px;transition:all 0.2s;
+  position:relative;overflow:hidden;
+}
+.upload-zone:active{background:rgba(232,200,122,0.08)}
+.upload-zone.has-photo{border-style:solid;border-color:rgba(232,200,122,0.3)}
+.upload-zone img{
+  width:100%;max-height:180px;object-fit:contain;
+  border-radius:8px;margin-bottom:8px;display:none;
+}
+.upload-zone.has-photo img{display:block}
+.upload-icon{font-size:32px;margin-bottom:8px}
+.upload-text{font-size:13px;font-weight:600;color:white;margin-bottom:3px}
+.upload-sub{font-size:10px;color:rgba(255,255,255,0.3)}
+
+/* TEMPLATE GRID */
+.sec-title{
+  font-size:10px;letter-spacing:0.3em;text-transform:uppercase;
+  color:var(--gold);font-weight:600;margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;
+}
+.sec-title::after{content:'';flex:1;height:0.5px;background:linear-gradient(90deg,rgba(232,200,122,0.3),transparent)}
+
+.template-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:10px;margin-bottom:16px;
+}
+.template-card{
+  border-radius:12px;overflow:hidden;
+  cursor:pointer;position:relative;
+  border:2px solid transparent;
+  transition:all 0.2s;
+  aspect-ratio:1;
+}
+.template-card.selected{border-color:var(--gold)}
+.template-card:active{transform:scale(0.97)}
+
+/* Template previews */
+.tmpl-preview{
+  width:100%;height:100%;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:12px;text-align:center;
+  position:relative;overflow:hidden;
+}
+
+/* Bollywood */
+.tmpl-bollywood{background:linear-gradient(135deg,#1A0A2A,#2A0A1A)}
+.tmpl-bollywood::before{content:'🎬';position:absolute;font-size:60px;opacity:0.08;top:-10px;right:-10px}
+.tmpl-bollywood .tmpl-tag{color:#FF6B9D}
+
+/* Magazine */
+.tmpl-magazine{background:linear-gradient(135deg,#0A1A2A,#0A2A1A)}
+.tmpl-magazine::before{content:'📰';position:absolute;font-size:60px;opacity:0.08;bottom:-10px;right:-10px}
+.tmpl-magazine .tmpl-tag{color:#6BD4FF}
+
+/* Royal */
+.tmpl-royal{background:linear-gradient(135deg,#1A0A0A,#2A1A00)}
+.tmpl-royal .tmpl-tag{color:var(--gold)}
+
+/* Award */
+.tmpl-award{background:linear-gradient(135deg,#0A1A0A,#1A2A0A)}
+.tmpl-award .tmpl-tag{color:#6BFF9D}
+
+/* Vintage */
+.tmpl-vintage{background:linear-gradient(135deg,#1A1208,#2A1A0A)}
+.tmpl-vintage .tmpl-tag{color:#D4B896}
+
+/* Newspaper */
+.tmpl-newspaper{background:linear-gradient(135deg,#0A0A0A,#1A1A1A)}
+.tmpl-newspaper .tmpl-tag{color:#E0E0E0}
+
+.tmpl-icon{font-size:28px;margin-bottom:6px}
+.tmpl-title{font-size:11px;font-weight:700;color:white;margin-bottom:2px}
+.tmpl-tag{font-size:9px;letter-spacing:0.1em;text-transform:uppercase}
+
+.selected-check{
+  position:absolute;top:6px;right:6px;
+  width:20px;height:20px;
+  background:var(--gold);border-radius:50%;
+  display:none;align-items:center;justify-content:center;
+  font-size:10px;color:var(--dark);font-weight:800;
+}
+.template-card.selected .selected-check{display:flex}
+
+/* CANVAS PREVIEW */
+.canvas-wrap{
+  background:rgba(255,255,255,0.03);
+  border-radius:14px;overflow:hidden;
+  margin-bottom:14px;border:0.5px solid rgba(255,255,255,0.06);
+}
+#funCanvas{
+  width:100%;display:block;
+  border-radius:14px;
+}
+.canvas-placeholder{
+  aspect-ratio:1;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:10px;padding:30px;
+}
+.canvas-ph-icon{font-size:48px;opacity:0.3}
+.canvas-ph-text{font-size:12px;color:rgba(255,255,255,0.2);text-align:center}
+
+/* ACTION BUTTONS */
+.action-btns{display:flex;gap:10px;margin-bottom:20px}
+.btn-generate{
+  flex:1;padding:14px;
+  background:linear-gradient(135deg,var(--gold3),var(--gold));
+  border:none;border-radius:12px;
+  color:var(--dark);font-family:'Montserrat',sans-serif;
+  font-size:13px;font-weight:700;cursor:pointer;
+  transition:all 0.15s;
+}
+.btn-generate:active{transform:scale(0.97)}
+.btn-download{
+  padding:14px 18px;
+  background:rgba(255,255,255,0.06);
+  border:0.5px solid rgba(255,255,255,0.1);
+  border-radius:12px;color:white;
+  font-family:'Montserrat',sans-serif;
+  font-size:13px;cursor:pointer;
+  display:flex;align-items:center;gap:6px;
+  transition:all 0.15s;
+  white-space:nowrap;
+}
+.btn-download:active{background:rgba(255,255,255,0.1)}
+
+/* COUPLE SECTION */
+.couple-info{
+  background:rgba(232,200,122,0.04);
+  border:0.5px solid rgba(232,200,122,0.1);
+  border-radius:12px;padding:14px;
+  margin-bottom:14px;
+  display:flex;align-items:center;gap:10px;
+}
+.couple-info-icon{font-size:24px}
+.couple-info-text{font-size:11px;color:rgba(255,255,255,0.4);line-height:1.5}
+.couple-info-text strong{color:white;display:block;margin-bottom:2px}
+
+.couple-frames{
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:10px;margin-bottom:14px;
+}
+.couple-frame-card{
+  border-radius:12px;overflow:hidden;
+  cursor:pointer;position:relative;
+  border:2px solid transparent;
+  transition:all 0.2s;
+  aspect-ratio:1;
+}
+.couple-frame-card.selected{border-color:var(--rose)}
+.couple-frame-card:active{transform:scale(0.97)}
+
+.cf-preview{
+  width:100%;height:100%;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:6px;padding:10px;text-align:center;
+}
+.cf1{background:linear-gradient(135deg,#1A0A1A,#2A1A2A)}
+.cf2{background:linear-gradient(135deg,#1A0A0A,#2A0808)}
+.cf3{background:linear-gradient(135deg,#0A1A0A,#0A2A10)}
+.cf4{background:linear-gradient(135deg,#0A0A1A,#08082A)}
+
+.cf-icon{font-size:24px}
+.cf-title{font-size:10px;font-weight:700;color:white}
+.cf-sub{font-size:8px;color:rgba(255,255,255,0.35);letter-spacing:0.05em}
+
+/* COUPLE UPLOAD */
+.couple-upload-row{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:10px;margin-bottom:14px;
+}
+.mini-upload{
+  background:rgba(255,255,255,0.03);
+  border:1px dashed rgba(255,255,255,0.1);
+  border-radius:10px;padding:12px;text-align:center;
+  cursor:pointer;transition:all 0.2s;
+  position:relative;overflow:hidden;
+}
+.mini-upload.has-photo{border-style:solid;border-color:rgba(232,200,122,0.25)}
+.mini-upload img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;display:none}
+.mini-upload.has-photo img{display:block}
+.mini-upload-ph{padding:10px 0}
+.mini-upload-icon{font-size:24px;margin-bottom:4px}
+.mini-upload-text{font-size:10px;color:rgba(255,255,255,0.4);font-weight:500}
+
+/* SHARE */
+.share-row{
+  display:flex;gap:8px;
+  margin-bottom:20px;
+}
+.share-btn{
+  flex:1;padding:11px 8px;
+  border-radius:10px;border:none;
+  font-family:'Montserrat',sans-serif;
+  font-size:10px;font-weight:600;
+  cursor:pointer;display:flex;
+  align-items:center;justify-content:center;gap:5px;
+  transition:all 0.15s;
+}
+.share-btn:active{transform:scale(0.96)}
+.btn-wa{background:#25D366;color:white}
+.btn-insta{background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);color:white}
+
+/* LOADING OVERLAY */
+#genLoading{
+  display:none;
+  position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,0.8);backdrop-filter:blur(4px);
+  flex-direction:column;align-items:center;justify-content:center;gap:14px;
+}
+.gen-spinner{
+  width:44px;height:44px;
+  border:2px solid rgba(232,200,122,0.1);
+  border-top-color:var(--gold);
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.gen-text{font-size:13px;color:rgba(255,255,255,0.6);letter-spacing:0.1em}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">Photo<em>Find</em> Pro</div>
+  <div class="fun-badge">🎉 Fun Zone</div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('frames')">🖼️ Fun Frames</div>
+  <div class="tab" onclick="switchTab('couple')">💒 With Couple</div>
+</div>
+
+<!-- FRAMES SECTION -->
+<div class="section active" id="tab-frames">
+
+  <!-- Upload selfie -->
+  <div class="upload-zone" id="selfieZone" onclick="document.getElementById('selfieInput').click()">
+    <input type="file" id="selfieInput" accept="image/*" style="display:none" onchange="loadSelfie(this)">
+    <img id="selfiePreview" alt="Your photo">
+    <div id="selfieZonePh">
+      <div class="upload-icon">🤳</div>
+      <div class="upload-text">Upload Your Selfie</div>
+      <div class="upload-sub">Tap to select from gallery</div>
+    </div>
+  </div>
+
+  <!-- Templates -->
+  <div class="sec-title">✦ Choose a Frame</div>
+  <div class="template-grid">
+
+    <div class="template-card" onclick="selectTemplate('bollywood')" id="tmpl-bollywood">
+      <div class="tmpl-preview tmpl-bollywood">
+        <div class="tmpl-icon">🎬</div>
+        <div class="tmpl-title">Bollywood Star</div>
+        <div class="tmpl-tag">Movie Poster</div>
+      </div>
+      <div class="selected-check">✓</div>
+    </div>
+
+    <div class="template-card" onclick="selectTemplate('magazine')" id="tmpl-magazine">
+      <div class="tmpl-preview tmpl-magazine">
+        <div class="tmpl-icon">📰</div>
+        <div class="tmpl-title">Magazine Cover</div>
+        <div class="tmpl-tag">Vogue Style</div>
+      </div>
+      <div class="selected-check">✓</div>
+    </div>
+
+    <div class="template-card" onclick="selectTemplate('royal')" id="tmpl-royal">
+      <div class="tmpl-preview tmpl-royal">
+        <div class="tmpl-icon">👑</div>
+        <div class="tmpl-title">Royal Portrait</div>
+        <div class="tmpl-tag">Mughal Style</div>
+      </div>
+      <div class="selected-check">✓</div>
+    </div>
+
+    <div class="template-card" onclick="selectTemplate('award')" id="tmpl-award">
+      <div class="tmpl-preview tmpl-award">
+        <div class="tmpl-icon">🏆</div>
+        <div class="tmpl-title">Best Guest</div>
+        <div class="tmpl-tag">Award Show</div>
+      </div>
+      <div class="selected-check">✓</div>
+    </div>
+
+    <div class="template-card" onclick="selectTemplate('vintage')" id="tmpl-vintage">
+      <div class="tmpl-preview tmpl-vintage">
+        <div class="tmpl-icon">📷</div>
+        <div class="tmpl-title">Vintage Film</div>
+        <div class="tmpl-tag">Retro Style</div>
+      </div>
+      <div class="selected-check">✓</div>
+    </div>
+
+    <div class="template-card" onclick="selectTemplate('newspaper')" id="tmpl-newspaper">
+      <div class="tmpl-preview tmpl-newspaper">
+        <div class="tmpl-icon">🗞️</div>
+        <div class="tmpl-title">Breaking News</div>
+        <div class="tmpl-tag">Front Page</div>
+      </div>
+      <div class="selected-check">✓</div>
+    </div>
+
+  </div>
+
+  <!-- Canvas Preview -->
+  <div class="sec-title">✦ Preview</div>
+  <div class="canvas-wrap">
+    <canvas id="funCanvas" width="600" height="600"></canvas>
+    <div class="canvas-placeholder" id="canvasPlaceholder">
+      <div class="canvas-ph-icon">🎨</div>
+      <div class="canvas-ph-text">Upload your selfie & select a frame to preview</div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="action-btns">
+    <button class="btn-generate" onclick="generateFrame()">✨ Generate</button>
+    <button class="btn-download" onclick="downloadFrame()" id="downloadBtn" style="display:none">⬇ Save</button>
+  </div>
+
+  <!-- Share -->
+  <div class="share-row" id="shareRow" style="display:none">
+    <button class="share-btn btn-wa" onclick="shareWA()">💬 WhatsApp</button>
+    <button class="share-btn btn-insta" onclick="shareInsta()">📸 Instagram</button>
+  </div>
+
+</div>
+
+<!-- COUPLE SECTION -->
+<div class="section" id="tab-couple">
+
+  <div class="couple-info">
+    <div class="couple-info-icon">💒</div>
+    <div class="couple-info-text">
+      <strong>Photo with the Couple!</strong>
+      Upload your selfie + a couple photo to create a beautiful memory together
+    </div>
+  </div>
+
+  <!-- Upload row -->
+  <div class="couple-upload-row">
+    <div class="mini-upload" id="guestZone" onclick="document.getElementById('guestInput').click()">
+      <input type="file" id="guestInput" accept="image/*" style="display:none" onchange="loadGuest(this)">
+      <img id="guestPreview" alt="Your photo">
+      <div class="mini-upload-ph" id="guestPh">
+        <div class="mini-upload-icon">🤳</div>
+        <div class="mini-upload-text">Your Photo</div>
+      </div>
+    </div>
+    <div class="mini-upload" id="coupleZone" onclick="document.getElementById('coupleInput').click()">
+      <input type="file" id="coupleInput" accept="image/*" style="display:none" onchange="loadCouple(this)">
+      <img id="couplePreview" alt="Couple photo">
+      <div class="mini-upload-ph" id="couplePh">
+        <div class="mini-upload-icon">💑</div>
+        <div class="mini-upload-text">Couple Photo</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Frame selection -->
+  <div class="sec-title">✦ Choose Frame Style</div>
+  <div class="couple-frames">
+
+    <div class="couple-frame-card" onclick="selectCoupleFrame('hearts')" id="cf-hearts">
+      <div class="cf-preview cf1">
+        <div class="cf-icon">💕</div>
+        <div class="cf-title">Hearts & Love</div>
+        <div class="cf-sub">Romantic gold</div>
+      </div>
+      <div class="selected-check" style="background:var(--rose)">✓</div>
+    </div>
+
+    <div class="couple-frame-card" onclick="selectCoupleFrame('floral')" id="cf-floral">
+      <div class="cf-preview cf2">
+        <div class="cf-icon">🌸</div>
+        <div class="cf-title">Floral Wedding</div>
+        <div class="cf-sub">Elegant roses</div>
+      </div>
+      <div class="selected-check" style="background:var(--rose)">✓</div>
+    </div>
+
+    <div class="couple-frame-card" onclick="selectCoupleFrame('royal')" id="cf-royal">
+      <div class="cf-preview cf3">
+        <div class="cf-icon">👑</div>
+        <div class="cf-title">Royal Gold</div>
+        <div class="cf-sub">Luxury frame</div>
+      </div>
+      <div class="selected-check" style="background:var(--rose)">✓</div>
+    </div>
+
+    <div class="couple-frame-card" onclick="selectCoupleFrame('starry')" id="cf-starry">
+      <div class="cf-preview cf4">
+        <div class="cf-icon">✨</div>
+        <div class="cf-title">Starry Night</div>
+        <div class="cf-sub">Dreamy blue</div>
+      </div>
+      <div class="selected-check" style="background:var(--rose)">✓</div>
+    </div>
+
+  </div>
+
+  <!-- Event name input -->
+  <input type="text" id="eventNameInput" placeholder="Event name (e.g. Sharma Wedding)"
+    style="width:100%;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px 14px;color:white;font-family:'Montserrat',sans-serif;font-size:13px;outline:none;margin-bottom:14px">
+
+  <!-- Canvas -->
+  <div class="sec-title">✦ Preview</div>
+  <div class="canvas-wrap">
+    <canvas id="coupleCanvas" width="600" height="400"></canvas>
+    <div class="canvas-placeholder" id="couplePlaceholder">
+      <div class="canvas-ph-icon">💒</div>
+      <div class="canvas-ph-text">Upload both photos & select a frame style</div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="action-btns">
+    <button class="btn-generate" onclick="generateCouple()" style="background:linear-gradient(135deg,#8B4A6B,var(--rose))">💕 Generate</button>
+    <button class="btn-download" onclick="downloadCouple()" id="coupleDownloadBtn" style="display:none">⬇ Save</button>
+  </div>
+
+  <div class="share-row" id="coupleShareRow" style="display:none">
+    <button class="share-btn btn-wa" onclick="shareCoupleWA()">💬 WhatsApp</button>
+    <button class="share-btn btn-insta" onclick="shareCoupleInsta()">📸 Instagram</button>
+  </div>
+
+</div>
+
+<!-- LOADING -->
+<div id="genLoading">
+  <div class="gen-spinner"></div>
+  <div class="gen-text" id="genText">Creating your masterpiece...</div>
+</div>
+
+<script>
+// State
+let selfieImg = null;
+let guestImg = null;
+let coupleImg = null;
+let selectedTemplate = null;
+let selectedCoupleFrame = null;
+let generatedDataURL = null;
+let coupleDataURL = null;
+
+const params = new URLSearchParams(window.location.search);
+const eventId = params.get('event');
+const eventName = params.get('name') || 'Your Event';
+
+// ── TABS ──
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='frames')||(i===1&&tab==='couple')));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+
+// ── IMAGE LOADING ──
+function loadSelfie(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      selfieImg = img;
+      const preview = document.getElementById('selfiePreview');
+      preview.src = e.target.result;
+      document.getElementById('selfieZone').classList.add('has-photo');
+      document.getElementById('selfieZonePh').style.display = 'none';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function loadGuest(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      guestImg = img;
+      const preview = document.getElementById('guestPreview');
+      preview.src = e.target.result;
+      document.getElementById('guestZone').classList.add('has-photo');
+      document.getElementById('guestPh').style.display = 'none';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function loadCouple(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      coupleImg = img;
+      const preview = document.getElementById('couplePreview');
+      preview.src = e.target.result;
+      document.getElementById('coupleZone').classList.add('has-photo');
+      document.getElementById('couplePh').style.display = 'none';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── TEMPLATE SELECTION ──
+function selectTemplate(id) {
+  selectedTemplate = id;
+  document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('tmpl-'+id).classList.add('selected');
+}
+
+function selectCoupleFrame(id) {
+  selectedCoupleFrame = id;
+  document.querySelectorAll('.couple-frame-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('cf-'+id).classList.add('selected');
+}
+
+// ── GENERATE FRAME ──
+async function generateFrame() {
+  if (!selfieImg) { alert('Please upload your selfie first!'); return; }
+  if (!selectedTemplate) { alert('Please select a frame!'); return; }
+
+  showLoading('Creating your ' + selectedTemplate + ' frame...');
+
+  await new Promise(r => setTimeout(r, 500)); // Small delay for UX
+
+  const canvas = document.getElementById('funCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = 600, H = 600;
+  canvas.width = W; canvas.height = H;
+
+  document.getElementById('canvasPlaceholder').style.display = 'none';
+  canvas.style.display = 'block';
+
+  switch(selectedTemplate) {
+    case 'bollywood': drawBollywood(ctx, W, H); break;
+    case 'magazine': drawMagazine(ctx, W, H); break;
+    case 'royal': drawRoyal(ctx, W, H); break;
+    case 'award': drawAward(ctx, W, H); break;
+    case 'vintage': drawVintage(ctx, W, H); break;
+    case 'newspaper': drawNewspaper(ctx, W, H); break;
+  }
+
+  generatedDataURL = canvas.toDataURL('image/jpeg', 0.92);
+  document.getElementById('downloadBtn').style.display = 'flex';
+  document.getElementById('shareRow').style.display = 'flex';
+  hideLoading();
+}
+
+// Draw selfie centered in frame area
+function drawSelfieInArea(ctx, x, y, w, h, rounded=0) {
+  if (!selfieImg) return;
+  ctx.save();
+  if (rounded > 0) {
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, rounded);
+    ctx.clip();
+  }
+  // Cover fit
+  const scale = Math.max(w/selfieImg.width, h/selfieImg.height);
+  const sw = selfieImg.width*scale, sh = selfieImg.height*scale;
+  ctx.drawImage(selfieImg, x+(w-sw)/2, y+(h-sh)/2, sw, sh);
+  ctx.restore();
+}
+
+// ── BOLLYWOOD TEMPLATE ──
+function drawBollywood(ctx, W, H) {
+  // Dark cinematic bg
+  const grad = ctx.createLinearGradient(0,0,W,H);
+  grad.addColorStop(0,'#1A0A2A');
+  grad.addColorStop(0.5,'#2A0A1A');
+  grad.addColorStop(1,'#0A0A2A');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,W,H);
+
+  // Stars bg
+  for(let i=0;i<80;i++){
+    ctx.beginPath();
+    ctx.arc(Math.random()*W,Math.random()*H,Math.random()*1.5,0,Math.PI*2);
+    ctx.fillStyle=`rgba(255,255,255,${Math.random()*0.4})`;
+    ctx.fill();
+  }
+
+  // Film strip sides
+  drawFilmStrip(ctx, 0, 0, 50, H);
+  drawFilmStrip(ctx, W-50, 0, 50, H);
+
+  // Photo area
+  drawSelfieInArea(ctx, 70, 60, 460, 360, 8);
+
+  // Gradient overlay on photo
+  const photoGrad = ctx.createLinearGradient(70, 60, 70, 420);
+  photoGrad.addColorStop(0,'transparent');
+  photoGrad.addColorStop(0.7,'transparent');
+  photoGrad.addColorStop(1,'rgba(26,10,42,0.8)');
+  ctx.fillStyle = photoGrad;
+  ctx.fillRect(70,60,460,360);
+
+  // Title bar
+  ctx.fillStyle = 'rgba(0,0,0,0.85)';
+  ctx.fillRect(0, 420, W, 180);
+
+  // Gold lines
+  ctx.strokeStyle = '#FF6B9D';
+  ctx.lineWidth = 3;
+  ctx.beginPath();ctx.moveTo(0,420);ctx.lineTo(W,420);ctx.stroke();
+  ctx.strokeStyle = '#FFD700';
+  ctx.lineWidth = 1;
+  ctx.beginPath();ctx.moveTo(0,424);ctx.lineTo(W,424);ctx.stroke();
+
+  // Star rating
+  ctx.fillStyle = '#FFD700';
+  ctx.font = 'bold 22px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('★ ★ ★ ★ ★', W/2, 455);
+
+  // Movie title
+  ctx.fillStyle = '#FF6B9D';
+  ctx.font = 'bold 14px Montserrat, sans-serif';
+  ctx.fillText('BLOCKBUSTER OF THE YEAR', W/2, 480);
+
+  // Name
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 32px Playfair Display, serif';
+  ctx.fillText(eventName.toUpperCase().split(' ').slice(0,2).join(' '), W/2, 520);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.font = '11px Montserrat, sans-serif';
+  ctx.fillText('PRESENTED BY PHOTOFIND PRO', W/2, 545);
+
+  ctx.fillStyle = 'rgba(255,107,157,0.6)';
+  ctx.font = '10px Montserrat, sans-serif';
+  ctx.fillText('www.templecity.digital', W/2, 570);
+
+  // Clapperboard icon
+  ctx.font = '24px serif';
+  ctx.fillText('🎬', 30, 445);
+  ctx.fillText('🎬', W-30, 445);
+}
+
+function drawFilmStrip(ctx, x, y, w, h) {
+  ctx.fillStyle = '#111';
+  ctx.fillRect(x,y,w,h);
+  ctx.fillStyle = '#222';
+  const holeW=w*0.5, holeH=20, holeX=x+(w-holeW)/2;
+  for(let i=10;i<h;i+=40){
+    ctx.beginPath();
+    ctx.roundRect(holeX,y+i,holeW,holeH,3);
+    ctx.fill();
+  }
+}
+
+// ── MAGAZINE TEMPLATE ──
+function drawMagazine(ctx, W, H) {
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0,0,W,H);
+
+  // Header bar
+  const hGrad = ctx.createLinearGradient(0,0,W,0);
+  hGrad.addColorStop(0,'#0A1A2A');
+  hGrad.addColorStop(1,'#0A2A1A');
+  ctx.fillStyle = hGrad;
+  ctx.fillRect(0,0,W,80);
+
+  // Magazine name
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 36px Playfair Display, serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('MOMENTS', W/2, 42);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.font = '10px Montserrat, sans-serif';
+  ctx.fillText('THE PREMIER WEDDING & EVENTS MAGAZINE', W/2, 62);
+
+  ctx.strokeStyle = '#6BD4FF';
+  ctx.lineWidth = 2;
+  ctx.beginPath();ctx.moveTo(30,72);ctx.lineTo(W-30,72);ctx.stroke();
+
+  // Photo
+  drawSelfieInArea(ctx, 0, 80, W, 380);
+
+  // Photo overlay gradient
+  const pGrad = ctx.createLinearGradient(0,80,0,460);
+  pGrad.addColorStop(0,'transparent');
+  pGrad.addColorStop(0.6,'transparent');
+  pGrad.addColorStop(1,'rgba(0,0,0,0.7)');
+  ctx.fillStyle = pGrad;
+  ctx.fillRect(0,80,W,380);
+
+  // Red band
+  ctx.fillStyle = '#FF3B3B';
+  ctx.fillRect(0,380,140,60);
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 11px Montserrat, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('EXCLUSIVE', 10, 405);
+  ctx.fillText('COVER STORY', 10, 425);
+
+  // Cover lines on photo
+  ctx.textAlign = 'right';
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 10px Montserrat, sans-serif';
+  ctx.fillText('SPECIAL WEDDING EDITION', W-10, 400);
+  ctx.fillText('2026 LUXURY EVENT COVERAGE', W-10, 418);
+  ctx.fillText('INSIDE: EXCLUSIVE PHOTOS', W-10, 436);
+
+  // Bottom section
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0,460,W,140);
+
+  ctx.fillStyle = '#0A1A2A';
+  ctx.font = 'bold 28px Playfair Display, serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(eventName, W/2, 498);
+
+  ctx.fillStyle = '#6BD4FF';
+  ctx.font = '11px Montserrat, sans-serif';
+  ctx.fillText('FEATURED IN THIS ISSUE', W/2, 520);
+
+  ctx.fillStyle = '#333';
+  ctx.font = '10px Montserrat, sans-serif';
+  ctx.fillText('Photographed by PhotoFind Pro · www.templecity.digital', W/2, 545);
+
+  // Barcode
+  drawBarcode(ctx, W-90, 558);
+}
+
+function drawBarcode(ctx, x, y) {
+  for(let i=0;i<30;i++){
+    ctx.fillStyle=`rgba(0,0,0,${Math.random()*0.8+0.2})`;
+    ctx.fillRect(x+i*2.5,y,Math.random()>0.5?2:1.5,25);
+  }
+  ctx.fillStyle='rgba(0,0,0,0.5)';
+  ctx.font='7px Montserrat,sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText('4 890000 513086',x+37,y+34);
+}
+
+// ── ROYAL TEMPLATE ──
+function drawRoyal(ctx, W, H) {
+  // Rich dark background
+  const bg = ctx.createLinearGradient(0,0,W,H);
+  bg.addColorStop(0,'#1A0A0A');
+  bg.addColorStop(0.5,'#2A1A00');
+  bg.addColorStop(1,'#1A0A0A');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0,0,W,H);
+
+  // Ornate outer border
+  drawGoldBorder(ctx, 8, 8, W-16, H-16, 4);
+  drawGoldBorder(ctx, 18, 18, W-36, H-36, 2);
+
+  // Crown top
+  ctx.font = '48px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('👑', W/2, 70);
+
+  // Ornate divider
+  drawRoyalDivider(ctx, 60, 85, W-120);
+
+  // Photo in ornate frame
+  const photoSize = 260;
+  const photoX = (W-photoSize)/2;
+  const photoY = 100;
+
+  // Gold frame around photo
+  ctx.strokeStyle = '#E8C87A';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(photoX-8, photoY-8, photoSize+16, photoSize+16);
+  ctx.strokeStyle = '#C9A84C';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(photoX-14, photoY-14, photoSize+28, photoSize+28);
+
+  // Corner ornaments
+  const corners = [[photoX-14,photoY-14],[photoX+photoSize+14,photoY-14],[photoX-14,photoY+photoSize+14],[photoX+photoSize+14,photoY+photoSize+14]];
+  ctx.font = '20px serif';
+  corners.forEach(([cx,cy]) => {
+    ctx.fillStyle = '#E8C87A';
+    ctx.fillText('✦', cx, cy);
+  });
+
+  drawSelfieInArea(ctx, photoX, photoY, photoSize, photoSize, 0);
+
+  // Title area
+  const titleY = photoY + photoSize + 30;
+  drawRoyalDivider(ctx, 60, titleY, W-120);
+
+  ctx.fillStyle = '#E8C87A';
+  ctx.font = 'bold 13px Montserrat, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('BY ROYAL DECREE', W/2, titleY+30);
+
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 26px Playfair Display, serif';
+  ctx.fillText(eventName, W/2, titleY+62);
+
+  ctx.fillStyle = '#C9A84C';
+  ctx.font = 'italic 13px Playfair Display, serif';
+  ctx.fillText('"A Celebration Most Grand"', W/2, titleY+85);
+
+  drawRoyalDivider(ctx, 80, titleY+100, W-160);
+
+  ctx.fillStyle = 'rgba(232,200,122,0.4)';
+  ctx.font = '9px Montserrat, sans-serif';
+  ctx.fillText('CAPTURED BY PHOTOFIND PRO · www.templecity.digital', W/2, H-16);
+}
+
+function drawGoldBorder(ctx, x, y, w, h, lw) {
+  const grad = ctx.createLinearGradient(x,y,x+w,y+h);
+  grad.addColorStop(0,'#E8C87A');
+  grad.addColorStop(0.5,'#C9A84C');
+  grad.addColorStop(1,'#E8C87A');
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = lw;
+  ctx.strokeRect(x,y,w,h);
+}
+
+function drawRoyalDivider(ctx, x, y, w) {
+  const grad = ctx.createLinearGradient(x,y,x+w,y);
+  grad.addColorStop(0,'transparent');
+  grad.addColorStop(0.5,'#E8C87A');
+  grad.addColorStop(1,'transparent');
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = 1;
+  ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+w,y);ctx.stroke();
+
+  ctx.fillStyle = '#E8C87A';
+  ctx.font = '12px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('❖', x+w/2, y+8);
+}
+
+// ── AWARD TEMPLATE ──
+function drawAward(ctx, W, H) {
+  // Dark stage bg
+  const bg = ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,W);
+  bg.addColorStop(0,'#0A2A0A');
+  bg.addColorStop(0.5,'#0A1A0A');
+  bg.addColorStop(1,'#050A05');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0,0,W,H);
+
+  // Spotlight effect
+  const spot = ctx.createRadialGradient(W/2,0,0,W/2,0,400);
+  spot.addColorStop(0,'rgba(255,255,200,0.08)');
+  spot.addColorStop(1,'transparent');
+  ctx.fillStyle = spot;
+  ctx.fillRect(0,0,W,H);
+
+  // Confetti dots
+  const colors=['#FFD700','#FF6B9D','#6BD4FF','#FF9D6B'];
+  for(let i=0;i<60;i++){
+    ctx.fillStyle=colors[Math.floor(Math.random()*colors.length)];
+    ctx.fillRect(Math.random()*W,Math.random()*H,3,3);
+  }
+
+  // Trophy
+  ctx.font = '48px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('🏆', W/2, 65);
+
+  // Award header
+  const hGrad = ctx.createLinearGradient(0,80,W,80);
+  hGrad.addColorStop(0,'transparent');
+  hGrad.addColorStop(0.3,'#1A3A1A');
+  hGrad.addColorStop(0.7,'#1A3A1A');
+  hGrad.addColorStop(1,'transparent');
+  ctx.fillStyle = hGrad;
+  ctx.fillRect(0,80,W,60);
+
+  ctx.fillStyle = '#FFD700';
+  ctx.font = 'bold 14px Montserrat, sans-serif';
+  ctx.fillText('★ PHOTOFIND PRO AWARDS ★', W/2, 105);
+
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.font = '10px Montserrat, sans-serif';
+  ctx.fillText('ANNUAL CELEBRATION OF EXCELLENCE', W/2, 125);
+
+  // Photo in circle
+  const cx = W/2, cy = 300, r = 120;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.clip();
+  if(selfieImg){
+    const scale=Math.max(r*2/selfieImg.width,r*2/selfieImg.height);
+    const sw=selfieImg.width*scale,sh=selfieImg.height*scale;
+    ctx.drawImage(selfieImg,cx-sw/2,cy-sh/2,sw,sh);
+  }
+  ctx.restore();
+
+  // Circle border
+  ctx.strokeStyle = '#FFD700';
+  ctx.lineWidth = 6;
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
+  ctx.strokeStyle = '#6BFF9D';
+  ctx.lineWidth = 2;
+  ctx.beginPath();ctx.arc(cx,cy,r+10,0,Math.PI*2);ctx.stroke();
+
+  // Stars around circle
+  for(let i=0;i<8;i++){
+    const angle=i*Math.PI/4-Math.PI/8;
+    const sx=cx+Math.cos(angle)*(r+24);
+    const sy=cy+Math.sin(angle)*(r+24);
+    ctx.fillStyle='#FFD700';
+    ctx.font='14px serif';
+    ctx.textAlign='center';
+    ctx.fillText('★',sx,sy+5);
+  }
+
+  // Award text
+  ctx.fillStyle = '#6BFF9D';
+  ctx.font = 'bold 12px Montserrat, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('PRESENTED WITH HONOR TO', W/2, 450);
+
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 28px Playfair Display, serif';
+  ctx.fillText('BEST GUEST', W/2, 488);
+
+  ctx.fillStyle = '#FFD700';
+  ctx.font = 'italic 14px Playfair Display, serif';
+  ctx.fillText('"For Outstanding Attendance"', W/2, 515);
+
+  ctx.strokeStyle = '#FFD700';
+  ctx.lineWidth = 1;
+  ctx.beginPath();ctx.moveTo(80,530);ctx.lineTo(W-80,530);ctx.stroke();
+
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.font = '10px Montserrat, sans-serif';
+  ctx.fillText(eventName + ' · PhotoFind Pro', W/2, 555);
+  ctx.fillText('www.templecity.digital', W/2, 572);
+}
+
+// ── VINTAGE TEMPLATE ──
+function drawVintage(ctx, W, H) {
+  // Sepia background
+  ctx.fillStyle = '#F5E6C8';
+  ctx.fillRect(0,0,W,H);
+
+  // Aged texture overlay
+  for(let i=0;i<200;i++){
+    ctx.fillStyle=`rgba(0,0,0,${Math.random()*0.03})`;
+    ctx.fillRect(Math.random()*W,Math.random()*H,Math.random()*3,Math.random()*3);
+  }
+
+  // Dark border
+  ctx.strokeStyle = '#3A2A10';
+  ctx.lineWidth = 12;
+  ctx.strokeRect(6,6,W-12,H-12);
+  ctx.strokeStyle = '#6A4A20';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(20,20,W-40,H-40);
+
+  // Header
+  ctx.fillStyle = '#3A2A10';
+  ctx.font = 'bold 14px Montserrat, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('✦ PORTRAIT PHOTOGRAPHY ✦', W/2, 48);
+
+  ctx.fillStyle = '#6A4A20';
+  ctx.font = '10px Montserrat, sans-serif';
+  ctx.fillText('Est. 2026 · Temple City Digital Studio', W/2, 65);
+
+  // Photo with sepia effect
+  drawSelfieInArea(ctx, 60, 80, W-120, 360, 4);
+
+  // Sepia overlay
+  ctx.fillStyle = 'rgba(180,120,40,0.25)';
+  ctx.fillRect(60,80,W-120,360);
+
+  // Vignette
+  const vig = ctx.createRadialGradient(W/2,260,100,W/2,260,300);
+  vig.addColorStop(0,'transparent');
+  vig.addColorStop(1,'rgba(50,30,0,0.4)');
+  ctx.fillStyle = vig;
+  ctx.fillRect(60,80,W-120,360);
+
+  // Film border
+  ctx.strokeStyle = '#3A2A10';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(60,80,W-120,360);
+
+  // Caption area
+  ctx.fillStyle = '#F5E6C8';
+  ctx.fillRect(60,440,W-120,120);
+
+  ctx.fillStyle = '#3A2A10';
+  ctx.font = 'bold 22px Playfair Display, serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(eventName, W/2, 476);
+
+  ctx.font = 'italic 13px Playfair Display, serif';
+  ctx.fillStyle = '#6A4A20';
+  ctx.fillText('"Memories Forever Preserved"', W/2, 502);
+
+  drawRoyalDivider(ctx, 100, 515, W-200);
+
+  ctx.fillStyle = 'rgba(58,42,16,0.5)';
+  ctx.font = '10px Montserrat, sans-serif';
+  ctx.fillText('PHOTOGRAPHED BY PHOTOFIND PRO', W/2, 540);
+
+  // Camera icon corner
+  ctx.font = '20px serif';
+  ctx.fillText('📷', 36, 110);
+  ctx.fillText('📷', W-36, 110);
+}
+
+// ── NEWSPAPER TEMPLATE ──
+function drawNewspaper(ctx, W, H) {
+  // White newspaper bg
+  ctx.fillStyle = '#F8F4E8';
+  ctx.fillRect(0,0,W,H);
+
+  // Newsprint texture
+  for(let i=0;i<150;i++){
+    ctx.fillStyle=`rgba(0,0,0,${Math.random()*0.02})`;
+    ctx.fillRect(Math.random()*W,Math.random()*H,Math.random()*2,Math.random()*2);
+  }
+
+  // Header strip
+  ctx.fillStyle = '#1A1A1A';
+  ctx.fillRect(0,0,W,100);
+
+  // Newspaper name
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 36px Playfair Display, serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('THE EVENT TIMES', W/2, 45);
+
+  // Thin lines
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = 1;
+  ctx.beginPath();ctx.moveTo(20,52);ctx.lineTo(W-20,52);ctx.stroke();
+
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.font = '9px Montserrat, sans-serif';
+  ctx.fillText('VOL. 1 · SPECIAL EDITION · 2026 · PRICE: PRICELESS', W/2, 68);
+
+  ctx.beginPath();ctx.moveTo(20,76);ctx.lineTo(W-20,76);ctx.stroke();
+
+  // Red breaking news band
+  ctx.fillStyle = '#CC0000';
+  ctx.fillRect(0,100,W,28);
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 12px Montserrat, sans-serif';
+  ctx.fillText('⚡ BREAKING NEWS ⚡ ' + eventName.toUpperCase() + ' — SPECIAL REPORT', W/2, 119);
+
+  // Headline
+  ctx.fillStyle = '#1A1A1A';
+  ctx.font = 'bold 20px Playfair Display, serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('LOCAL STAR SPOTTED AT', W/2, 155);
+  ctx.fillText('THE EVENT OF THE YEAR!', W/2, 178);
+
+  // Column lines
+  ctx.strokeStyle = '#1A1A1A';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();ctx.moveTo(W/2,135);ctx.lineTo(W/2,190);ctx.stroke();
+
+  // Photo
+  drawSelfieInArea(ctx, 30, 195, W-60, 280, 2);
+
+  // Photo caption bar
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.fillRect(30,445,W-60,30);
+  ctx.fillStyle = 'white';
+  ctx.font = 'italic 10px Montserrat, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(`${eventName} · Photographed by PhotoFind Pro`, W/2, 465);
+
+  // Article text
+  ctx.fillStyle = '#1A1A1A';
+  ctx.font = '10px Montserrat, sans-serif';
+  ctx.textAlign = 'left';
+  const text = [
+    `Sources confirm that this distinguished guest was`,
+    `present at what is being called "the event of the`,
+    `decade." Witnesses report exceptional elegance and`,
+    `style throughout the evening's festivities.`,
+    ``,
+    `"It was truly a memorable occasion," said one`,
+    `attendee. Full coverage on pages 2-5.`,
+  ];
+  text.forEach((line, i) => {
+    ctx.fillText(line, 30, 490 + i*14);
+  });
+
+  // Footer
+  ctx.strokeStyle = '#1A1A1A';
+  ctx.lineWidth = 1;
+  ctx.beginPath();ctx.moveTo(20,590);ctx.lineTo(W-20,590);ctx.stroke();
+  ctx.fillStyle = '#1A1A1A';
+  ctx.font = '8px Montserrat, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('www.templecity.digital · PhotoFind Pro · All Rights Reserved 2026', W/2, 598);
+}
+
+// ── COUPLE CANVAS ──
+async function generateCouple() {
+  if (!guestImg) { alert('Please upload your photo!'); return; }
+  if (!coupleImg) { alert('Please upload the couple photo!'); return; }
+  if (!selectedCoupleFrame) { alert('Please select a frame style!'); return; }
+
+  showLoading('Creating your special memory...');
+  await new Promise(r => setTimeout(r, 500));
+
+  const canvas = document.getElementById('coupleCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = 600, H = 400;
+  canvas.width = W; canvas.height = H;
+
+  document.getElementById('couplePlaceholder').style.display = 'none';
+  canvas.style.display = 'block';
+
+  const evName = document.getElementById('eventNameInput').value || eventName;
+
+  switch(selectedCoupleFrame) {
+    case 'hearts': drawHeartsCouple(ctx,W,H,evName); break;
+    case 'floral': drawFloralCouple(ctx,W,H,evName); break;
+    case 'royal': drawRoyalCouple(ctx,W,H,evName); break;
+    case 'starry': drawStarryCouple(ctx,W,H,evName); break;
+  }
+
+  coupleDataURL = canvas.toDataURL('image/jpeg', 0.92);
+  document.getElementById('coupleDownloadBtn').style.display = 'flex';
+  document.getElementById('coupleShareRow').style.display = 'flex';
+  hideLoading();
+}
+
+function drawCoupleLayout(ctx, W, H, bgGrad, frameColor, titleColor, accentColor) {
+  // Background
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0,0,W,H);
+
+  // Title bar top
+  ctx.fillStyle = frameColor;
+  ctx.fillRect(0,0,W,50);
+
+  const evName = document.getElementById('eventNameInput').value || eventName;
+
+  ctx.fillStyle = titleColor;
+  ctx.font = 'bold 18px Playfair Display, serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(evName, W/2, 32);
+
+  // Two photos side by side
+  const gap = 16;
+  const photoW = (W-60-gap)/2;
+  const photoH = H-110;
+  const startY = 60;
+
+  // Left — couple photo
+  ctx.strokeStyle = accentColor;
+  ctx.lineWidth = 4;
+  ctx.strokeRect(20,startY,photoW,photoH);
+
+  if(coupleImg){
+    ctx.save();
+    ctx.beginPath();ctx.rect(20,startY,photoW,photoH);ctx.clip();
+    const scale=Math.max(photoW/coupleImg.width,photoH/coupleImg.height);
+    const sw=coupleImg.width*scale,sh=coupleImg.height*scale;
+    ctx.drawImage(coupleImg,20+(photoW-sw)/2,startY+(photoH-sh)/2,sw,sh);
+    ctx.restore();
+  }
+
+  // Right — guest photo
+  const rightX = 20+photoW+gap;
+  ctx.strokeStyle = accentColor;
+  ctx.lineWidth = 4;
+  ctx.strokeRect(rightX,startY,photoW,photoH);
+
+  if(guestImg){
+    ctx.save();
+    ctx.beginPath();ctx.rect(rightX,startY,photoW,photoH);ctx.clip();
+    const scale=Math.max(photoW/guestImg.width,photoH/guestImg.height);
+    const sw=guestImg.width*scale,sh=guestImg.height*scale;
+    ctx.drawImage(guestImg,rightX+(photoW-sw)/2,startY+(photoH-sh)/2,sw,sh);
+    ctx.restore();
+  }
+
+  // Labels
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.fillRect(20,startY+photoH-24,photoW,24);
+  ctx.fillRect(rightX,startY+photoH-24,photoW,24);
+
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 11px Montserrat, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('💑 The Couple', 20+photoW/2, startY+photoH-8);
+  ctx.fillText('🎉 I Was There!', rightX+photoW/2, startY+photoH-8);
+
+  // Bottom bar
+  ctx.fillStyle = frameColor;
+  ctx.fillRect(0,H-40,W,40);
+
+  ctx.fillStyle = titleColor;
+  ctx.font = '10px Montserrat, sans-serif';
+  ctx.fillText('PhotoFind Pro · www.templecity.digital · '+new Date().getFullYear(), W/2, H-14);
+}
+
+function drawHeartsCouple(ctx,W,H,evName) {
+  const bg=ctx.createLinearGradient(0,0,W,H);
+  bg.addColorStop(0,'#1A0A1A');bg.addColorStop(1,'#2A0A2A');
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+
+  // Hearts bg
+  ctx.font='20px serif';
+  for(let i=0;i<20;i++){
+    ctx.globalAlpha=Math.random()*0.1;
+    ctx.fillText('❤️',Math.random()*W,Math.random()*H);
+  }
+  ctx.globalAlpha=1;
+
+  const fc=ctx.createLinearGradient(0,0,W,0);
+  fc.addColorStop(0,'#8B1A4A');fc.addColorStop(1,'#C84A7A');
+
+  drawCoupleLayout(ctx,W,H,bg,fc,'#FFB6C1','#FF69B4');
+  ctx.font='24px serif';ctx.textAlign='center';
+  ctx.fillText('❤️',W/2,H-14);
+}
+
+function drawFloralCouple(ctx,W,H,evName) {
+  const bg=ctx.createLinearGradient(0,0,W,H);
+  bg.addColorStop(0,'#1A0808');bg.addColorStop(1,'#2A0A10');
+  const fc=ctx.createLinearGradient(0,0,W,0);
+  fc.addColorStop(0,'#6B1A2A');fc.addColorStop(1,'#8B2A3A');
+
+  drawCoupleLayout(ctx,W,H,bg,fc,'#FFB6C1','#FF69B4');
+
+  // Floral corners
+  ctx.font='22px serif';ctx.textAlign='left';
+  ctx.fillText('🌸',4,46);ctx.fillText('🌺',W-30,46);
+  ctx.fillText('🌸',4,H-4);ctx.fillText('🌺',W-30,H-4);
+}
+
+function drawRoyalCouple(ctx,W,H,evName) {
+  const bg=ctx.createLinearGradient(0,0,W,H);
+  bg.addColorStop(0,'#1A1400');bg.addColorStop(1,'#2A1A00');
+  const fc=ctx.createLinearGradient(0,0,W,0);
+  fc.addColorStop(0,'#6A4A00');fc.addColorStop(1,'#8A6A10');
+
+  drawCoupleLayout(ctx,W,H,bg,fc,'#E8C87A','#E8C87A');
+
+  // Crown
+  ctx.font='22px serif';ctx.textAlign='center';
+  ctx.fillText('👑',W/2,H-14);
+}
+
+function drawStarryCouple(ctx,W,H,evName) {
+  const bg=ctx.createLinearGradient(0,0,W,H);
+  bg.addColorStop(0,'#040820');bg.addColorStop(1,'#08082A');
+
+  // Stars
+  for(let i=0;i<100;i++){
+    ctx.fillStyle=`rgba(255,255,255,${Math.random()*0.5})`;
+    ctx.beginPath();ctx.arc(Math.random()*W,Math.random()*H,Math.random()*1.5,0,Math.PI*2);ctx.fill();
+  }
+
+  const fc=ctx.createLinearGradient(0,0,W,0);
+  fc.addColorStop(0,'#1A1A4A');fc.addColorStop(1,'#2A2A6A');
+
+  drawCoupleLayout(ctx,W,H,bg,fc,'#89B4D4','#6BA4D4');
+
+  ctx.font='18px serif';ctx.textAlign='center';
+  ctx.fillText('✨',W/2,H-14);
+}
+
+// ── DOWNLOAD & SHARE ──
+function downloadFrame() {
+  if (!generatedDataURL) return;
+  const a = document.createElement('a');
+  a.download = `PhotoFindPro-${selectedTemplate}-${Date.now()}.jpg`;
+  a.href = generatedDataURL;
+  a.click();
+}
+
+function downloadCouple() {
+  if (!coupleDataURL) return;
+  const a = document.createElement('a');
+  a.download = `PhotoFindPro-WithCouple-${Date.now()}.jpg`;
+  a.href = coupleDataURL;
+  a.click();
+}
+
+function shareWA() {
+  downloadFrame();
+  setTimeout(() => {
+    const msg = `🎨 Look at my fun photo from ${eventName}! Created with PhotoFind Pro 🎉\n\nwww.templecity.digital`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+  }, 500);
+}
+
+function shareInsta() {
+  downloadFrame();
+  alert('Photo saved! Open Instagram and share from your gallery 📸');
+}
+
+function shareCoupleWA() {
+  downloadCouple();
+  setTimeout(() => {
+    const msg = `💒 I was there! Check out my photo with the couple from ${eventName}! 🎉\n\nCreated with PhotoFind Pro\nwww.templecity.digital`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+  }, 500);
+}
+
+function shareCoupleInsta() {
+  downloadCouple();
+  alert('Photo saved! Open Instagram and share from your gallery 📸');
+}
+
+// ── UTILS ──
+function showLoading(text) {
+  document.getElementById('genText').textContent = text;
+  document.getElementById('genLoading').style.display = 'flex';
+}
+
+function hideLoading() {
+  document.getElementById('genLoading').style.display = 'none';
+}
+
+// Pre-select first template
+selectTemplate('bollywood');
+selectCoupleFrame('hearts');
+</script>
+</body>
+</html>

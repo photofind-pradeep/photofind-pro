@@ -732,6 +732,14 @@ function showResults(data) {
           <span>Get physical prints delivered to you!</span>
         </div>
         <div class="dl-btn" style="background:rgba(212,175,114,0.15);color:#D4AF72;border:1px solid rgba(212,175,114,0.3);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600">Order</div>
+      </div>
+      <div class="dl-row" onclick="openFunZone()" style="cursor:pointer">
+        <div class="dl-icon" style="background:rgba(155,137,212,0.1)">🎉</div>
+        <div class="dl-info">
+          <strong>Fun Zone</strong>
+          <span>Frames, Bollywood posters & couple photos!</span>
+        </div>
+        <div class="dl-btn" style="background:rgba(155,137,212,0.15);color:#9B89D4;border:1px solid rgba(155,137,212,0.3);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600">Open</div>
       </div>`;
   } else {
     dlCard.innerHTML = `<div class="dl-row"><div class="dl-info" style="text-align:center;padding:10px 0;color:var(--muted2)">No photos to download</div></div>`;
@@ -888,6 +896,12 @@ function closePrintModal(e) {
   if (!e || e.target === document.getElementById('printModal')) {
     document.getElementById('printModal').style.display = 'none';
   }
+}
+
+function openFunZone() {
+  const eventId = selectedEvent?.id || '';
+  const name = formatEventName(selectedEvent?.name || '');
+  window.open(`/funzone.html?event=${eventId}&name=${encodeURIComponent(name)}`, '_blank');
 }
 
 function openPrintOrder() {
