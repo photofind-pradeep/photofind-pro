@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PhotoFind Pro — Event Video</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Montserrat:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gold:#E8C87A;--gold2:#C9A84C;
+  --dark:#0C0A07;--dark2:#1A1208;
+  --text:rgba(255,255,255,0.85);
+  --muted:rgba(255,255,255,0.35);
+}
+
+body{
+  font-family:'Montserrat',sans-serif;
+  background:var(--dark);
+  min-height:100vh;
+  color:var(--text);
+}
+
+/* ── HEADER ── */
+.header{
+  padding:16px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:0.5px solid rgba(232,200,122,0.1);
+  position:sticky;top:0;z-index:100;
+  background:rgba(12,10,7,0.95);
+  backdrop-filter:blur(10px);
+}
+.logo{
+  font-family:'Playfair Display',serif;
+  font-size:18px;font-weight:900;color:white;
+}
+.logo em{color:var(--gold);font-style:normal}
+.header-badge{
+  font-size:9px;color:rgba(232,200,122,0.5);
+  letter-spacing:0.2em;text-transform:uppercase;
+}
+
+/* ── HERO ── */
+.hero{
+  padding:32px 20px 24px;
+  text-align:center;
+  background:linear-gradient(180deg,rgba(26,18,8,0.8),transparent);
+  border-bottom:0.5px solid rgba(232,200,122,0.06);
+}
+.hero-eyebrow{
+  font-size:9px;letter-spacing:0.4em;text-transform:uppercase;
+  color:rgba(232,200,122,0.5);margin-bottom:10px;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+}
+.hero-eyebrow::before,.hero-eyebrow::after{
+  content:'';width:24px;height:0.5px;
+  background:rgba(232,200,122,0.3);
+}
+.hero-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(22px,6vw,36px);
+  font-weight:900;color:white;
+  line-height:1.05;margin-bottom:6px;
+}
+.hero-sub{
+  font-family:'Playfair Display',serif;
+  font-size:14px;font-style:italic;
+  color:var(--gold);margin-bottom:4px;
+}
+.hero-date{
+  font-size:10px;color:var(--muted);
+  letter-spacing:0.2em;text-transform:uppercase;
+}
+
+/* ── VIDEO PLAYER ── */
+.video-wrap{
+  max-width:720px;margin:0 auto;
+  padding:20px 16px;
+}
+
+.video-card{
+  background:var(--dark2);
+  border-radius:16px;overflow:hidden;
+  border:0.5px solid rgba(232,200,122,0.1);
+  box-shadow:0 20px 60px rgba(0,0,0,0.5);
+  margin-bottom:16px;
+}
+
+.video-player-wrap{
+  position:relative;
+  background:#000;
+  aspect-ratio:16/9;
+}
+
+#videoPlayer{
+  width:100%;height:100%;
+  display:block;
+  background:#000;
+}
+
+/* Upload placeholder */
+.video-placeholder{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#0D0A1A,#1A0F2E);
+  gap:12px;
+}
+.video-placeholder-icon{font-size:48px}
+.video-placeholder-text{
+  font-family:'Playfair Display',serif;
+  font-size:18px;font-style:italic;
+  color:rgba(255,255,255,0.4);
+}
+.video-placeholder-sub{
+  font-size:11px;color:rgba(255,255,255,0.2);
+  letter-spacing:0.15em;text-transform:uppercase;
+}
+
+/* Video info bar */
+.video-info{
+  padding:14px 16px;
+  border-top:0.5px solid rgba(232,200,122,0.08);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.video-title{
+  font-family:'Playfair Display',serif;
+  font-size:15px;font-weight:700;color:white;
+}
+.video-duration{
+  font-size:11px;color:var(--muted);
+  letter-spacing:0.1em;
+}
+
+/* ── CHAPTERS ── */
+.chapters-card{
+  background:var(--dark2);
+  border-radius:14px;
+  border:0.5px solid rgba(232,200,122,0.1);
+  overflow:hidden;
+  margin-bottom:16px;
+}
+.chapters-header{
+  padding:14px 16px;
+  border-bottom:0.5px solid rgba(232,200,122,0.08);
+  display:flex;align-items:center;gap:8px;
+}
+.chapters-title{
+  font-size:10px;letter-spacing:0.25em;text-transform:uppercase;
+  color:var(--gold);font-weight:600;
+}
+
+.chapter-item{
+  padding:12px 16px;
+  display:flex;align-items:center;gap:12px;
+  border-bottom:0.5px solid rgba(255,255,255,0.04);
+  cursor:pointer;transition:background 0.15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.chapter-item:last-child{border-bottom:none}
+.chapter-item:active{background:rgba(232,200,122,0.05)}
+.chapter-item.active{background:rgba(232,200,122,0.06)}
+
+.chapter-num{
+  width:28px;height:28px;
+  background:rgba(232,200,122,0.08);
+  border:0.5px solid rgba(232,200,122,0.2);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:600;color:var(--gold);
+  flex-shrink:0;
+}
+.chapter-item.active .chapter-num{
+  background:linear-gradient(135deg,var(--gold2),var(--gold));
+  color:var(--dark);border-color:transparent;
+}
+
+.chapter-info{flex:1}
+.chapter-name{font-size:13px;font-weight:500;color:white;margin-bottom:2px}
+.chapter-time{font-size:10px;color:var(--muted);letter-spacing:0.08em}
+
+.chapter-arrow{
+  font-size:12px;color:rgba(232,200,122,0.25);
+}
+
+/* ── SHARE SECTION ── */
+.share-card{
+  background:linear-gradient(135deg,var(--dark2),rgba(26,18,8,0.8));
+  border-radius:14px;
+  border:0.5px solid rgba(232,200,122,0.1);
+  padding:20px 16px;
+  margin-bottom:16px;
+}
+.share-title{
+  font-size:10px;letter-spacing:0.25em;text-transform:uppercase;
+  color:var(--gold);font-weight:600;margin-bottom:14px;
+}
+.share-btns{display:flex;gap:10px;flex-wrap:wrap}
+.share-btn{
+  flex:1;min-width:100px;
+  padding:12px 10px;
+  border-radius:10px;border:none;
+  font-family:'Montserrat',sans-serif;
+  font-size:11px;font-weight:600;
+  cursor:pointer;
+  display:flex;flex-direction:column;
+  align-items:center;gap:4px;
+  transition:all 0.15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.share-btn:active{transform:scale(0.96)}
+.btn-wa{background:#25D366;color:white}
+.btn-copy{background:rgba(232,200,122,0.1);border:0.5px solid rgba(232,200,122,0.25);color:var(--gold)}
+.btn-share{background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.1);color:var(--muted)}
+.share-btn-icon{font-size:20px}
+
+/* ── VALIDITY ── */
+.validity-bar{
+  background:rgba(255,255,255,0.03);
+  border-radius:10px;
+  border:0.5px solid rgba(255,255,255,0.06);
+  padding:12px 16px;
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:16px;
+}
+.validity-icon{font-size:16px}
+.validity-text{font-size:11px;color:var(--muted)}
+.validity-text strong{color:white}
+
+/* ── UPLOAD SECTION (for photographer) ── */
+.upload-section{
+  display:none;
+  background:rgba(232,200,122,0.04);
+  border-radius:14px;
+  border:1px dashed rgba(232,200,122,0.2);
+  padding:24px 16px;
+  text-align:center;
+  margin-bottom:16px;
+  cursor:pointer;
+  transition:all 0.2s;
+}
+.upload-section:hover{border-color:rgba(232,200,122,0.4);background:rgba(232,200,122,0.06)}
+.upload-icon{font-size:36px;margin-bottom:10px}
+.upload-text{font-size:14px;font-weight:600;color:white;margin-bottom:4px}
+.upload-sub{font-size:11px;color:var(--muted)}
+
+/* ── FOOTER ── */
+.footer{
+  padding:24px 20px;
+  text-align:center;
+  border-top:0.5px solid rgba(232,200,122,0.06);
+  margin-top:8px;
+}
+.footer-brand{
+  font-family:'Playfair Display',serif;
+  font-size:14px;font-weight:700;color:white;margin-bottom:4px;
+}
+.footer-brand em{color:var(--gold);font-style:normal}
+.footer-sub{font-size:9px;color:rgba(255,255,255,0.15);letter-spacing:0.2em;text-transform:uppercase}
+
+/* Loading state */
+#loadingState{
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  min-height:60vh;gap:16px;
+}
+.load-spinner{
+  width:40px;height:40px;
+  border:2px solid rgba(232,200,122,0.1);
+  border-top-color:var(--gold);
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-text{font-size:12px;color:var(--muted);letter-spacing:0.15em}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">Photo<em>Find</em> Pro</div>
+  <div class="header-badge">Event Video</div>
+</div>
+
+<div id="mainContent">
+  <div id="loadingState">
+    <div class="load-spinner"></div>
+    <div class="load-text">Loading event video...</div>
+  </div>
+</div>
+
+<script>
+const SERVER = 'https://api.templecity.digital';
+const params = new URLSearchParams(window.location.search);
+const eventId = params.get('event');
+const isPhotographer = params.get('upload') === 'true';
+
+let eventData = null;
+let videoData = null;
+
+async function init() {
+  try {
+    if (!eventId) { showError('No event specified'); return; }
+
+    // Get event info
+    const evRes = await fetch(`${SERVER}/events`);
+    const evData = await evRes.json();
+    const ev = evData.events?.find(e => e.id === eventId);
+
+    if (ev) {
+      const raw = ev.name.split('__')[0].replace(/^\d{4}-\d{2}-\d{2}_/, '').replace(/-/g, ' ');
+      eventData = {
+        name: raw,
+        date: parseDate(ev.name),
+        type: detectType(ev.name),
+        validity: getValidity(ev.name),
+      };
+    }
+
+    // Get video data
+    const vidRes = await fetch(`${SERVER}/video/${eventId}`);
+    const vidData = await vidRes.json();
+    videoData = vidData;
+
+    renderPage();
+  } catch(e) {
+    showError(e.message);
+  }
+}
+
+function renderPage() {
+  const main = document.getElementById('mainContent');
+  const hasVideo = videoData?.success && videoData?.video;
+
+  main.innerHTML = `
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-eyebrow">✦ Event Video ✦</div>
+      <div class="hero-title">${eventData?.name || 'Your Event'}</div>
+      <div class="hero-sub">${getSubtitle(eventData?.type)}</div>
+      <div class="hero-date">${eventData?.date || '2026'}</div>
+    </div>
+
+    <div class="video-wrap">
+
+      <!-- VIDEO PLAYER -->
+      <div class="video-card">
+        <div class="video-player-wrap">
+          ${hasVideo
+            ? `<video id="videoPlayer" controls playsinline preload="metadata" poster="${videoData.thumbnail || ''}">
+                <source src="${videoData.video.viewLink}" type="video/mp4">
+                Your browser does not support video.
+              </video>`
+            : `<div class="video-placeholder">
+                <div class="video-placeholder-icon">🎬</div>
+                <div class="video-placeholder-text">Video Coming Soon</div>
+                <div class="video-placeholder-sub">Photographer is preparing your video</div>
+              </div>`
+          }
+        </div>
+        <div class="video-info">
+          <div class="video-title">${eventData?.name || 'Event'} — Full Video</div>
+          <div class="video-duration">${hasVideo ? videoData.duration || 'Full Event' : 'Uploading...'}</div>
+        </div>
+      </div>
+
+      ${hasVideo && videoData.chapters?.length > 0 ? `
+      <!-- CHAPTERS -->
+      <div class="chapters-card">
+        <div class="chapters-header">
+          <span>📋</span>
+          <div class="chapters-title">Chapters</div>
+        </div>
+        ${videoData.chapters.map((ch, i) => `
+          <div class="chapter-item ${i === 0 ? 'active' : ''}" onclick="seekTo(${ch.time}, ${i})">
+            <div class="chapter-num">${i + 1}</div>
+            <div class="chapter-info">
+              <div class="chapter-name">${ch.name}</div>
+              <div class="chapter-time">${formatTime(ch.time)}</div>
+            </div>
+            <div class="chapter-arrow">▶</div>
+          </div>`).join('')}
+      </div>` : ''}
+
+      ${isPhotographer ? `
+      <!-- UPLOAD SECTION -->
+      <div class="upload-section" id="uploadSection" onclick="document.getElementById('videoFile').click()">
+        <input type="file" id="videoFile" accept="video/*" style="display:none" onchange="uploadVideo(this)">
+        <div class="upload-icon">🎬</div>
+        <div class="upload-text">Upload Final Event Video</div>
+        <div class="upload-sub">MP4, MOV, AVI supported · Max 2GB</div>
+      </div>` : ''}
+
+      <!-- SHARE -->
+      <div class="share-card">
+        <div class="share-title">✦ Share With Family</div>
+        <div class="share-btns">
+          <button class="share-btn btn-wa" onclick="waShare()">
+            <span class="share-btn-icon">💬</span>
+            WhatsApp
+          </button>
+          <button class="share-btn btn-copy" onclick="copyLink()">
+            <span class="share-btn-icon">🔗</span>
+            Copy Link
+          </button>
+          ${navigator.share ? `<button class="share-btn btn-share" onclick="nativeShare()">
+            <span class="share-btn-icon">↗</span>
+            Share
+          </button>` : ''}
+        </div>
+      </div>
+
+      <!-- VALIDITY -->
+      <div class="validity-bar">
+        <span class="validity-icon">⏳</span>
+        <div class="validity-text">
+          Video available until <strong>${eventData?.validity || '30 days'}</strong>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <div class="footer-brand">Photo<em>Find</em> Pro</div>
+      <div class="footer-sub">Odisha's First AI Photo Delivery</div>
+    </div>`;
+
+  // Show upload section for photographer
+  if (isPhotographer) {
+    document.getElementById('uploadSection').style.display = 'block';
+  }
+}
+
+function seekTo(seconds, chapterIdx) {
+  const video = document.getElementById('videoPlayer');
+  if (video) {
+    video.currentTime = seconds;
+    video.play();
+    // Update active chapter
+    document.querySelectorAll('.chapter-item').forEach((el, i) => {
+      el.classList.toggle('active', i === chapterIdx);
+    });
+  }
+}
+
+async function uploadVideo(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const section = document.getElementById('uploadSection');
+  section.innerHTML = `
+    <div class="upload-icon">⏳</div>
+    <div class="upload-text">Uploading ${file.name}...</div>
+    <div class="upload-sub">Please wait — do not close this page</div>`;
+
+  try {
+    const formData = new FormData();
+    formData.append('video', file);
+    formData.append('eventId', eventId);
+
+    const res = await fetch(`${SERVER}/upload-video`, {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      section.innerHTML = `
+        <div class="upload-icon">✅</div>
+        <div class="upload-text">Video Uploaded Successfully!</div>
+        <div class="upload-sub">Refreshing page...</div>`;
+      setTimeout(() => window.location.reload(), 2000);
+    } else {
+      section.innerHTML = `
+        <div class="upload-icon">❌</div>
+        <div class="upload-text">Upload Failed</div>
+        <div class="upload-sub">${data.error}</div>`;
+    }
+  } catch(e) {
+    section.innerHTML = `<div class="upload-text">Error: ${e.message}</div>`;
+  }
+}
+
+function waShare() {
+  const url = window.location.href.split('?')[0] + `?event=${eventId}`;
+  const name = eventData?.name || 'our event';
+  const msg = `🎬 *${name} — Full Event Video*\n\nWatch our complete event video online — no download needed!\n\n📺 Watch here:\n${url}\n\n_Powered by PhotoFind Pro_\n🌐 www.templecity.digital`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function copyLink() {
+  const url = window.location.href.split('?')[0] + `?event=${eventId}`;
+  navigator.clipboard.writeText(url).then(() => alert('✅ Link copied!'));
+}
+
+function nativeShare() {
+  const url = window.location.href.split('?')[0] + `?event=${eventId}`;
+  navigator.share({ title: `${eventData?.name} Video`, url });
+}
+
+function formatTime(seconds) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+function parseDate(name) {
+  const m = name.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (m) return new Date(m[1]).toLocaleDateString('en-IN', {day:'numeric',month:'long',year:'numeric'});
+  return '2026';
+}
+
+function detectType(name) {
+  const n = name?.toLowerCase() || '';
+  if (n.includes('wed') || n.includes('marr')) return 'wedding';
+  if (n.includes('birth') || n.includes('bday')) return 'birthday';
+  return 'event';
+}
+
+function getSubtitle(type) {
+  const s = { wedding: 'Wedding Highlights', birthday: 'Birthday Celebration', event: 'Event Recording' };
+  return s[type] || 'Event Video';
+}
+
+function getValidity(name) {
+  if (name?.includes('advanced')) return '90 days';
+  return '45 days';
+}
+
+function showError(msg) {
+  document.getElementById('mainContent').innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:12px;padding:40px;text-align:center">
+      <div style="font-size:48px">🎬</div>
+      <div style="font-size:16px;color:white">Video not found</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.3)">${msg}</div>
+    </div>`;
+}
+
+init();
+</script>
+</body>
+</html>

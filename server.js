@@ -698,6 +698,8 @@ app.post('/payment/verify', async (req, res) => {
     const uploadLink = `${baseUrl}/upload.html?event=${eventFolder.id}`;
     const guestLink = `${baseUrl}?event=${eventFolder.id}`;
     const driveLink = `https://drive.google.com/drive/folders/${eventFolder.id}`;
+    const albumLink = `${baseUrl}/album.html?event=${eventFolder.id}&type=${eventType}`;
+    const videoLink = `${baseUrl}/video.html?event=${eventFolder.id}`;
 
     const whatsappMsg =
       `📸 *PhotoFind Pro — ${pkgConfig.name} Plan Ready!*\n\n` +
@@ -712,6 +714,11 @@ app.post('/payment/verify', async (req, res) => {
       `*━━━ SHARE WITH GUESTS ━━━*\n\n` +
       `*🎊 Guest QR Link:*\n${guestLink}\n` +
       `_Guests scan face → find photos instantly!_\n\n` +
+      `*━━━ CLIENT ALBUM ━━━*\n\n` +
+      `*📖 Digital Flip Book Album:*\n${albumLink}\n` +
+      `_Beautiful cinematic album with BGM — share with family!_\n\n` +
+      `*🎬 Event Video Page:*\n${videoLink}\n` +
+      `_Upload your final edited video here — family watches online!_\n\n` +
       `*━━━ YOUR PLAN INCLUDES ━━━*\n\n` +
       `✅ AI Face Recognition\n` +
       `✅ Solo + Group Photos\n` +
@@ -746,7 +753,7 @@ app.post('/payment/verify', async (req, res) => {
     };
     clients.push(client);
 
-    res.json({ success: true, eventId: eventFolder.id, eventName, studioName, uploadLink, guestLink, waLink, package: pkg, packageConfig: pkgConfig });
+    res.json({ success: true, eventId: eventFolder.id, eventName, studioName, uploadLink, guestLink, albumLink, waLink, package: pkg, packageConfig: pkgConfig });
   } catch (err) {
     console.error('❌ Verify error:', err.message);
     res.status(500).json({ success: false, error: err.message });
@@ -991,7 +998,113 @@ app.get('/events', async (req, res) => {
   }
 });
 
-// ── Get Photos for Album ──
+// ── Get Video for Event ──
+app.get('/video/:eventId', async (req, res) => {
+  try {
+    const { eventId } = req.params;
+
+    // Look for video folder
+    const subfolders = await drive.files.list({
+      q: `'${eventId}' in parents and mimeType='application/vnd.google-apps.folder' and name='videos' and trashed=false`,
+      fields: 'files(id)',
+    });
+
+    if (!subfolders.data.files.length) {
+      return res.json({ success: true, video: null, chapters: [] });
+    }
+
+    const videoFolderId = subfolders.data.files[0].id;
+
+    // Get videos
+    const videosRes = await drive.files.list({
+      q: `'${videoFolderId}' in parents and mimeType contains 'video/' and trashed=false`,
+      fields: 'files(id, name, webViewLink, thumbnailLink, videoMediaMetadata)',
+      orderBy: 'createdTime desc',
+    });
+
+    // Get chapters JSON if exists
+    const chaptersRes = await drive.files.list({
+      q: `'${videoFolderId}' in parents and name='chapters.json' and trashed=false`,
+      fields: 'files(id)',
+    });
+
+    let chapters = [];
+    if (chaptersRes.data.files.length > 0) {
+      try {
+        const chFile = await drive.files.get({ fileId: chaptersRes.data.files[0].id, alt: 'media' }, { responseType: 'text' });
+        chapters = JSON.parse(chFile.data);
+      } catch(e) {}
+    }
+
+    const video = videosRes.data.files[0] || null;
+
+    res.json({
+      success: true,
+      video: video ? {
+        id: video.id,
+        name: video.name,
+        viewLink: `https://drive.google.com/file/d/${video.id}/preview`,
+        downloadLink: video.webViewLink,
+        thumbnail: video.thumbnailLink,
+        duration: video.videoMediaMetadata?.durationMillis
+          ? formatDuration(video.videoMediaMetadata.durationMillis)
+          : null,
+      } : null,
+      chapters,
+    });
+  } catch(err) {
+    console.error('❌ Video route error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── Upload Video ──
+app.post('/upload-video', upload.single('video'), async (req, res) => {
+  try {
+    const { eventId } = req.body;
+    if (!req.file || !eventId) return res.status(400).json({ success: false, error: 'Video and eventId required' });
+
+    // Get or create videos folder
+    const videoFolderId = await getOrCreateFolder(eventId, 'videos');
+
+    // Upload video to Drive
+    const { Readable } = require('stream');
+    const stream = new Readable();
+    stream.push(req.file.buffer);
+    stream.push(null);
+
+    const driveFile = await drive.files.create({
+      requestBody: {
+        name: req.file.originalname || `video_${Date.now()}.mp4`,
+        parents: [videoFolderId],
+        mimeType: req.file.mimetype || 'video/mp4',
+      },
+      media: { mimeType: req.file.mimetype || 'video/mp4', body: stream },
+      fields: 'id, name, webViewLink',
+    });
+
+    // Make public
+    await drive.permissions.create({
+      fileId: driveFile.data.id,
+      requestBody: { role: 'reader', type: 'anyone' },
+    });
+
+    console.log(`✅ Video uploaded: ${driveFile.data.name}`);
+    res.json({ success: true, videoId: driveFile.data.id, name: driveFile.data.name });
+  } catch(err) {
+    console.error('❌ Video upload error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+function formatDuration(ms) {
+  const totalSec = Math.floor(ms / 1000);
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m ${s}s`;
+}
 app.get('/photos/:eventId', async (req, res) => {
   try {
     const { eventId } = req.params;
