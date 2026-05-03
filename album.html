@@ -2,436 +2,392 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>PhotoFind Pro — Your Album</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400;1,600&family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-
 :root{
-  --gold:#D4AF72;
-  --gold2:#B8935A;
-  --cream:#FDFBF6;
-  --dark:#0A0806;
-  --dark2:#1A1208;
-  --text:#2A1E0E;
-  --muted:#8B7355;
-  --border:rgba(180,140,80,0.2);
+  --gold:#D4AF72;--gold2:#B8935A;
+  --cream:#FDFBF6;--parchment:#F5EDD8;
+  --dark:#0A0806;--text:#2A1E0E;--muted:#8B7355;
 }
 
 body{
   font-family:'Jost',sans-serif;
-  background:var(--dark);
-  min-height:100vh;
-  overflow-x:hidden;
+  background:radial-gradient(ellipse at center,#2A1A08,#0A0806);
+  min-height:100vh;overflow:hidden;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  user-select:none;
 }
 
 /* ── LOADING ── */
 #loading{
-  position:fixed;inset:0;
+  position:fixed;inset:0;z-index:1000;
   background:var(--dark);
   display:flex;flex-direction:column;
   align-items:center;justify-content:center;
-  z-index:1000;
-  transition:opacity 0.8s ease;
+  transition:opacity 0.8s;
 }
 .load-logo{
   font-family:'Cormorant Garamond',serif;
-  font-size:36px;font-weight:700;
-  color:white;margin-bottom:8px;
+  font-size:40px;font-weight:700;color:white;
 }
 .load-logo span{color:var(--gold)}
-.load-bar{
-  width:120px;height:2px;
-  background:rgba(255,255,255,0.1);
-  border-radius:2px;overflow:hidden;
-  margin-top:24px;
-}
-.load-fill{
-  height:100%;width:0%;
-  background:linear-gradient(90deg,var(--gold2),var(--gold));
-  border-radius:2px;
-  transition:width 0.3s ease;
+.load-sub{font-size:11px;color:rgba(255,255,255,0.3);letter-spacing:0.3em;margin-top:6px}
+.load-bar{width:140px;height:2px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:28px;overflow:hidden}
+.load-fill{height:100%;width:0;background:linear-gradient(90deg,var(--gold2),var(--gold));transition:width 0.2s}
+
+/* ── BOOK WRAPPER ── */
+#bookWrap{
+  display:none;
+  width:100vw;height:100vh;
+  position:relative;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
 }
 
-/* ── ALBUM CONTAINER ── */
-#album{
-  display:none;
-  min-height:100vh;
-  background:var(--cream);
+/* ── BOOK ── */
+.book{
+  width:min(360px, 92vw);
+  height:min(500px, 75vh);
   position:relative;
+  transform-style:preserve-3d;
+  perspective:2000px;
+}
+
+/* Book shadow */
+.book::after{
+  content:'';
+  position:absolute;
+  bottom:-20px;left:10%;right:10%;
+  height:20px;
+  background:radial-gradient(ellipse,rgba(0,0,0,0.4),transparent 70%);
+  border-radius:50%;
+}
+
+/* ── PAGE ── */
+.page{
+  position:absolute;
+  top:0;left:0;
+  width:100%;height:100%;
+  transform-origin:left center;
+  transform-style:preserve-3d;
+  transition:transform 0.7s cubic-bezier(0.645,0.045,0.355,1.000);
+  cursor:pointer;
+  border-radius:2px 8px 8px 2px;
+}
+
+.page.flipped{
+  transform:rotateY(-180deg);
+}
+
+/* Page front and back */
+.page-front,.page-back{
+  position:absolute;
+  top:0;left:0;width:100%;height:100%;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+  border-radius:2px 8px 8px 2px;
+  overflow:hidden;
+}
+
+.page-back{
+  transform:rotateY(180deg);
+  border-radius:8px 2px 2px 8px;
+}
+
+/* Page spine shadow */
+.page-front::before{
+  content:'';
+  position:absolute;
+  top:0;left:0;bottom:0;width:20px;
+  background:linear-gradient(90deg,rgba(0,0,0,0.15),transparent);
+  z-index:1;pointer-events:none;
+}
+
+.page-back::after{
+  content:'';
+  position:absolute;
+  top:0;right:0;bottom:0;width:20px;
+  background:linear-gradient(-90deg,rgba(0,0,0,0.15),transparent);
+  z-index:1;pointer-events:none;
 }
 
 /* ── COVER PAGE ── */
-.cover{
-  min-height:100vh;
-  background:linear-gradient(160deg,var(--dark) 0%,var(--dark2) 60%,#2A1A08 100%);
+.cover-page{
+  background:linear-gradient(160deg,#1A1208,#0A0806,#2A1A08);
+  width:100%;height:100%;
   display:flex;flex-direction:column;
   align-items:center;justify-content:center;
-  padding:40px 24px;
-  position:relative;overflow:hidden;
+  padding:24px 20px;
   text-align:center;
+  position:relative;overflow:hidden;
 }
 
-.cover::before{
-  content:'';
-  position:absolute;inset:0;
-  background:
-    radial-gradient(ellipse at 30% 20%,rgba(212,175,114,0.08),transparent 50%),
-    radial-gradient(ellipse at 70% 80%,rgba(180,130,80,0.05),transparent 50%);
+.cover-page::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 30% 30%,rgba(212,175,114,0.08),transparent 60%),
+             radial-gradient(ellipse at 70% 70%,rgba(180,130,80,0.05),transparent 60%);
 }
 
-.cover-topline{
+.cover-gold-line{
   position:absolute;top:0;left:0;right:0;height:3px;
   background:linear-gradient(90deg,transparent,var(--gold),var(--gold2),var(--gold),transparent);
 }
+.cover-gold-line-b{
+  position:absolute;bottom:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,transparent,var(--gold2),var(--gold),var(--gold2),transparent);
+}
 
 .cover-corner{
-  position:absolute;
-  width:60px;height:60px;
-  border-color:rgba(212,175,114,0.3);
-  border-style:solid;
+  position:absolute;width:30px;height:30px;
+  border-color:rgba(212,175,114,0.3);border-style:solid;
 }
-.cover-corner.tl{top:20px;left:20px;border-width:1px 0 0 1px}
-.cover-corner.tr{top:20px;right:20px;border-width:1px 1px 0 0}
-.cover-corner.bl{bottom:20px;left:20px;border-width:0 0 1px 1px}
-.cover-corner.br{bottom:20px;right:20px;border-width:0 1px 1px 0}
+.tl{top:14px;left:14px;border-width:1px 0 0 1px}
+.tr{top:14px;right:14px;border-width:1px 1px 0 0}
+.bl{bottom:14px;left:14px;border-width:0 0 1px 1px}
+.br{bottom:14px;right:14px;border-width:0 1px 1px 0}
+
+.cover-img{
+  width:90px;height:90px;border-radius:50%;
+  overflow:hidden;
+  border:2px solid rgba(212,175,114,0.4);
+  box-shadow:0 0 0 6px rgba(212,175,114,0.06);
+  margin-bottom:16px;
+  position:relative;z-index:1;
+}
+.cover-img img,.cover-img-ph{width:100%;height:100%;object-fit:cover}
+.cover-img-ph{background:linear-gradient(135deg,#1A1208,#2A1A08);display:flex;align-items:center;justify-content:center;font-size:36px}
 
 .cover-eyebrow{
-  font-size:10px;letter-spacing:0.4em;
-  text-transform:uppercase;
-  color:rgba(212,175,114,0.6);
-  font-weight:500;margin-bottom:16px;
+  font-size:8px;letter-spacing:0.4em;text-transform:uppercase;
+  color:rgba(212,175,114,0.5);margin-bottom:8px;
   position:relative;z-index:1;
 }
-
-.cover-photo{
-  width:200px;height:200px;
-  border-radius:50%;
-  overflow:hidden;
-  border:3px solid rgba(212,175,114,0.4);
-  box-shadow:0 0 0 8px rgba(212,175,114,0.06),0 20px 60px rgba(0,0,0,0.5);
-  margin-bottom:28px;
-  position:relative;z-index:1;
-}
-.cover-photo img{width:100%;height:100%;object-fit:cover}
-.cover-photo-placeholder{
-  width:100%;height:100%;
-  background:linear-gradient(135deg,var(--dark2),#2A1A08);
-  display:flex;align-items:center;justify-content:center;
-  font-size:60px;
-}
-
-.cover-title{
+.cover-name{
   font-family:'Cormorant Garamond',serif;
-  font-size:42px;font-weight:700;
-  color:white;line-height:1.05;
-  margin-bottom:6px;
+  font-size:26px;font-weight:700;color:white;
+  line-height:1.1;margin-bottom:4px;
   position:relative;z-index:1;
 }
-
-.cover-sub{
+.cover-script{
   font-family:'Cormorant Garamond',serif;
-  font-size:18px;font-weight:300;
-  font-style:italic;
-  color:var(--gold);
-  margin-bottom:20px;
-  position:relative;z-index:1;
+  font-size:15px;font-style:italic;color:var(--gold);
+  margin-bottom:6px;position:relative;z-index:1;
 }
-
 .cover-date{
-  font-size:11px;color:rgba(255,255,255,0.35);
-  letter-spacing:0.2em;text-transform:uppercase;
-  margin-bottom:32px;
-  position:relative;z-index:1;
-}
-
-.cover-divider{
-  width:80px;height:0.5px;
-  background:linear-gradient(90deg,transparent,var(--gold),transparent);
-  margin:0 auto 32px;
-  position:relative;z-index:1;
-}
-
-.cover-stats{
-  display:flex;gap:32px;
-  position:relative;z-index:1;
-  margin-bottom:40px;
-}
-.cover-stat-val{
-  font-family:'Cormorant Garamond',serif;
-  font-size:28px;font-weight:700;
-  color:var(--gold);line-height:1;
-  margin-bottom:4px;
-}
-.cover-stat-lbl{
   font-size:9px;color:rgba(255,255,255,0.3);
-  letter-spacing:0.15em;text-transform:uppercase;
-}
-
-.scroll-hint{
-  position:absolute;bottom:32px;
-  left:50%;transform:translateX(-50%);
-  display:flex;flex-direction:column;
-  align-items:center;gap:6px;
-  z-index:1;
-  animation:bounce 2s ease infinite;
-}
-.scroll-hint-text{
-  font-size:10px;color:rgba(255,255,255,0.3);
   letter-spacing:0.2em;text-transform:uppercase;
-}
-.scroll-arrow{
-  font-size:16px;color:rgba(212,175,114,0.4);
-}
-@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(6px)}}
-
-/* ── ALBUM PAGES ── */
-.album-pages{
-  background:var(--cream);
-  padding:0;
+  position:relative;z-index:1;
 }
 
-/* Section header */
-.section-header{
-  background:var(--dark);
-  padding:20px 24px;
-  display:flex;align-items:center;gap:12px;
-  position:sticky;top:0;z-index:10;
-}
-.section-header-line{
-  flex:1;height:0.5px;
-  background:linear-gradient(90deg,rgba(212,175,114,0.4),transparent);
-}
-.section-header-text{
-  font-size:9px;letter-spacing:0.3em;
-  text-transform:uppercase;
-  color:var(--gold);font-weight:600;
-}
-
-/* Photo grid layouts */
-.page{
-  padding:16px;
-  background:var(--cream);
-  border-bottom:1px solid rgba(180,140,80,0.1);
-}
-
-/* Full bleed hero */
-.layout-hero .photo-frame{
-  width:100%;
-  aspect-ratio:4/3;
-  border-radius:8px;
-  overflow:hidden;
-  box-shadow:0 4px 20px rgba(0,0,0,0.12);
+/* ── PHOTO PAGES ── */
+.photo-page{
+  background:var(--parchment);
+  width:100%;height:100%;
+  display:flex;flex-direction:column;
   position:relative;
 }
 
-/* 2 column */
-.layout-duo{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
+/* Page texture */
+.photo-page::before{
+  content:'';position:absolute;inset:0;
+  background:
+    linear-gradient(90deg,rgba(180,140,80,0.03) 1px,transparent 1px),
+    linear-gradient(rgba(180,140,80,0.02) 1px,transparent 1px);
+  background-size:20px 20px;
+  pointer-events:none;
 }
-.layout-duo .photo-frame{
-  aspect-ratio:1;
-  border-radius:8px;
-  overflow:hidden;
+
+.photo-page-header{
+  padding:12px 14px 8px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:0.5px solid rgba(180,140,80,0.2);
+}
+.page-event-name{
+  font-family:'Cormorant Garamond',serif;
+  font-size:11px;font-style:italic;
+  color:var(--muted);
+}
+.page-number{
+  font-size:9px;color:rgba(180,140,80,0.5);
+  letter-spacing:0.1em;
+}
+
+.photo-area{
+  flex:1;padding:10px 12px;
+  display:flex;flex-direction:column;
+  gap:8px;overflow:hidden;
+}
+
+/* Single photo layout */
+.layout-single .photo-slot{
+  flex:1;border-radius:6px;overflow:hidden;
   box-shadow:0 2px 12px rgba(0,0,0,0.1);
+  position:relative;
 }
 
-/* 3 column */
-.layout-trio{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:6px;
+/* Two photos layout */
+.layout-double{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;height:100%;
 }
-.layout-trio .photo-frame{
-  aspect-ratio:1;
-  border-radius:6px;
-  overflow:hidden;
-  box-shadow:0 2px 8px rgba(0,0,0,0.08);
-}
-
-/* Magazine layout - big + small */
-.layout-mag{
-  display:grid;
-  grid-template-columns:2fr 1fr;
-  grid-template-rows:1fr 1fr;
-  gap:8px;
-  height:280px;
-}
-.layout-mag .photo-frame.main{
-  grid-row:span 2;
-  border-radius:8px;
-  overflow:hidden;
-  box-shadow:0 4px 20px rgba(0,0,0,0.12);
-}
-.layout-mag .photo-frame.small{
-  border-radius:6px;
-  overflow:hidden;
+.layout-double .photo-slot{
+  border-radius:6px;overflow:hidden;
   box-shadow:0 2px 10px rgba(0,0,0,0.1);
 }
 
-.photo-frame img{
-  width:100%;height:100%;
-  object-fit:cover;
-  transition:transform 0.4s ease;
-}
-.photo-frame:active img{transform:scale(1.05)}
-.photo-frame{cursor:pointer;position:relative}
-
-/* Photo number badge */
-.photo-num{
-  position:absolute;bottom:6px;right:6px;
-  background:rgba(0,0,0,0.5);
-  color:rgba(255,255,255,0.8);
-  font-size:9px;padding:2px 6px;
-  border-radius:10px;backdrop-filter:blur(4px);
-}
-
-/* Page decoration */
-.page-deco{
-  text-align:center;padding:12px 0 4px;
-  font-family:'Cormorant Garamond',serif;
-  font-size:13px;font-style:italic;
-  color:var(--muted);
-}
-
-/* ── GROUP SECTION ── */
-.group-section{
-  background:var(--dark);
-  padding:0;
-}
-.group-page{
-  padding:16px;
-  background:rgba(255,255,255,0.03);
-  border-bottom:0.5px solid rgba(212,175,114,0.08);
-}
-.group-grid{
+/* Feature + small layout */
+.layout-feature{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:6px;
+  grid-template-rows:1.6fr 1fr;
+  gap:8px;height:100%;
 }
-.group-frame{
-  aspect-ratio:1;border-radius:6px;
-  overflow:hidden;cursor:pointer;
-  box-shadow:0 2px 8px rgba(0,0,0,0.3);
-  position:relative;
-  border:0.5px solid rgba(212,175,114,0.1);
+.layout-feature .photo-slot{
+  border-radius:6px;overflow:hidden;
+  box-shadow:0 2px 10px rgba(0,0,0,0.1);
 }
-.group-frame img{width:100%;height:100%;object-fit:cover;opacity:0.85}
 
-/* ── CLOSING PAGE ── */
-.closing{
-  background:linear-gradient(160deg,var(--dark2),var(--dark));
-  padding:48px 24px;
-  text-align:center;
+.photo-slot img{
+  width:100%;height:100%;
+  object-fit:cover;display:block;
+}
+
+.photo-page-footer{
+  padding:6px 14px 10px;
+  display:flex;align-items:center;justify-content:center;
+  border-top:0.5px solid rgba(180,140,80,0.15);
+}
+.page-caption{
+  font-family:'Cormorant Garamond',serif;
+  font-size:11px;font-style:italic;
+  color:var(--muted);text-align:center;
+}
+
+/* ── BACK COVER ── */
+.back-cover{
+  background:linear-gradient(160deg,#1A1208,#0A0806);
+  width:100%;height:100%;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:24px;text-align:center;
   position:relative;overflow:hidden;
 }
-.closing::before{
+.back-cover::before{
   content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse at 50% 50%,rgba(212,175,114,0.06),transparent 60%);
+  background:radial-gradient(ellipse at 50% 50%,rgba(212,175,114,0.05),transparent 60%);
 }
-.closing-title{
+.back-brand{
   font-family:'Cormorant Garamond',serif;
-  font-size:32px;font-weight:700;
-  color:white;margin-bottom:8px;
-  position:relative;z-index:1;
+  font-size:22px;font-weight:700;color:white;
+  position:relative;z-index:1;margin-bottom:4px;
 }
-.closing-sub{
-  font-family:'Cormorant Garamond',serif;
-  font-size:18px;font-style:italic;
-  color:var(--gold);margin-bottom:24px;
-  position:relative;z-index:1;
-}
-.closing-divider{
-  width:60px;height:0.5px;
-  background:linear-gradient(90deg,transparent,var(--gold),transparent);
-  margin:0 auto 24px;
-  position:relative;z-index:1;
-}
-.closing-brand{
-  font-size:10px;color:rgba(255,255,255,0.25);
+.back-brand span{color:var(--gold)}
+.back-tagline{
+  font-size:9px;color:rgba(255,255,255,0.25);
   letter-spacing:0.2em;text-transform:uppercase;
-  position:relative;z-index:1;
+  position:relative;z-index:1;margin-bottom:20px;
+}
+.back-divider{
+  width:50px;height:0.5px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  margin:0 auto 20px;position:relative;z-index:1;
+}
+.back-url{
+  font-size:10px;color:rgba(212,175,114,0.4);
+  letter-spacing:0.15em;position:relative;z-index:1;
+}
+
+/* ── NAVIGATION ── */
+#navBar{
+  display:flex;align-items:center;justify-content:center;
+  gap:16px;margin-top:20px;
+  position:relative;z-index:10;
+}
+
+.nav-btn{
+  width:44px;height:44px;
+  background:rgba(255,255,255,0.08);
+  border:0.5px solid rgba(212,175,114,0.2);
+  border-radius:50%;color:var(--gold);
+  font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.nav-btn:active{background:rgba(212,175,114,0.15);transform:scale(0.95)}
+.nav-btn:disabled{opacity:0.3;cursor:not-allowed}
+
+.page-indicator{
+  font-size:11px;color:rgba(255,255,255,0.4);
+  letter-spacing:0.1em;min-width:80px;text-align:center;
+}
+
+/* ── TITLE BAR ── */
+#titleBar{
+  margin-bottom:16px;text-align:center;
+  position:relative;z-index:10;
+}
+.title-bar-name{
+  font-family:'Cormorant Garamond',serif;
+  font-size:18px;font-weight:600;color:white;
+}
+.title-bar-sub{
+  font-size:9px;color:rgba(212,175,114,0.4);
+  letter-spacing:0.2em;text-transform:uppercase;margin-top:2px;
 }
 
 /* ── TOOLBAR ── */
-.toolbar{
-  position:fixed;bottom:0;left:0;right:0;
-  background:rgba(10,8,6,0.95);
-  backdrop-filter:blur(20px);
-  border-top:0.5px solid rgba(212,175,114,0.15);
-  padding:12px 16px 20px;
-  display:flex;gap:10px;
-  z-index:100;
+#toolbar{
+  display:flex;gap:10px;margin-top:16px;
+  position:relative;z-index:10;
 }
 .tb-btn{
-  flex:1;padding:12px 8px;
-  border:none;border-radius:10px;
-  font-family:'Jost',sans-serif;
-  font-size:12px;font-weight:500;
-  cursor:pointer;
-  display:flex;flex-direction:column;
-  align-items:center;gap:3px;
-  transition:all 0.2s;
-}
-.tb-btn-icon{font-size:18px}
-.tb-btn-text{font-size:10px;letter-spacing:0.05em}
-
-.tb-share{
-  background:rgba(212,175,114,0.1);
-  border:0.5px solid rgba(212,175,114,0.25);
-  color:var(--gold);
-}
-.tb-download{
-  background:linear-gradient(135deg,#25D366,#128C7E);
-  color:white;
-}
-.tb-print{
+  padding:9px 16px;border-radius:20px;
+  border:0.5px solid rgba(212,175,114,0.2);
   background:rgba(255,255,255,0.05);
-  border:0.5px solid rgba(255,255,255,0.1);
   color:rgba(255,255,255,0.6);
+  font-family:'Jost',sans-serif;
+  font-size:11px;cursor:pointer;
+  display:flex;align-items:center;gap:5px;
+  transition:all 0.2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.tb-btn:active{background:rgba(212,175,114,0.1)}
+.tb-btn-wa{
+  background:rgba(37,211,102,0.1);
+  border-color:rgba(37,211,102,0.25);
+  color:rgba(37,211,102,0.8);
 }
 
-/* ── LIGHTBOX ── */
-#lightbox{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,0.95);
-  z-index:500;
-  display:none;
-  flex-direction:column;
-  align-items:center;justify-content:center;
+/* ── SWIPE HINT ── */
+.swipe-hint{
+  position:absolute;bottom:8px;left:50%;
+  transform:translateX(-50%);
+  font-size:9px;color:rgba(255,255,255,0.2);
+  letter-spacing:0.15em;text-transform:uppercase;
+  pointer-events:none;
+  animation:fadeInOut 3s ease 2s forwards;
+  opacity:0;
 }
-#lightbox img{
-  max-width:100%;max-height:80vh;
-  object-fit:contain;
-  border-radius:4px;
+@keyframes fadeInOut{
+  0%{opacity:0}10%{opacity:1}80%{opacity:1}100%{opacity:0}
 }
-.lb-close{
-  position:absolute;top:16px;right:16px;
-  width:36px;height:36px;
-  background:rgba(255,255,255,0.1);
-  border:none;border-radius:50%;
-  color:white;font-size:18px;
-  cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
+
+/* BGM indicator */
+#bgmIndicator{
+  position:fixed;top:16px;right:16px;
+  background:rgba(0,0,0,0.4);
+  border:0.5px solid rgba(212,175,114,0.2);
+  border-radius:20px;padding:6px 12px;
+  display:none;align-items:center;gap:6px;
+  font-size:10px;color:rgba(255,255,255,0.5);
+  z-index:100;cursor:pointer;
 }
-.lb-info{
-  margin-top:16px;
-  font-size:11px;color:rgba(255,255,255,0.4);
-  letter-spacing:0.1em;
-}
-.lb-actions{
-  display:flex;gap:10px;margin-top:12px;
-}
-.lb-btn{
-  padding:8px 16px;border-radius:8px;
-  border:none;font-family:'Jost',sans-serif;
-  font-size:12px;cursor:pointer;
-}
-.lb-btn-dl{background:var(--gold);color:var(--dark);font-weight:600}
-.lb-btn-cl{background:rgba(255,255,255,0.1);color:white}
+.music-icon{font-size:14px;animation:spin 3s linear infinite}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -439,388 +395,427 @@ body{
 <!-- LOADING -->
 <div id="loading">
   <div class="load-logo">Photo<span>Find</span> Pro</div>
-  <div style="font-size:11px;color:rgba(255,255,255,0.3);letter-spacing:0.2em;margin-top:4px">YOUR DIGITAL ALBUM</div>
+  <div class="load-sub">Your Digital Album</div>
   <div class="load-bar"><div class="load-fill" id="loadFill"></div></div>
 </div>
 
-<!-- ALBUM -->
-<div id="album">
+<!-- BGM INDICATOR -->
+<div id="bgmIndicator" onclick="toggleBGM()">
+  <span class="music-icon">🎵</span>
+  <span id="bgmText">Playing BGM</span>
+</div>
 
-  <!-- COVER -->
-  <div class="cover" id="coverPage">
-    <div class="cover-topline"></div>
-    <div class="cover-corner tl"></div>
-    <div class="cover-corner tr"></div>
-    <div class="cover-corner bl"></div>
-    <div class="cover-corner br"></div>
+<!-- BOOK WRAP -->
+<div id="bookWrap">
 
-    <div class="cover-eyebrow">✦ Your Personal Album ✦</div>
-
-    <div class="cover-photo">
-      <div class="cover-photo-placeholder" id="coverPhoto">📸</div>
-    </div>
-
-    <div class="cover-title" id="coverTitle">Your Event</div>
-    <div class="cover-sub" id="coverSub">A collection of beautiful memories</div>
-    <div class="cover-date" id="coverDate">2026</div>
-
-    <div class="cover-divider"></div>
-
-    <div class="cover-stats">
-      <div style="text-align:center">
-        <div class="cover-stat-val" id="statSolo">0</div>
-        <div class="cover-stat-lbl">Your Photos</div>
-      </div>
-      <div style="text-align:center">
-        <div class="cover-stat-val" id="statGroup">0</div>
-        <div class="cover-stat-lbl">Group Photos</div>
-      </div>
-    </div>
-
-    <div class="scroll-hint">
-      <div class="scroll-hint-text">Scroll to view album</div>
-      <div class="scroll-arrow">↓</div>
-    </div>
+  <div id="titleBar">
+    <div class="title-bar-name" id="titleName">Your Album</div>
+    <div class="title-bar-sub" id="titleSub">DIGITAL PHOTO BOOK</div>
   </div>
 
-  <!-- ALBUM PAGES -->
-  <div class="album-pages" id="albumPages">
-    <!-- Generated dynamically -->
+  <!-- THE BOOK -->
+  <div class="book" id="book">
+    <!-- Pages injected here -->
   </div>
 
-  <!-- GROUP SECTION -->
-  <div class="group-section" id="groupSection" style="display:none">
-    <div class="section-header">
-      <div class="section-header-text">👥 Group Photos</div>
-      <div class="section-header-line"></div>
-    </div>
-    <div class="group-page">
-      <div class="group-grid" id="groupGrid"></div>
-    </div>
+  <!-- SWIPE HINT -->
+  <div class="swipe-hint">Swipe or tap to turn pages</div>
+
+  <!-- NAVIGATION -->
+  <div id="navBar">
+    <button class="nav-btn" id="prevBtn" onclick="prevPage()" disabled>‹</button>
+    <div class="page-indicator" id="pageIndicator">Cover</div>
+    <button class="nav-btn" id="nextBtn" onclick="nextPage()">›</button>
   </div>
 
-  <!-- CLOSING -->
-  <div class="closing" style="padding-bottom:100px">
-    <div class="closing-title">Thank You</div>
-    <div class="closing-sub">For being part of this beautiful day</div>
-    <div class="closing-divider"></div>
-    <div class="closing-brand">
-      PhotoFind Pro · Temple City Digital<br>
-      www.templecity.digital
-    </div>
+  <!-- TOOLBAR -->
+  <div id="toolbar">
+    <button class="tb-btn" onclick="shareAlbum()">🔗 Share</button>
+    <button class="tb-btn tb-btn-wa" onclick="whatsappShare()">💬 WhatsApp</button>
+    <button class="tb-btn" onclick="toggleBGM()">🎵 Music</button>
   </div>
 
 </div>
 
-<!-- TOOLBAR -->
-<div class="toolbar" id="toolbar" style="display:none">
-  <button class="tb-btn tb-share" onclick="shareAlbum()">
-    <span class="tb-btn-icon">🔗</span>
-    <span class="tb-btn-text">Share</span>
-  </button>
-  <button class="tb-btn tb-download" onclick="downloadAll()">
-    <span class="tb-btn-icon">💬</span>
-    <span class="tb-btn-text">WhatsApp</span>
-  </button>
-  <button class="tb-btn tb-print" onclick="orderPrints()">
-    <span class="tb-btn-icon">🖨️</span>
-    <span class="tb-btn-text">Prints</span>
-  </button>
-</div>
-
-<!-- LIGHTBOX -->
-<div id="lightbox">
-  <button class="lb-close" onclick="closeLightbox()">✕</button>
-  <img id="lbImg" src="" alt="">
-  <div class="lb-info" id="lbInfo"></div>
-  <div class="lb-actions">
-    <a id="lbDownload" href="" target="_blank" class="lb-btn lb-btn-dl">⬇ Download</a>
-    <button class="lb-btn lb-btn-cl" onclick="closeLightbox()">Close</button>
-  </div>
-</div>
+<!-- AUDIO -->
+<audio id="bgmAudio" loop></audio>
 
 <script>
 const SERVER = 'https://api.templecity.digital';
-
-// Get params from URL
 const params = new URLSearchParams(window.location.search);
 const eventId = params.get('event');
-const albumType = params.get('type') || 'wedding';
 
-let soloPhotos = [];
-let groupPhotos = [];
+let pages = [];
+let currentPage = 0;
+let totalPages = 0;
+let allPhotos = [];
 let eventName = '';
+let eventDate = '';
+let bgmPlaying = false;
+let touchStartX = 0;
 
-// Simulate loading
-let progress = 0;
-const loadInterval = setInterval(() => {
-  progress += Math.random() * 15;
-  if (progress > 90) progress = 90;
-  document.getElementById('loadFill').style.width = progress + '%';
-}, 200);
+// Captions pool
+const captions = [
+  'Every moment tells a story...',
+  'Memories worth keeping forever',
+  'A beautiful day to remember',
+  'Joy captured in time',
+  'Smiles that light up the world',
+  'Together, always',
+  'The best moments of the day',
+  'Pure happiness',
+];
 
-// Load album data
-async function loadAlbum() {
+// Loading progress
+let prog = 0;
+const loadInt = setInterval(() => {
+  prog += Math.random() * 12;
+  if (prog > 88) prog = 88;
+  document.getElementById('loadFill').style.width = prog + '%';
+}, 150);
+
+async function init() {
   try {
-    if (!eventId) {
-      showError('No event specified');
+    if (!eventId) { showLoadError('No event specified'); return; }
+
+    // Load events
+    const evRes = await fetch(`${SERVER}/events`);
+    const evData = await evRes.json();
+    const event = evData.events?.find(e => e.id === eventId);
+
+    if (event) {
+      const parts = event.name.split('__');
+      const raw = parts[0].replace(/^\d{4}-\d{2}-\d{2}_/, '').replace(/-/g, ' ');
+      eventName = raw;
+      eventDate = getDate(event.name);
+
+      document.getElementById('titleName').textContent = eventName;
+      document.getElementById('titleSub').textContent = eventDate + ' · DIGITAL PHOTO BOOK';
+    }
+
+    // Load photos
+    const phRes = await fetch(`${SERVER}/photos/${eventId}`);
+    const phData = await phRes.json();
+    allPhotos = phData.photos || [];
+
+    if (allPhotos.length === 0) {
+      showLoadError('No photos found for this event');
       return;
     }
 
-    // Get event info
-    const eventsRes = await fetch(`${SERVER}/events`);
-    const eventsData = await eventsRes.json();
-    const event = eventsData.events?.find(e => e.id === eventId);
-
-    if (event) {
-      const nameParts = event.name.split('__');
-      const rawName = nameParts[0].replace(/^\d{4}-\d{2}-\d{2}_/, '').replace(/-/g, ' ');
-      eventName = rawName;
-
-      // Set cover info
-      document.getElementById('coverTitle').textContent = rawName;
-      document.getElementById('coverSub').textContent = getSubtitle(event.name);
-      document.getElementById('coverDate').textContent = formatDate(event.name);
-    }
-
-    // Get photos
-    const photosRes = await fetch(`${SERVER}/photos/${eventId}`);
-    const photosData = await photosRes.json();
-
-    if (photosData.success) {
-      soloPhotos = photosData.photos || [];
-      groupPhotos = photosData.groupPhotos || [];
-
-      document.getElementById('statSolo').textContent = soloPhotos.length;
-      document.getElementById('statGroup').textContent = groupPhotos.length;
-
-      // Set cover photo
-      if (soloPhotos.length > 0) {
-        const coverPhotoEl = document.getElementById('coverPhoto');
-        coverPhotoEl.innerHTML = `<img src="${soloPhotos[0].thumbnailLink}" style="width:100%;height:100%;object-fit:cover">`;
-      }
-
-      buildAlbumPages();
-      buildGroupSection();
-    }
+    buildBook();
+    setupSwipe();
+    startBGM();
 
     // Complete loading
-    clearInterval(loadInterval);
+    clearInterval(loadInt);
     document.getElementById('loadFill').style.width = '100%';
-
     setTimeout(() => {
       document.getElementById('loading').style.opacity = '0';
       setTimeout(() => {
         document.getElementById('loading').style.display = 'none';
-        document.getElementById('album').style.display = 'block';
-        document.getElementById('toolbar').style.display = 'flex';
+        document.getElementById('bookWrap').style.display = 'flex';
       }, 800);
-    }, 500);
+    }, 400);
 
   } catch(e) {
-    showError(e.message);
+    showLoadError(e.message);
   }
 }
 
-function getSubtitle(name) {
-  if (name.toLowerCase().includes('wed')) return 'A Wedding to Remember';
-  if (name.toLowerCase().includes('birth')) return 'A Birthday Celebration';
-  if (name.toLowerCase().includes('corp')) return 'Corporate Event Memories';
-  return 'Beautiful Memories';
+function buildBook() {
+  const book = document.getElementById('book');
+  book.innerHTML = '';
+  pages = [];
+
+  // Decide layouts
+  const layouts = buildLayouts(allPhotos.length);
+  let photoIdx = 0;
+  let pageNum = 0;
+
+  // Page 0: Cover (front)
+  const coverPage = createPage(pageNum++);
+  coverPage.innerHTML = `
+    <div class="page-front">
+      <div class="cover-page">
+        <div class="cover-gold-line"></div>
+        <div class="cover-gold-line-b"></div>
+        <div class="cover-corner tl"></div>
+        <div class="cover-corner tr"></div>
+        <div class="cover-corner bl"></div>
+        <div class="cover-corner br"></div>
+        <div class="cover-eyebrow">✦ Personal Album ✦</div>
+        <div class="cover-img">
+          <img src="${allPhotos[0]?.thumbnailLink}" onerror="this.parentElement.innerHTML='<div class=cover-img-ph>📸</div>'">
+        </div>
+        <div class="cover-name">${eventName}</div>
+        <div class="cover-script">A collection of beautiful memories</div>
+        <div class="cover-date">${eventDate}</div>
+      </div>
+    </div>
+    <div class="page-back">
+      <div class="photo-page">
+        ${buildPhotoPageInner(allPhotos, photoIdx, 'single', eventName, 1)}
+      </div>
+    </div>`;
+
+  photoIdx += 1;
+  book.appendChild(coverPage);
+  pages.push(coverPage);
+
+  // Photo pages
+  let pairIdx = 1;
+  while (photoIdx < allPhotos.length) {
+    const page = createPage(pageNum++);
+    const frontCount = layouts[pairIdx] || 1;
+    const backCount = layouts[pairIdx + 1] || 1;
+
+    const frontLayout = getLayoutName(frontCount);
+    const backLayout = getLayoutName(backCount);
+
+    const frontPageNum = photoIdx + 1;
+    const backPageNum = photoIdx + frontCount + 1;
+
+    page.innerHTML = `
+      <div class="page-front">
+        <div class="photo-page">
+          ${buildPhotoPageInner(allPhotos, photoIdx, frontLayout, eventName, frontPageNum)}
+        </div>
+      </div>
+      <div class="page-back">
+        ${photoIdx + frontCount < allPhotos.length ?
+          `<div class="photo-page">${buildPhotoPageInner(allPhotos, photoIdx + frontCount, backLayout, eventName, backPageNum)}</div>` :
+          `<div class="back-cover">
+            <div class="back-brand">Photo<span>Find</span> Pro</div>
+            <div class="back-tagline">Odisha's First AI Photo Delivery</div>
+            <div class="back-divider"></div>
+            <div class="back-url">www.templecity.digital</div>
+          </div>`
+        }
+      </div>`;
+
+    photoIdx += frontCount + backCount;
+    book.appendChild(page);
+    pages.push(page);
+    pairIdx += 2;
+  }
+
+  // Last page: back cover if not added
+  if (!book.querySelector('.back-cover')) {
+    const lastPage = createPage(pageNum++);
+    lastPage.innerHTML = `
+      <div class="page-front">
+        <div class="photo-page">
+          <div class="photo-area" style="align-items:center;justify-content:center">
+            <div style="text-align:center;padding:20px">
+              <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;color:var(--muted)">The End</div>
+              <div style="font-size:11px;color:rgba(180,140,80,0.4);margin-top:8px;letter-spacing:0.1em">${allPhotos.length} memories captured</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="page-back">
+        <div class="back-cover">
+          <div class="back-brand">Photo<span>Find</span> Pro</div>
+          <div class="back-tagline">Odisha's First AI Photo Delivery</div>
+          <div class="back-divider"></div>
+          <div class="back-url">www.templecity.digital</div>
+        </div>
+      </div>`;
+    book.appendChild(lastPage);
+    pages.push(lastPage);
+  }
+
+  totalPages = pages.length;
+  updateNav();
 }
 
-function formatDate(name) {
-  const match = name.match(/^(\d{4}-\d{2}-\d{2})/);
-  if (match) {
-    const d = new Date(match[1]);
+function createPage(index) {
+  const p = document.createElement('div');
+  p.className = 'page';
+  p.style.zIndex = 100 - index;
+  p.dataset.index = index;
+  return p;
+}
+
+function buildPhotoPageInner(photos, startIdx, layout, name, pageNum) {
+  const caption = captions[startIdx % captions.length];
+  const pageNumStr = String(pageNum).padStart(2, '0');
+
+  let photoHTML = '';
+
+  if (layout === 'single' && photos[startIdx]) {
+    photoHTML = `<div class="photo-area layout-single">
+      <div class="photo-slot"><img src="${photos[startIdx].thumbnailLink}" loading="lazy"></div>
+    </div>`;
+  } else if (layout === 'double' && photos[startIdx] && photos[startIdx + 1]) {
+    photoHTML = `<div class="photo-area layout-double">
+      <div class="photo-slot"><img src="${photos[startIdx].thumbnailLink}" loading="lazy"></div>
+      <div class="photo-slot"><img src="${photos[startIdx + 1].thumbnailLink}" loading="lazy"></div>
+    </div>`;
+  } else if (layout === 'feature' && photos[startIdx] && photos[startIdx + 1]) {
+    photoHTML = `<div class="photo-area layout-feature">
+      <div class="photo-slot"><img src="${photos[startIdx].thumbnailLink}" loading="lazy"></div>
+      <div class="photo-slot"><img src="${photos[startIdx + 1].thumbnailLink}" loading="lazy"></div>
+    </div>`;
+  } else if (photos[startIdx]) {
+    photoHTML = `<div class="photo-area layout-single">
+      <div class="photo-slot"><img src="${photos[startIdx].thumbnailLink}" loading="lazy"></div>
+    </div>`;
+  }
+
+  return `
+    <div class="photo-page-header">
+      <div class="page-event-name">${name}</div>
+      <div class="page-number">${pageNumStr}</div>
+    </div>
+    ${photoHTML}
+    <div class="photo-page-footer">
+      <div class="page-caption">${caption}</div>
+    </div>`;
+}
+
+function buildLayouts(total) {
+  const layouts = [];
+  let remaining = total;
+  while (remaining > 0) {
+    if (remaining === 1) { layouts.push(1); remaining = 0; }
+    else if (remaining === 2) { layouts.push(2); remaining = 0; }
+    else if (remaining >= 3 && Math.random() > 0.5) { layouts.push(2); remaining -= 2; }
+    else { layouts.push(1); remaining -= 1; }
+  }
+  return layouts;
+}
+
+function getLayoutName(count) {
+  if (count === 1) return 'single';
+  if (count === 2) return Math.random() > 0.5 ? 'double' : 'feature';
+  return 'single';
+}
+
+// ── PAGE FLIP ──
+function nextPage() {
+  if (currentPage >= totalPages - 1) return;
+  pages[currentPage].classList.add('flipped');
+  currentPage++;
+  updateNav();
+}
+
+function prevPage() {
+  if (currentPage <= 0) return;
+  currentPage--;
+  pages[currentPage].classList.remove('flipped');
+  updateNav();
+}
+
+function updateNav() {
+  const prev = document.getElementById('prevBtn');
+  const next = document.getElementById('nextBtn');
+  const indicator = document.getElementById('pageIndicator');
+
+  prev.disabled = currentPage === 0;
+  next.disabled = currentPage >= totalPages - 1;
+
+  if (currentPage === 0) indicator.textContent = 'Cover';
+  else if (currentPage === totalPages - 1) indicator.textContent = 'The End';
+  else indicator.textContent = `Page ${currentPage} of ${totalPages - 1}`;
+}
+
+// ── SWIPE ──
+function setupSwipe() {
+  const book = document.getElementById('book');
+  book.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, {passive:true});
+  book.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 40) {
+      if (dx < 0) nextPage();
+      else prevPage();
+    }
+  }, {passive:true});
+
+  // Click right side = next, left side = prev
+  book.addEventListener('click', e => {
+    const rect = book.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    if (x > rect.width * 0.6) nextPage();
+    else if (x < rect.width * 0.4) prevPage();
+  });
+}
+
+// ── BGM ──
+async function startBGM() {
+  try {
+    const audio = document.getElementById('bgmAudio');
+    // Use a royalty-free music URL
+    audio.src = 'https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3';
+    audio.volume = 0.3;
+
+    // Try Pixabay BGM
+    const bgmRes = await fetch(`${SERVER}/bgm?type=wedding`).catch(() => null);
+    if (bgmRes?.ok) {
+      const bgmData = await bgmRes.json();
+      if (bgmData.url) audio.src = bgmData.url;
+    }
+
+    document.getElementById('bgmIndicator').style.display = 'flex';
+    bgmPlaying = false;
+  } catch(e) {}
+}
+
+function toggleBGM() {
+  const audio = document.getElementById('bgmAudio');
+  const indicator = document.getElementById('bgmIndicator');
+  if (bgmPlaying) {
+    audio.pause();
+    bgmPlaying = false;
+    document.getElementById('bgmText').textContent = 'Play Music';
+    indicator.style.opacity = '0.5';
+  } else {
+    audio.play().then(() => {
+      bgmPlaying = true;
+      document.getElementById('bgmText').textContent = 'Playing BGM';
+      indicator.style.opacity = '1';
+    }).catch(() => {});
+  }
+}
+
+// ── SHARE ──
+function shareAlbum() {
+  const url = window.location.href;
+  if (navigator.share) {
+    navigator.share({ title: `${eventName} — My Album`, url });
+  } else {
+    navigator.clipboard.writeText(url).then(() => alert('Album link copied!'));
+  }
+}
+
+function whatsappShare() {
+  const url = window.location.href;
+  const msg = `📸 *My Photo Album — ${eventName}*\n\n🎬 View my beautiful digital album:\n${url}\n\n_Powered by PhotoFind Pro_\n🌐 www.templecity.digital`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+// ── HELPERS ──
+function getDate(name) {
+  const m = name.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (m) {
+    const d = new Date(m[1]);
     return d.toLocaleDateString('en-IN', {day:'numeric',month:'long',year:'numeric'});
   }
   return '2026';
 }
 
-function buildAlbumPages() {
-  const container = document.getElementById('albumPages');
-  container.innerHTML = '';
-
-  if (soloPhotos.length === 0) {
-    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">No photos found</div>';
-    return;
-  }
-
-  // Section header
-  const header = document.createElement('div');
-  header.className = 'section-header';
-  header.innerHTML = `
-    <div class="section-header-text">📸 Your Photos</div>
-    <div class="section-header-line"></div>`;
-  container.appendChild(header);
-
-  let i = 0;
-  let pageNum = 0;
-
-  while (i < soloPhotos.length) {
-    const remaining = soloPhotos.length - i;
-    const layout = getLayout(pageNum, remaining);
-
-    const page = document.createElement('div');
-    page.className = 'page';
-
-    if (layout === 'hero' && remaining >= 1) {
-      page.innerHTML = `
-        <div class="layout-hero">
-          <div class="photo-frame" onclick="openLightbox(${i})">
-            <img src="${soloPhotos[i].thumbnailLink}" loading="lazy">
-            <div class="photo-num">${i+1}</div>
-          </div>
-        </div>`;
-      i += 1;
-    } else if (layout === 'duo' && remaining >= 2) {
-      page.innerHTML = `
-        <div class="layout-duo">
-          <div class="photo-frame" onclick="openLightbox(${i})">
-            <img src="${soloPhotos[i].thumbnailLink}" loading="lazy">
-            <div class="photo-num">${i+1}</div>
-          </div>
-          <div class="photo-frame" onclick="openLightbox(${i+1})">
-            <img src="${soloPhotos[i+1].thumbnailLink}" loading="lazy">
-            <div class="photo-num">${i+2}</div>
-          </div>
-        </div>`;
-      i += 2;
-    } else if (layout === 'mag' && remaining >= 3) {
-      page.innerHTML = `
-        <div class="layout-mag">
-          <div class="photo-frame main" onclick="openLightbox(${i})">
-            <img src="${soloPhotos[i].thumbnailLink}" loading="lazy">
-          </div>
-          <div class="photo-frame small" onclick="openLightbox(${i+1})">
-            <img src="${soloPhotos[i+1].thumbnailLink}" loading="lazy">
-          </div>
-          <div class="photo-frame small" onclick="openLightbox(${i+2})">
-            <img src="${soloPhotos[i+2].thumbnailLink}" loading="lazy">
-          </div>
-        </div>`;
-      i += 3;
-    } else {
-      // Trio or remaining
-      const count = Math.min(3, remaining);
-      let html = '<div class="layout-trio">';
-      for (let j = 0; j < count; j++) {
-        html += `<div class="photo-frame" onclick="openLightbox(${i+j})">
-          <img src="${soloPhotos[i+j].thumbnailLink}" loading="lazy">
-          <div class="photo-num">${i+j+1}</div>
-        </div>`;
-      }
-      html += '</div>';
-      page.innerHTML = html;
-      i += count;
-    }
-
-    // Add decorative text occasionally
-    if (pageNum % 4 === 3) {
-      const deco = document.createElement('div');
-      deco.className = 'page-deco';
-      deco.textContent = getDecoText(albumType);
-      page.appendChild(deco);
-    }
-
-    container.appendChild(page);
-    pageNum++;
-  }
-}
-
-function getLayout(pageNum, remaining) {
-  if (remaining === 1) return 'hero';
-  if (remaining === 2) return 'duo';
-  const layouts = ['hero', 'duo', 'mag', 'trio', 'duo', 'hero', 'trio', 'mag'];
-  return layouts[pageNum % layouts.length];
-}
-
-function getDecoText(type) {
-  const texts = {
-    wedding: ['Every love story is beautiful...', 'Two souls, one journey ♥', 'Forever begins today...'],
-    birthday: ['Making memories that last...', 'Celebrating life! 🎉', 'Another year of joy...'],
-    corporate: ['Moments worth remembering...', 'Together we achieve more...'],
-    default: ['Beautiful memories...', 'Captured forever...']
-  };
-  const arr = texts[type] || texts.default;
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-function buildGroupSection() {
-  if (groupPhotos.length === 0) return;
-
-  const section = document.getElementById('groupSection');
-  section.style.display = 'block';
-
-  const grid = document.getElementById('groupGrid');
-  grid.innerHTML = '';
-
-  groupPhotos.forEach((photo, i) => {
-    const frame = document.createElement('div');
-    frame.className = 'group-frame';
-    frame.innerHTML = `<img src="${photo.thumbnailLink}" loading="lazy">`;
-    frame.onclick = () => openGroupLightbox(i);
-    grid.appendChild(frame);
-  });
-}
-
-// Lightbox
-function openLightbox(index) {
-  const photo = soloPhotos[index];
-  document.getElementById('lbImg').src = photo.thumbnailLink;
-  document.getElementById('lbDownload').href = photo.viewLink;
-  document.getElementById('lbInfo').textContent = `Photo ${index + 1} of ${soloPhotos.length}`;
-  document.getElementById('lightbox').style.display = 'flex';
-}
-
-function openGroupLightbox(index) {
-  const photo = groupPhotos[index];
-  document.getElementById('lbImg').src = photo.thumbnailLink;
-  document.getElementById('lbDownload').href = photo.viewLink;
-  document.getElementById('lbInfo').textContent = `Group Photo ${index + 1} of ${groupPhotos.length}`;
-  document.getElementById('lightbox').style.display = 'flex';
-}
-
-function closeLightbox() {
-  document.getElementById('lightbox').style.display = 'none';
-}
-
-// Toolbar actions
-function shareAlbum() {
-  const url = window.location.href;
-  if (navigator.share) {
-    navigator.share({title: `${eventName} — My Album`, url});
-  } else {
-    navigator.clipboard.writeText(url);
-    alert('Album link copied!');
-  }
-}
-
-function downloadAll() {
-  const msg = `📸 *My Photos from ${eventName}*\n\n` +
-    `📷 ${soloPhotos.length} personal photos\n` +
-    `👥 ${groupPhotos.length} group photos\n\n` +
-    `View my digital album:\n${window.location.href}\n\n` +
-    `_Powered by PhotoFind Pro_\n🌐 www.templecity.digital`;
-  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-}
-
-function orderPrints() {
-  alert('Order prints feature coming soon!');
-}
-
-function showError(msg) {
-  clearInterval(loadInterval);
+function showLoadError(msg) {
+  clearInterval(loadInt);
   document.getElementById('loading').innerHTML = `
     <div style="text-align:center;padding:40px">
-      <div style="font-size:36px;margin-bottom:16px">😔</div>
+      <div style="font-size:40px;margin-bottom:16px">😔</div>
       <div style="color:white;font-size:16px;margin-bottom:8px">Album not found</div>
       <div style="color:rgba(255,255,255,0.4);font-size:13px">${msg}</div>
     </div>`;
 }
 
-loadAlbum();
+init();
 </script>
 </body>
 </html>
