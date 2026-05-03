@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PhotoFind Pro — Your Album</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400;1,600&family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --gold:#D4AF72;
+  --gold2:#B8935A;
+  --cream:#FDFBF6;
+  --dark:#0A0806;
+  --dark2:#1A1208;
+  --text:#2A1E0E;
+  --muted:#8B7355;
+  --border:rgba(180,140,80,0.2);
+}
+
+body{
+  font-family:'Jost',sans-serif;
+  background:var(--dark);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ── LOADING ── */
+#loading{
+  position:fixed;inset:0;
+  background:var(--dark);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  z-index:1000;
+  transition:opacity 0.8s ease;
+}
+.load-logo{
+  font-family:'Cormorant Garamond',serif;
+  font-size:36px;font-weight:700;
+  color:white;margin-bottom:8px;
+}
+.load-logo span{color:var(--gold)}
+.load-bar{
+  width:120px;height:2px;
+  background:rgba(255,255,255,0.1);
+  border-radius:2px;overflow:hidden;
+  margin-top:24px;
+}
+.load-fill{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,var(--gold2),var(--gold));
+  border-radius:2px;
+  transition:width 0.3s ease;
+}
+
+/* ── ALBUM CONTAINER ── */
+#album{
+  display:none;
+  min-height:100vh;
+  background:var(--cream);
+  position:relative;
+}
+
+/* ── COVER PAGE ── */
+.cover{
+  min-height:100vh;
+  background:linear-gradient(160deg,var(--dark) 0%,var(--dark2) 60%,#2A1A08 100%);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:40px 24px;
+  position:relative;overflow:hidden;
+  text-align:center;
+}
+
+.cover::before{
+  content:'';
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 30% 20%,rgba(212,175,114,0.08),transparent 50%),
+    radial-gradient(ellipse at 70% 80%,rgba(180,130,80,0.05),transparent 50%);
+}
+
+.cover-topline{
+  position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,transparent,var(--gold),var(--gold2),var(--gold),transparent);
+}
+
+.cover-corner{
+  position:absolute;
+  width:60px;height:60px;
+  border-color:rgba(212,175,114,0.3);
+  border-style:solid;
+}
+.cover-corner.tl{top:20px;left:20px;border-width:1px 0 0 1px}
+.cover-corner.tr{top:20px;right:20px;border-width:1px 1px 0 0}
+.cover-corner.bl{bottom:20px;left:20px;border-width:0 0 1px 1px}
+.cover-corner.br{bottom:20px;right:20px;border-width:0 1px 1px 0}
+
+.cover-eyebrow{
+  font-size:10px;letter-spacing:0.4em;
+  text-transform:uppercase;
+  color:rgba(212,175,114,0.6);
+  font-weight:500;margin-bottom:16px;
+  position:relative;z-index:1;
+}
+
+.cover-photo{
+  width:200px;height:200px;
+  border-radius:50%;
+  overflow:hidden;
+  border:3px solid rgba(212,175,114,0.4);
+  box-shadow:0 0 0 8px rgba(212,175,114,0.06),0 20px 60px rgba(0,0,0,0.5);
+  margin-bottom:28px;
+  position:relative;z-index:1;
+}
+.cover-photo img{width:100%;height:100%;object-fit:cover}
+.cover-photo-placeholder{
+  width:100%;height:100%;
+  background:linear-gradient(135deg,var(--dark2),#2A1A08);
+  display:flex;align-items:center;justify-content:center;
+  font-size:60px;
+}
+
+.cover-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:42px;font-weight:700;
+  color:white;line-height:1.05;
+  margin-bottom:6px;
+  position:relative;z-index:1;
+}
+
+.cover-sub{
+  font-family:'Cormorant Garamond',serif;
+  font-size:18px;font-weight:300;
+  font-style:italic;
+  color:var(--gold);
+  margin-bottom:20px;
+  position:relative;z-index:1;
+}
+
+.cover-date{
+  font-size:11px;color:rgba(255,255,255,0.35);
+  letter-spacing:0.2em;text-transform:uppercase;
+  margin-bottom:32px;
+  position:relative;z-index:1;
+}
+
+.cover-divider{
+  width:80px;height:0.5px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  margin:0 auto 32px;
+  position:relative;z-index:1;
+}
+
+.cover-stats{
+  display:flex;gap:32px;
+  position:relative;z-index:1;
+  margin-bottom:40px;
+}
+.cover-stat-val{
+  font-family:'Cormorant Garamond',serif;
+  font-size:28px;font-weight:700;
+  color:var(--gold);line-height:1;
+  margin-bottom:4px;
+}
+.cover-stat-lbl{
+  font-size:9px;color:rgba(255,255,255,0.3);
+  letter-spacing:0.15em;text-transform:uppercase;
+}
+
+.scroll-hint{
+  position:absolute;bottom:32px;
+  left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;
+  align-items:center;gap:6px;
+  z-index:1;
+  animation:bounce 2s ease infinite;
+}
+.scroll-hint-text{
+  font-size:10px;color:rgba(255,255,255,0.3);
+  letter-spacing:0.2em;text-transform:uppercase;
+}
+.scroll-arrow{
+  font-size:16px;color:rgba(212,175,114,0.4);
+}
+@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(6px)}}
+
+/* ── ALBUM PAGES ── */
+.album-pages{
+  background:var(--cream);
+  padding:0;
+}
+
+/* Section header */
+.section-header{
+  background:var(--dark);
+  padding:20px 24px;
+  display:flex;align-items:center;gap:12px;
+  position:sticky;top:0;z-index:10;
+}
+.section-header-line{
+  flex:1;height:0.5px;
+  background:linear-gradient(90deg,rgba(212,175,114,0.4),transparent);
+}
+.section-header-text{
+  font-size:9px;letter-spacing:0.3em;
+  text-transform:uppercase;
+  color:var(--gold);font-weight:600;
+}
+
+/* Photo grid layouts */
+.page{
+  padding:16px;
+  background:var(--cream);
+  border-bottom:1px solid rgba(180,140,80,0.1);
+}
+
+/* Full bleed hero */
+.layout-hero .photo-frame{
+  width:100%;
+  aspect-ratio:4/3;
+  border-radius:8px;
+  overflow:hidden;
+  box-shadow:0 4px 20px rgba(0,0,0,0.12);
+  position:relative;
+}
+
+/* 2 column */
+.layout-duo{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.layout-duo .photo-frame{
+  aspect-ratio:1;
+  border-radius:8px;
+  overflow:hidden;
+  box-shadow:0 2px 12px rgba(0,0,0,0.1);
+}
+
+/* 3 column */
+.layout-trio{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:6px;
+}
+.layout-trio .photo-frame{
+  aspect-ratio:1;
+  border-radius:6px;
+  overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Magazine layout - big + small */
+.layout-mag{
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  grid-template-rows:1fr 1fr;
+  gap:8px;
+  height:280px;
+}
+.layout-mag .photo-frame.main{
+  grid-row:span 2;
+  border-radius:8px;
+  overflow:hidden;
+  box-shadow:0 4px 20px rgba(0,0,0,0.12);
+}
+.layout-mag .photo-frame.small{
+  border-radius:6px;
+  overflow:hidden;
+  box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+
+.photo-frame img{
+  width:100%;height:100%;
+  object-fit:cover;
+  transition:transform 0.4s ease;
+}
+.photo-frame:active img{transform:scale(1.05)}
+.photo-frame{cursor:pointer;position:relative}
+
+/* Photo number badge */
+.photo-num{
+  position:absolute;bottom:6px;right:6px;
+  background:rgba(0,0,0,0.5);
+  color:rgba(255,255,255,0.8);
+  font-size:9px;padding:2px 6px;
+  border-radius:10px;backdrop-filter:blur(4px);
+}
+
+/* Page decoration */
+.page-deco{
+  text-align:center;padding:12px 0 4px;
+  font-family:'Cormorant Garamond',serif;
+  font-size:13px;font-style:italic;
+  color:var(--muted);
+}
+
+/* ── GROUP SECTION ── */
+.group-section{
+  background:var(--dark);
+  padding:0;
+}
+.group-page{
+  padding:16px;
+  background:rgba(255,255,255,0.03);
+  border-bottom:0.5px solid rgba(212,175,114,0.08);
+}
+.group-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:6px;
+}
+.group-frame{
+  aspect-ratio:1;border-radius:6px;
+  overflow:hidden;cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,0.3);
+  position:relative;
+  border:0.5px solid rgba(212,175,114,0.1);
+}
+.group-frame img{width:100%;height:100%;object-fit:cover;opacity:0.85}
+
+/* ── CLOSING PAGE ── */
+.closing{
+  background:linear-gradient(160deg,var(--dark2),var(--dark));
+  padding:48px 24px;
+  text-align:center;
+  position:relative;overflow:hidden;
+}
+.closing::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 50%,rgba(212,175,114,0.06),transparent 60%);
+}
+.closing-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:32px;font-weight:700;
+  color:white;margin-bottom:8px;
+  position:relative;z-index:1;
+}
+.closing-sub{
+  font-family:'Cormorant Garamond',serif;
+  font-size:18px;font-style:italic;
+  color:var(--gold);margin-bottom:24px;
+  position:relative;z-index:1;
+}
+.closing-divider{
+  width:60px;height:0.5px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  margin:0 auto 24px;
+  position:relative;z-index:1;
+}
+.closing-brand{
+  font-size:10px;color:rgba(255,255,255,0.25);
+  letter-spacing:0.2em;text-transform:uppercase;
+  position:relative;z-index:1;
+}
+
+/* ── TOOLBAR ── */
+.toolbar{
+  position:fixed;bottom:0;left:0;right:0;
+  background:rgba(10,8,6,0.95);
+  backdrop-filter:blur(20px);
+  border-top:0.5px solid rgba(212,175,114,0.15);
+  padding:12px 16px 20px;
+  display:flex;gap:10px;
+  z-index:100;
+}
+.tb-btn{
+  flex:1;padding:12px 8px;
+  border:none;border-radius:10px;
+  font-family:'Jost',sans-serif;
+  font-size:12px;font-weight:500;
+  cursor:pointer;
+  display:flex;flex-direction:column;
+  align-items:center;gap:3px;
+  transition:all 0.2s;
+}
+.tb-btn-icon{font-size:18px}
+.tb-btn-text{font-size:10px;letter-spacing:0.05em}
+
+.tb-share{
+  background:rgba(212,175,114,0.1);
+  border:0.5px solid rgba(212,175,114,0.25);
+  color:var(--gold);
+}
+.tb-download{
+  background:linear-gradient(135deg,#25D366,#128C7E);
+  color:white;
+}
+.tb-print{
+  background:rgba(255,255,255,0.05);
+  border:0.5px solid rgba(255,255,255,0.1);
+  color:rgba(255,255,255,0.6);
+}
+
+/* ── LIGHTBOX ── */
+#lightbox{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.95);
+  z-index:500;
+  display:none;
+  flex-direction:column;
+  align-items:center;justify-content:center;
+}
+#lightbox img{
+  max-width:100%;max-height:80vh;
+  object-fit:contain;
+  border-radius:4px;
+}
+.lb-close{
+  position:absolute;top:16px;right:16px;
+  width:36px;height:36px;
+  background:rgba(255,255,255,0.1);
+  border:none;border-radius:50%;
+  color:white;font-size:18px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.lb-info{
+  margin-top:16px;
+  font-size:11px;color:rgba(255,255,255,0.4);
+  letter-spacing:0.1em;
+}
+.lb-actions{
+  display:flex;gap:10px;margin-top:12px;
+}
+.lb-btn{
+  padding:8px 16px;border-radius:8px;
+  border:none;font-family:'Jost',sans-serif;
+  font-size:12px;cursor:pointer;
+}
+.lb-btn-dl{background:var(--gold);color:var(--dark);font-weight:600}
+.lb-btn-cl{background:rgba(255,255,255,0.1);color:white}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="load-logo">Photo<span>Find</span> Pro</div>
+  <div style="font-size:11px;color:rgba(255,255,255,0.3);letter-spacing:0.2em;margin-top:4px">YOUR DIGITAL ALBUM</div>
+  <div class="load-bar"><div class="load-fill" id="loadFill"></div></div>
+</div>
+
+<!-- ALBUM -->
+<div id="album">
+
+  <!-- COVER -->
+  <div class="cover" id="coverPage">
+    <div class="cover-topline"></div>
+    <div class="cover-corner tl"></div>
+    <div class="cover-corner tr"></div>
+    <div class="cover-corner bl"></div>
+    <div class="cover-corner br"></div>
+
+    <div class="cover-eyebrow">✦ Your Personal Album ✦</div>
+
+    <div class="cover-photo">
+      <div class="cover-photo-placeholder" id="coverPhoto">📸</div>
+    </div>
+
+    <div class="cover-title" id="coverTitle">Your Event</div>
+    <div class="cover-sub" id="coverSub">A collection of beautiful memories</div>
+    <div class="cover-date" id="coverDate">2026</div>
+
+    <div class="cover-divider"></div>
+
+    <div class="cover-stats">
+      <div style="text-align:center">
+        <div class="cover-stat-val" id="statSolo">0</div>
+        <div class="cover-stat-lbl">Your Photos</div>
+      </div>
+      <div style="text-align:center">
+        <div class="cover-stat-val" id="statGroup">0</div>
+        <div class="cover-stat-lbl">Group Photos</div>
+      </div>
+    </div>
+
+    <div class="scroll-hint">
+      <div class="scroll-hint-text">Scroll to view album</div>
+      <div class="scroll-arrow">↓</div>
+    </div>
+  </div>
+
+  <!-- ALBUM PAGES -->
+  <div class="album-pages" id="albumPages">
+    <!-- Generated dynamically -->
+  </div>
+
+  <!-- GROUP SECTION -->
+  <div class="group-section" id="groupSection" style="display:none">
+    <div class="section-header">
+      <div class="section-header-text">👥 Group Photos</div>
+      <div class="section-header-line"></div>
+    </div>
+    <div class="group-page">
+      <div class="group-grid" id="groupGrid"></div>
+    </div>
+  </div>
+
+  <!-- CLOSING -->
+  <div class="closing" style="padding-bottom:100px">
+    <div class="closing-title">Thank You</div>
+    <div class="closing-sub">For being part of this beautiful day</div>
+    <div class="closing-divider"></div>
+    <div class="closing-brand">
+      PhotoFind Pro · Temple City Digital<br>
+      www.templecity.digital
+    </div>
+  </div>
+
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar" id="toolbar" style="display:none">
+  <button class="tb-btn tb-share" onclick="shareAlbum()">
+    <span class="tb-btn-icon">🔗</span>
+    <span class="tb-btn-text">Share</span>
+  </button>
+  <button class="tb-btn tb-download" onclick="downloadAll()">
+    <span class="tb-btn-icon">💬</span>
+    <span class="tb-btn-text">WhatsApp</span>
+  </button>
+  <button class="tb-btn tb-print" onclick="orderPrints()">
+    <span class="tb-btn-icon">🖨️</span>
+    <span class="tb-btn-text">Prints</span>
+  </button>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox">
+  <button class="lb-close" onclick="closeLightbox()">✕</button>
+  <img id="lbImg" src="" alt="">
+  <div class="lb-info" id="lbInfo"></div>
+  <div class="lb-actions">
+    <a id="lbDownload" href="" target="_blank" class="lb-btn lb-btn-dl">⬇ Download</a>
+    <button class="lb-btn lb-btn-cl" onclick="closeLightbox()">Close</button>
+  </div>
+</div>
+
+<script>
+const SERVER = 'https://api.templecity.digital';
+
+// Get params from URL
+const params = new URLSearchParams(window.location.search);
+const eventId = params.get('event');
+const albumType = params.get('type') || 'wedding';
+
+let soloPhotos = [];
+let groupPhotos = [];
+let eventName = '';
+
+// Simulate loading
+let progress = 0;
+const loadInterval = setInterval(() => {
+  progress += Math.random() * 15;
+  if (progress > 90) progress = 90;
+  document.getElementById('loadFill').style.width = progress + '%';
+}, 200);
+
+// Load album data
+async function loadAlbum() {
+  try {
+    if (!eventId) {
+      showError('No event specified');
+      return;
+    }
+
+    // Get event info
+    const eventsRes = await fetch(`${SERVER}/events`);
+    const eventsData = await eventsRes.json();
+    const event = eventsData.events?.find(e => e.id === eventId);
+
+    if (event) {
+      const nameParts = event.name.split('__');
+      const rawName = nameParts[0].replace(/^\d{4}-\d{2}-\d{2}_/, '').replace(/-/g, ' ');
+      eventName = rawName;
+
+      // Set cover info
+      document.getElementById('coverTitle').textContent = rawName;
+      document.getElementById('coverSub').textContent = getSubtitle(event.name);
+      document.getElementById('coverDate').textContent = formatDate(event.name);
+    }
+
+    // Get photos
+    const photosRes = await fetch(`${SERVER}/photos/${eventId}`);
+    const photosData = await photosRes.json();
+
+    if (photosData.success) {
+      soloPhotos = photosData.photos || [];
+      groupPhotos = photosData.groupPhotos || [];
+
+      document.getElementById('statSolo').textContent = soloPhotos.length;
+      document.getElementById('statGroup').textContent = groupPhotos.length;
+
+      // Set cover photo
+      if (soloPhotos.length > 0) {
+        const coverPhotoEl = document.getElementById('coverPhoto');
+        coverPhotoEl.innerHTML = `<img src="${soloPhotos[0].thumbnailLink}" style="width:100%;height:100%;object-fit:cover">`;
+      }
+
+      buildAlbumPages();
+      buildGroupSection();
+    }
+
+    // Complete loading
+    clearInterval(loadInterval);
+    document.getElementById('loadFill').style.width = '100%';
+
+    setTimeout(() => {
+      document.getElementById('loading').style.opacity = '0';
+      setTimeout(() => {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('album').style.display = 'block';
+        document.getElementById('toolbar').style.display = 'flex';
+      }, 800);
+    }, 500);
+
+  } catch(e) {
+    showError(e.message);
+  }
+}
+
+function getSubtitle(name) {
+  if (name.toLowerCase().includes('wed')) return 'A Wedding to Remember';
+  if (name.toLowerCase().includes('birth')) return 'A Birthday Celebration';
+  if (name.toLowerCase().includes('corp')) return 'Corporate Event Memories';
+  return 'Beautiful Memories';
+}
+
+function formatDate(name) {
+  const match = name.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (match) {
+    const d = new Date(match[1]);
+    return d.toLocaleDateString('en-IN', {day:'numeric',month:'long',year:'numeric'});
+  }
+  return '2026';
+}
+
+function buildAlbumPages() {
+  const container = document.getElementById('albumPages');
+  container.innerHTML = '';
+
+  if (soloPhotos.length === 0) {
+    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">No photos found</div>';
+    return;
+  }
+
+  // Section header
+  const header = document.createElement('div');
+  header.className = 'section-header';
+  header.innerHTML = `
+    <div class="section-header-text">📸 Your Photos</div>
+    <div class="section-header-line"></div>`;
+  container.appendChild(header);
+
+  let i = 0;
+  let pageNum = 0;
+
+  while (i < soloPhotos.length) {
+    const remaining = soloPhotos.length - i;
+    const layout = getLayout(pageNum, remaining);
+
+    const page = document.createElement('div');
+    page.className = 'page';
+
+    if (layout === 'hero' && remaining >= 1) {
+      page.innerHTML = `
+        <div class="layout-hero">
+          <div class="photo-frame" onclick="openLightbox(${i})">
+            <img src="${soloPhotos[i].thumbnailLink}" loading="lazy">
+            <div class="photo-num">${i+1}</div>
+          </div>
+        </div>`;
+      i += 1;
+    } else if (layout === 'duo' && remaining >= 2) {
+      page.innerHTML = `
+        <div class="layout-duo">
+          <div class="photo-frame" onclick="openLightbox(${i})">
+            <img src="${soloPhotos[i].thumbnailLink}" loading="lazy">
+            <div class="photo-num">${i+1}</div>
+          </div>
+          <div class="photo-frame" onclick="openLightbox(${i+1})">
+            <img src="${soloPhotos[i+1].thumbnailLink}" loading="lazy">
+            <div class="photo-num">${i+2}</div>
+          </div>
+        </div>`;
+      i += 2;
+    } else if (layout === 'mag' && remaining >= 3) {
+      page.innerHTML = `
+        <div class="layout-mag">
+          <div class="photo-frame main" onclick="openLightbox(${i})">
+            <img src="${soloPhotos[i].thumbnailLink}" loading="lazy">
+          </div>
+          <div class="photo-frame small" onclick="openLightbox(${i+1})">
+            <img src="${soloPhotos[i+1].thumbnailLink}" loading="lazy">
+          </div>
+          <div class="photo-frame small" onclick="openLightbox(${i+2})">
+            <img src="${soloPhotos[i+2].thumbnailLink}" loading="lazy">
+          </div>
+        </div>`;
+      i += 3;
+    } else {
+      // Trio or remaining
+      const count = Math.min(3, remaining);
+      let html = '<div class="layout-trio">';
+      for (let j = 0; j < count; j++) {
+        html += `<div class="photo-frame" onclick="openLightbox(${i+j})">
+          <img src="${soloPhotos[i+j].thumbnailLink}" loading="lazy">
+          <div class="photo-num">${i+j+1}</div>
+        </div>`;
+      }
+      html += '</div>';
+      page.innerHTML = html;
+      i += count;
+    }
+
+    // Add decorative text occasionally
+    if (pageNum % 4 === 3) {
+      const deco = document.createElement('div');
+      deco.className = 'page-deco';
+      deco.textContent = getDecoText(albumType);
+      page.appendChild(deco);
+    }
+
+    container.appendChild(page);
+    pageNum++;
+  }
+}
+
+function getLayout(pageNum, remaining) {
+  if (remaining === 1) return 'hero';
+  if (remaining === 2) return 'duo';
+  const layouts = ['hero', 'duo', 'mag', 'trio', 'duo', 'hero', 'trio', 'mag'];
+  return layouts[pageNum % layouts.length];
+}
+
+function getDecoText(type) {
+  const texts = {
+    wedding: ['Every love story is beautiful...', 'Two souls, one journey ♥', 'Forever begins today...'],
+    birthday: ['Making memories that last...', 'Celebrating life! 🎉', 'Another year of joy...'],
+    corporate: ['Moments worth remembering...', 'Together we achieve more...'],
+    default: ['Beautiful memories...', 'Captured forever...']
+  };
+  const arr = texts[type] || texts.default;
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function buildGroupSection() {
+  if (groupPhotos.length === 0) return;
+
+  const section = document.getElementById('groupSection');
+  section.style.display = 'block';
+
+  const grid = document.getElementById('groupGrid');
+  grid.innerHTML = '';
+
+  groupPhotos.forEach((photo, i) => {
+    const frame = document.createElement('div');
+    frame.className = 'group-frame';
+    frame.innerHTML = `<img src="${photo.thumbnailLink}" loading="lazy">`;
+    frame.onclick = () => openGroupLightbox(i);
+    grid.appendChild(frame);
+  });
+}
+
+// Lightbox
+function openLightbox(index) {
+  const photo = soloPhotos[index];
+  document.getElementById('lbImg').src = photo.thumbnailLink;
+  document.getElementById('lbDownload').href = photo.viewLink;
+  document.getElementById('lbInfo').textContent = `Photo ${index + 1} of ${soloPhotos.length}`;
+  document.getElementById('lightbox').style.display = 'flex';
+}
+
+function openGroupLightbox(index) {
+  const photo = groupPhotos[index];
+  document.getElementById('lbImg').src = photo.thumbnailLink;
+  document.getElementById('lbDownload').href = photo.viewLink;
+  document.getElementById('lbInfo').textContent = `Group Photo ${index + 1} of ${groupPhotos.length}`;
+  document.getElementById('lightbox').style.display = 'flex';
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').style.display = 'none';
+}
+
+// Toolbar actions
+function shareAlbum() {
+  const url = window.location.href;
+  if (navigator.share) {
+    navigator.share({title: `${eventName} — My Album`, url});
+  } else {
+    navigator.clipboard.writeText(url);
+    alert('Album link copied!');
+  }
+}
+
+function downloadAll() {
+  const msg = `📸 *My Photos from ${eventName}*\n\n` +
+    `📷 ${soloPhotos.length} personal photos\n` +
+    `👥 ${groupPhotos.length} group photos\n\n` +
+    `View my digital album:\n${window.location.href}\n\n` +
+    `_Powered by PhotoFind Pro_\n🌐 www.templecity.digital`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function orderPrints() {
+  alert('Order prints feature coming soon!');
+}
+
+function showError(msg) {
+  clearInterval(loadInterval);
+  document.getElementById('loading').innerHTML = `
+    <div style="text-align:center;padding:40px">
+      <div style="font-size:36px;margin-bottom:16px">😔</div>
+      <div style="color:white;font-size:16px;margin-bottom:8px">Album not found</div>
+      <div style="color:rgba(255,255,255,0.4);font-size:13px">${msg}</div>
+    </div>`;
+}
+
+loadAlbum();
+</script>
+</body>
+</html>

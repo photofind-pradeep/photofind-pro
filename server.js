@@ -991,6 +991,39 @@ app.get('/events', async (req, res) => {
   }
 });
 
+// ── Get Photos for Album ──
+app.get('/photos/:eventId', async (req, res) => {
+  try {
+    const { eventId } = req.params;
+
+    const subfolders = await drive.files.list({
+      q: `'${eventId}' in parents and mimeType='application/vnd.google-apps.folder' and name='original' and trashed=false`,
+      fields: 'files(id)',
+    });
+
+    if (!subfolders.data.files.length) {
+      return res.json({ success: true, photos: [], groupPhotos: [] });
+    }
+
+    const photosRes = await drive.files.list({
+      q: `'${subfolders.data.files[0].id}' in parents and mimeType contains 'image/' and trashed=false`,
+      fields: 'files(id, name, thumbnailLink, webViewLink)', pageSize: 1000,
+    });
+
+    const photos = photosRes.data.files.map(f => ({
+      id: f.id,
+      name: f.name,
+      thumbnailLink: f.thumbnailLink?.replace('=s220', '=s400') || '',
+      viewLink: f.webViewLink,
+    }));
+
+    res.json({ success: true, photos, groupPhotos: [] });
+  } catch(err) {
+    console.error('❌ Photos error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.get('/stats/:eventId', async (req, res) => {
   try {
     const { eventId } = req.params;
