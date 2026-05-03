@@ -4,207 +4,519 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>PhotoFind Pro — Your Album</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400;1,600&family=Jost:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Montserrat:wght@200;300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --gold:#D4AF72;--gold2:#B8935A;
-  --cream:#FDFBF6;--parchment:#F5EDD8;
-  --dark:#0A0806;--text:#2A1E0E;--muted:#8B7355;
+  --gold:#E8C87A;--gold2:#C9A84C;--gold3:#A07830;
+  --cream:#FDF8F0;--ivory:#F5EDD8;--parchment:#EDE0C4;
+  --dark:#0C0A07;--dark2:#1A1408;--ink:#2A1E0E;
+  --rose:#C8899A;--sage:#8BA888;--slate:#6B8B9E;
 }
+
+html,body{width:100%;height:100%;overflow:hidden}
 
 body{
-  font-family:'Jost',sans-serif;
-  background:radial-gradient(ellipse at center,#2A1A08,#0A0806);
-  min-height:100vh;overflow:hidden;
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  user-select:none;
-  -webkit-tap-highlight-color:transparent;
+  font-family:'Montserrat',sans-serif;
+  background:var(--dark);
+  display:flex;align-items:center;justify-content:center;
+  user-select:none;-webkit-tap-highlight-color:transparent;
 }
 
-/* ── LOADING ── */
+/* ══ LOADING ══ */
 #loading{
-  position:fixed;inset:0;z-index:1000;
+  position:fixed;inset:0;z-index:9999;
   background:var(--dark);
   display:flex;flex-direction:column;
   align-items:center;justify-content:center;
-  transition:opacity 0.8s;
+  gap:0;
 }
-.load-logo{font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:700;color:white}
-.load-logo span{color:var(--gold)}
-.load-sub{font-size:11px;color:rgba(255,255,255,0.3);letter-spacing:0.3em;margin-top:6px}
-.load-bar{width:140px;height:2px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:28px;overflow:hidden}
-.load-fill{height:100%;width:0;background:linear-gradient(90deg,var(--gold2),var(--gold));transition:width 0.2s}
+.ld-brand{
+  font-family:'Playfair Display',serif;
+  font-size:38px;font-weight:900;
+  color:white;letter-spacing:-0.02em;
+  margin-bottom:4px;
+}
+.ld-brand em{color:var(--gold);font-style:normal}
+.ld-tag{font-size:9px;color:rgba(232,200,122,0.4);letter-spacing:0.4em;text-transform:uppercase;margin-bottom:32px}
+.ld-bar{width:160px;height:1.5px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden}
+.ld-fill{height:100%;width:0;background:linear-gradient(90deg,var(--gold3),var(--gold),var(--gold2));transition:width 0.2s}
+.ld-status{font-size:10px;color:rgba(255,255,255,0.2);margin-top:12px;letter-spacing:0.15em}
 
-/* ── BOOK WRAP ── */
-#bookWrap{
+/* ══ STAGE ══ */
+#stage{
   display:none;
   width:100vw;height:100vh;
-  flex-direction:column;
-  align-items:center;justify-content:center;
-}
-
-/* ── TITLE ── */
-#titleBar{margin-bottom:14px;text-align:center}
-.title-name{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:white}
-.title-sub{font-size:9px;color:rgba(212,175,114,0.4);letter-spacing:0.2em;margin-top:2px}
-
-/* ── BOOK ── */
-.book{
-  width:min(340px,90vw);
-  height:min(480px,68vh);
   position:relative;
-  perspective:2000px;
-  transform-style:preserve-3d;
+  align-items:center;justify-content:center;
+  flex-direction:column;
+  overflow:hidden;
 }
-.book::after{
-  content:'';position:absolute;
-  bottom:-16px;left:8%;right:8%;height:16px;
-  background:radial-gradient(ellipse,rgba(0,0,0,0.35),transparent 70%);
+
+/* Ambient background */
+#stage::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 20% 30%,rgba(232,200,122,0.04),transparent 40%),
+    radial-gradient(ellipse at 80% 70%,rgba(200,137,154,0.03),transparent 40%);
+}
+
+/* ══ BOOK ══ */
+.book-container{
+  position:relative;
+  display:flex;flex-direction:column;
+  align-items:center;
+}
+
+.book{
+  width:min(320px,88vw);
+  height:min(460px,65vh);
+  position:relative;
+  perspective:2400px;
+}
+
+/* Book shadow layers */
+.book-shadow{
+  position:absolute;
+  bottom:-18px;left:6%;right:6%;height:18px;
+  background:radial-gradient(ellipse at 50% 0,rgba(0,0,0,0.5),transparent 70%);
+  border-radius:50%;
+}
+.book-shadow2{
+  position:absolute;
+  bottom:-30px;left:12%;right:12%;height:15px;
+  background:radial-gradient(ellipse at 50% 0,rgba(0,0,0,0.2),transparent 70%);
   border-radius:50%;
 }
 
-/* ── PAGE ── */
+/* Book spine */
+.book-spine{
+  position:absolute;
+  top:4px;bottom:4px;left:0;width:12px;
+  background:linear-gradient(90deg,#2A1A08,#3A2A10,#2A1A08);
+  border-radius:2px 0 0 2px;
+  box-shadow:inset -2px 0 4px rgba(0,0,0,0.3);
+  z-index:300;
+}
+
+/* ══ PAGES ══ */
 .page{
   position:absolute;inset:0;
   transform-origin:left center;
   transform-style:preserve-3d;
-  transition:transform 0.75s cubic-bezier(0.645,0.045,0.355,1.000);
-  border-radius:2px 10px 10px 2px;
+  transition:transform 0.9s cubic-bezier(0.4,0,0.2,1);
+  cursor:pointer;
 }
 .page.flipped{transform:rotateY(-180deg)}
 
-.page-front,.page-back{
+.page-f,.page-b{
   position:absolute;inset:0;
   backface-visibility:hidden;
   -webkit-backface-visibility:hidden;
   overflow:hidden;
 }
-.page-front{border-radius:2px 10px 10px 2px}
-.page-back{
+.page-f{
+  border-radius:1px 10px 10px 1px;
+  box-shadow:2px 0 15px rgba(0,0,0,0.2),inset -1px 0 0 rgba(0,0,0,0.1);
+}
+.page-b{
   transform:rotateY(180deg);
-  border-radius:10px 2px 2px 10px;
+  border-radius:10px 1px 1px 10px;
+  box-shadow:-2px 0 15px rgba(0,0,0,0.2),inset 1px 0 0 rgba(0,0,0,0.1);
 }
 
-/* spine shadows */
-.page-front::before{
-  content:'';position:absolute;top:0;left:0;bottom:0;width:24px;
-  background:linear-gradient(90deg,rgba(0,0,0,0.18),transparent);
-  z-index:2;pointer-events:none;
-}
-.page-back::after{
-  content:'';position:absolute;top:0;right:0;bottom:0;width:24px;
-  background:linear-gradient(-90deg,rgba(0,0,0,0.18),transparent);
-  z-index:2;pointer-events:none;
+/* Page edge shimmer on flip */
+.page-f::after{
+  content:'';position:absolute;
+  top:0;right:0;bottom:0;width:40px;
+  background:linear-gradient(-90deg,rgba(0,0,0,0.08),transparent);
+  pointer-events:none;z-index:1;
 }
 
-/* ── COVER ── */
-.cover-page{
+/* ══ COVER PAGE ══ */
+.cover{
   width:100%;height:100%;
-  background:linear-gradient(155deg,#1A1208,#0A0806,#2A1A08);
+  position:relative;overflow:hidden;
+  background:var(--dark2);
+}
+
+/* Wedding theme: Deep navy + gold */
+.cover.wedding{
+  background:linear-gradient(140deg,#0D0A1A 0%,#1A0F2E 40%,#0A0C1A 70%,#120A0A 100%);
+}
+/* Birthday theme */
+.cover.birthday{
+  background:linear-gradient(140deg,#0A1A0A 0%,#0F2A1A 40%,#0A1A2A 100%);
+}
+/* Corporate theme */
+.cover.corporate{
+  background:linear-gradient(140deg,#0A0A1A 0%,#0F1A2A 100%);
+}
+
+/* Decorative orbs */
+.cover-orb1,.cover-orb2,.cover-orb3{
+  position:absolute;border-radius:50%;pointer-events:none;
+}
+.cover.wedding .cover-orb1{
+  width:220px;height:220px;top:-60px;right:-60px;
+  background:radial-gradient(circle,rgba(100,60,180,0.2),transparent 70%);
+}
+.cover.wedding .cover-orb2{
+  width:180px;height:180px;bottom:-40px;left:-40px;
+  background:radial-gradient(circle,rgba(180,100,120,0.15),transparent 70%);
+}
+.cover.wedding .cover-orb3{
+  width:120px;height:120px;top:40%;left:20%;
+  background:radial-gradient(circle,rgba(232,200,122,0.06),transparent 70%);
+}
+
+/* Geometric decorations */
+.cover-geo{
+  position:absolute;inset:0;pointer-events:none;overflow:hidden;
+}
+.cover-geo::before{
+  content:'';position:absolute;
+  top:12px;left:12px;right:12px;bottom:12px;
+  border:0.5px solid rgba(232,200,122,0.12);
+  border-radius:2px;
+}
+.cover-geo::after{
+  content:'';position:absolute;
+  top:18px;left:18px;right:18px;bottom:18px;
+  border:0.5px solid rgba(232,200,122,0.06);
+  border-radius:2px;
+}
+
+/* Top decorative line */
+.cover-topline{
+  position:absolute;top:0;left:0;right:0;height:2.5px;
+  background:linear-gradient(90deg,transparent,var(--gold3),var(--gold),var(--gold2),var(--gold),var(--gold3),transparent);
+}
+
+/* Cover content */
+.cover-content{
+  position:absolute;inset:0;
   display:flex;flex-direction:column;
   align-items:center;justify-content:center;
-  padding:20px 16px;text-align:center;
-  position:relative;overflow:hidden;
+  padding:28px 20px;
+  text-align:center;
 }
-.cover-page::before{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse at 30% 25%,rgba(212,175,114,0.08),transparent 55%),
-             radial-gradient(ellipse at 70% 75%,rgba(180,130,80,0.05),transparent 55%);
+
+/* Mandala / decorative circle */
+.cover-mandala{
+  width:130px;height:130px;
+  position:relative;margin-bottom:16px;
 }
-.cover-top-line,.cover-bot-line{
-  position:absolute;left:0;right:0;height:3px;
-  background:linear-gradient(90deg,transparent,var(--gold),var(--gold2),var(--gold),transparent);
+.cover-photo-ring{
+  position:absolute;inset:0;
+  border-radius:50%;
+  border:1px solid rgba(232,200,122,0.25);
+  box-shadow:
+    0 0 0 6px rgba(232,200,122,0.04),
+    0 0 0 12px rgba(232,200,122,0.02),
+    0 0 40px rgba(232,200,122,0.08),
+    inset 0 0 20px rgba(0,0,0,0.3);
 }
-.cover-top-line{top:0}
-.cover-bot-line{bottom:0}
-
-.c-corner{position:absolute;width:28px;height:28px;border-color:rgba(212,175,114,0.3);border-style:solid}
-.c-tl{top:12px;left:12px;border-width:1px 0 0 1px}
-.c-tr{top:12px;right:12px;border-width:1px 1px 0 0}
-.c-bl{bottom:12px;left:12px;border-width:0 0 1px 1px}
-.c-br{bottom:12px;right:12px;border-width:0 1px 1px 0}
-
-.c-eyebrow{font-size:8px;letter-spacing:0.4em;text-transform:uppercase;color:rgba(212,175,114,0.5);margin-bottom:10px;position:relative;z-index:1}
-.c-photo{
-  width:80px;height:80px;border-radius:50%;overflow:hidden;
-  border:2px solid rgba(212,175,114,0.4);
-  box-shadow:0 0 0 6px rgba(212,175,114,0.06),0 8px 30px rgba(0,0,0,0.4);
-  margin-bottom:14px;position:relative;z-index:1;flex-shrink:0;
+.cover-photo-inner{
+  position:absolute;
+  top:8px;left:8px;right:8px;bottom:8px;
+  border-radius:50%;overflow:hidden;
+  border:1.5px solid rgba(232,200,122,0.3);
 }
-.c-photo img,.c-photo-ph{width:100%;height:100%;object-fit:cover}
-.c-photo-ph{background:linear-gradient(135deg,#1A1208,#2A1A08);display:flex;align-items:center;justify-content:center;font-size:32px}
+.cover-photo-inner img,.cover-photo-ph{
+  width:100%;height:100%;object-fit:cover;
+}
+.cover-photo-ph{
+  background:linear-gradient(135deg,#1A1208,#2A1A10);
+  display:flex;align-items:center;justify-content:center;
+  font-size:36px;
+}
 
-.c-name{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:white;line-height:1.1;margin-bottom:4px;position:relative;z-index:1}
-.c-script{font-family:'Cormorant Garamond',serif;font-size:14px;font-style:italic;color:var(--gold);margin-bottom:5px;position:relative;z-index:1}
-.c-date{font-size:9px;color:rgba(255,255,255,0.3);letter-spacing:0.2em;text-transform:uppercase;position:relative;z-index:1}
-.c-divider{width:60px;height:0.5px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:10px auto;position:relative;z-index:1}
-.c-stats{display:flex;gap:24px;position:relative;z-index:1}
-.c-stat-val{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:var(--gold);line-height:1;margin-bottom:2px}
-.c-stat-lbl{font-size:8px;color:rgba(255,255,255,0.28);letter-spacing:0.12em;text-transform:uppercase}
+/* Decorative dots around circle */
+.cover-dots{
+  position:absolute;inset:-8px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 50% 0%,var(--gold) 1.5px,transparent 1.5px),
+    radial-gradient(circle at 100% 50%,var(--gold) 1.5px,transparent 1.5px),
+    radial-gradient(circle at 50% 100%,var(--gold) 1.5px,transparent 1.5px),
+    radial-gradient(circle at 0% 50%,var(--gold) 1.5px,transparent 1.5px),
+    radial-gradient(circle at 85% 15%,rgba(232,200,122,0.5) 1px,transparent 1px),
+    radial-gradient(circle at 15% 85%,rgba(232,200,122,0.5) 1px,transparent 1px),
+    radial-gradient(circle at 85% 85%,rgba(232,200,122,0.5) 1px,transparent 1px),
+    radial-gradient(circle at 15% 15%,rgba(232,200,122,0.5) 1px,transparent 1px);
+}
 
-/* ── PHOTO PAGE ── */
-.photo-page{
+.cover-eyebrow{
+  font-size:8px;letter-spacing:0.5em;text-transform:uppercase;
+  color:rgba(232,200,122,0.45);font-weight:500;
+  margin-bottom:10px;
+}
+
+.cover-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(18px,5vw,26px);
+  font-weight:900;color:white;
+  line-height:1.05;margin-bottom:5px;
+  text-shadow:0 2px 20px rgba(0,0,0,0.5);
+}
+
+.cover-subtitle{
+  font-family:'Cormorant Garamond',serif;
+  font-size:13px;font-style:italic;
+  color:rgba(232,200,122,0.65);
+  margin-bottom:4px;
+}
+
+.cover-date{
+  font-size:9px;color:rgba(255,255,255,0.25);
+  letter-spacing:0.25em;text-transform:uppercase;
+  margin-bottom:16px;
+}
+
+.cover-divider{
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:16px;width:100%;justify-content:center;
+}
+.cover-divider-line{
+  height:0.5px;width:30px;
+  background:linear-gradient(90deg,transparent,rgba(232,200,122,0.4));
+}
+.cover-divider-line.r{
+  background:linear-gradient(-90deg,transparent,rgba(232,200,122,0.4));
+}
+.cover-divider-diamond{
+  width:5px;height:5px;
+  background:var(--gold);
+  transform:rotate(45deg);
+}
+
+.cover-stats{
+  display:flex;gap:20px;
+}
+.cover-stat{text-align:center}
+.cover-stat-val{
+  font-family:'Playfair Display',serif;
+  font-size:20px;font-weight:700;color:var(--gold);
+  line-height:1;
+}
+.cover-stat-lbl{
+  font-size:7.5px;color:rgba(255,255,255,0.25);
+  letter-spacing:0.15em;text-transform:uppercase;
+  margin-top:2px;
+}
+
+.cover-botline{
+  position:absolute;bottom:0;left:0;right:0;height:2.5px;
+  background:linear-gradient(90deg,transparent,var(--gold3),var(--gold),var(--gold2),var(--gold),var(--gold3),transparent);
+}
+
+/* ══ PHOTO PAGES ══ */
+.pp{
   width:100%;height:100%;
-  background:var(--parchment);
+  background:var(--ivory);
   display:flex;flex-direction:column;
   position:relative;
+  overflow:hidden;
 }
-.photo-page::before{
+
+/* Subtle paper texture */
+.pp::before{
   content:'';position:absolute;inset:0;pointer-events:none;
-  background:
-    linear-gradient(90deg,rgba(180,140,80,0.025) 1px,transparent 1px),
-    linear-gradient(rgba(180,140,80,0.02) 1px,transparent 1px);
-  background-size:18px 18px;
+  background-image:
+    radial-gradient(circle at 20% 20%,rgba(180,140,80,0.03) 0%,transparent 50%),
+    radial-gradient(circle at 80% 80%,rgba(180,140,80,0.02) 0%,transparent 50%);
 }
 
-.pp-header{
-  padding:9px 12px 7px;
-  display:flex;align-items:center;justify-content:space-between;
-  border-bottom:0.5px solid rgba(180,140,80,0.18);
-  flex-shrink:0;
-}
-.pp-event{font-family:'Cormorant Garamond',serif;font-size:10px;font-style:italic;color:var(--muted)}
-.pp-num{font-size:8px;color:rgba(180,140,80,0.45);letter-spacing:0.08em}
-
-.pp-body{flex:1;padding:8px 10px;overflow:hidden;display:flex;flex-direction:column;gap:6px}
-
-/* Layouts */
-.l-single{height:100%}
-.l-single .ps{height:100%}
-.l-double{display:grid;grid-template-columns:1fr 1fr;gap:6px;height:100%}
-.l-feature{display:grid;grid-template-rows:1.5fr 1fr;gap:6px;height:100%}
-.l-trio{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1.4fr 1fr;gap:5px;height:100%}
-.l-trio .ps:first-child{grid-column:span 2}
-
-.ps{
-  border-radius:5px;overflow:hidden;
-  box-shadow:0 1px 8px rgba(0,0,0,0.09);
-  position:relative;
-}
-.ps img{width:100%;height:100%;object-fit:cover;display:block}
-
-/* Page corner fold effect */
-.ps::after{
-  content:'';position:absolute;bottom:0;right:0;
+/* Page fold top-right corner */
+.pp::after{
+  content:'';position:absolute;top:0;right:0;
   width:0;height:0;
   border-style:solid;
-  border-width:0 0 14px 14px;
-  border-color:transparent transparent rgba(180,140,80,0.15) transparent;
+  border-width:22px 22px 0 0;
+  border-color:var(--parchment) transparent transparent transparent;
+  filter:drop-shadow(-1px 1px 1px rgba(0,0,0,0.08));
+}
+
+/* ── FULL BLEED HERO ── */
+.layout-hero .pp-img{
+  flex:1;position:relative;overflow:hidden;
+}
+.layout-hero .pp-img img{
+  width:100%;height:100%;object-fit:cover;
+  filter:brightness(0.97);
+}
+
+/* Hero caption overlay */
+.layout-hero .pp-caption-overlay{
+  position:absolute;bottom:0;left:0;right:0;
+  padding:24px 16px 12px;
+  background:linear-gradient(transparent,rgba(0,0,0,0.45));
+}
+.layout-hero .caption-text{
+  font-family:'Cormorant Garamond',serif;
+  font-size:13px;font-style:italic;
+  color:rgba(255,255,255,0.85);text-align:center;
+}
+
+/* ── MAGAZINE LAYOUT ── */
+.layout-mag{
+  display:grid;
+  grid-template-columns:3fr 2fr;
+  grid-template-rows:1fr 1fr;
+  gap:4px;flex:1;
+}
+.layout-mag .ps{position:relative;overflow:hidden}
+.layout-mag .ps img{width:100%;height:100%;object-fit:cover}
+.layout-mag .ps.main{grid-row:span 2}
+.layout-mag .ps.accent{
+  border-left:2px solid white;
+}
+
+/* ── TRIPTYCH ── */
+.layout-tri{
+  display:grid;
+  grid-template-columns:1fr 1.4fr 1fr;
+  gap:3px;flex:1;
+}
+.layout-tri .ps{position:relative;overflow:hidden}
+.layout-tri .ps img{width:100%;height:100%;object-fit:cover}
+.layout-tri .ps.center{border-left:2px solid white;border-right:2px solid white}
+
+/* ── DIPTYCH ── */
+.layout-dipt{
+  display:grid;
+  grid-template-rows:1fr 1fr;
+  gap:4px;flex:1;
+}
+.layout-dipt .ps{position:relative;overflow:hidden}
+.layout-dipt .ps img{width:100%;height:100%;object-fit:cover}
+.layout-dipt .ps:first-child{border-bottom:2px solid white}
+
+/* ── POLAROID LAYOUT ── */
+.layout-polaroid{
+  flex:1;
+  display:flex;align-items:center;justify-content:center;
+  padding:10px;
+  background:var(--parchment);
+  position:relative;
+}
+.polaroid{
+  background:white;
+  padding:8px 8px 28px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.12),0 1px 4px rgba(0,0,0,0.08);
+  transform:rotate(-1.5deg);
+  width:85%;
+  position:relative;
+}
+.polaroid img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+.polaroid-caption{
+  text-align:center;
+  font-family:'Cormorant Garamond',serif;
+  font-size:11px;font-style:italic;
+  color:rgba(0,0,0,0.4);
+  padding-top:6px;
+}
+.polaroid2{
+  position:absolute;
+  background:white;
+  padding:6px 6px 20px;
+  box-shadow:0 3px 15px rgba(0,0,0,0.1);
+  transform:rotate(3deg);
+  width:50%;
+  bottom:16px;right:10px;
+  z-index:2;
+}
+.polaroid2 img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+
+/* ── CINEMATIC ── */
+.layout-cinematic{
+  flex:1;
+  position:relative;overflow:hidden;
+  background:black;
+}
+.layout-cinematic .ps{
+  position:absolute;inset:0;
+}
+.layout-cinematic .ps img{
+  width:100%;height:100%;object-fit:cover;
+  filter:brightness(0.85) contrast(1.1);
+}
+/* Letterbox bars */
+.layout-cinematic::before,.layout-cinematic::after{
+  content:'';position:absolute;left:0;right:0;height:30px;
+  background:black;z-index:1;
+}
+.layout-cinematic::before{top:0}
+.layout-cinematic::after{bottom:0}
+
+/* ── EDITORIAL ── */
+.layout-editorial{
+  flex:1;display:flex;
+}
+.editorial-main{flex:1.5;position:relative;overflow:hidden}
+.editorial-main img{width:100%;height:100%;object-fit:cover}
+.editorial-side{
+  flex:1;
+  background:var(--dark2);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:12px 10px;gap:8px;
+}
+.editorial-num{
+  font-family:'Playfair Display',serif;
+  font-size:40px;font-weight:900;
+  color:rgba(232,200,122,0.15);
+  line-height:1;
+}
+.editorial-quote{
+  font-family:'Cormorant Garamond',serif;
+  font-size:10px;font-style:italic;
+  color:rgba(255,255,255,0.35);
+  text-align:center;line-height:1.6;
+}
+.editorial-gold-line{
+  width:30px;height:0.5px;
+  background:rgba(232,200,122,0.3);
+}
+
+/* PAGE HEADER & FOOTER */
+.pp-header{
+  padding:7px 12px 6px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:0.5px solid rgba(160,120,48,0.15);
+  flex-shrink:0;
+  position:relative;z-index:1;
+}
+.pp-event{
+  font-family:'Cormorant Garamond',serif;
+  font-size:9px;font-style:italic;color:rgba(160,120,48,0.6);
+}
+.pp-num{
+  font-size:8px;color:rgba(160,120,48,0.35);
+  letter-spacing:0.12em;font-weight:500;
 }
 
 .pp-footer{
-  padding:5px 12px 8px;
-  border-top:0.5px solid rgba(180,140,80,0.12);
-  text-align:center;flex-shrink:0;
+  padding:5px 12px 7px;
+  border-top:0.5px solid rgba(160,120,48,0.1);
+  flex-shrink:0;position:relative;z-index:1;
+  display:flex;align-items:center;justify-content:space-between;
 }
-.pp-caption{font-family:'Cormorant Garamond',serif;font-size:10px;font-style:italic;color:var(--muted)}
+.pp-caption{
+  font-family:'Cormorant Garamond',serif;
+  font-size:9.5px;font-style:italic;
+  color:rgba(120,90,40,0.55);
+}
+.pp-logo{
+  font-size:7px;color:rgba(160,120,48,0.25);
+  letter-spacing:0.1em;
+}
 
-/* ── BACK COVER ── */
+/* ══ BACK COVER ══ */
 .back-cover{
   width:100%;height:100%;
-  background:linear-gradient(155deg,#1A1208,#0A0806);
+  background:linear-gradient(220deg,#0D0A1A,#0A0C1A,#120A0A);
   display:flex;flex-direction:column;
   align-items:center;justify-content:center;
   padding:20px;text-align:center;
@@ -212,349 +524,386 @@ body{
 }
 .back-cover::before{
   content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse at 50% 50%,rgba(212,175,114,0.05),transparent 60%);
+  background:radial-gradient(ellipse at 50% 50%,rgba(232,200,122,0.04),transparent 60%);
 }
-.bc-brand{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:white;position:relative;z-index:1}
-.bc-brand span{color:var(--gold)}
-.bc-tag{font-size:8px;color:rgba(255,255,255,0.2);letter-spacing:0.2em;text-transform:uppercase;position:relative;z-index:1;margin-top:4px}
+.bc-topline,.bc-botline{
+  position:absolute;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold3),var(--gold),var(--gold3),transparent);
+}
+.bc-topline{top:0}.bc-botline{bottom:0}
+.bc-brand{
+  font-family:'Playfair Display',serif;
+  font-size:22px;font-weight:900;color:white;
+  position:relative;z-index:1;
+}
+.bc-brand em{color:var(--gold);font-style:normal}
+.bc-tag{font-size:8px;color:rgba(255,255,255,0.18);letter-spacing:0.25em;text-transform:uppercase;margin-top:5px;position:relative;z-index:1}
 .bc-div{width:40px;height:0.5px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:14px auto;position:relative;z-index:1}
-.bc-url{font-size:9px;color:rgba(212,175,114,0.35);letter-spacing:0.15em;position:relative;z-index:1}
+.bc-url{font-size:9px;color:rgba(232,200,122,0.3);letter-spacing:0.2em;position:relative;z-index:1}
 
-/* ── PROGRESS BAR ── */
+/* ══ PROGRESS ══ */
 #progressWrap{
-  width:min(340px,90vw);
-  margin-top:10px;
+  width:min(320px,88vw);
+  margin-top:10px;position:relative;
+}
+#progressTrack{
+  width:100%;height:2px;
+  background:rgba(255,255,255,0.06);
+  border-radius:2px;overflow:hidden;
   position:relative;
 }
-#progressBar{
-  width:100%;height:2px;
-  background:rgba(255,255,255,0.08);
-  border-radius:2px;overflow:hidden;
-}
 #progressFill{
-  height:100%;width:0%;
-  background:linear-gradient(90deg,var(--gold2),var(--gold));
-  border-radius:2px;
-  transition:width 0.3s ease;
+  height:100%;width:0;
+  background:linear-gradient(90deg,var(--gold3),var(--gold));
+  border-radius:2px;transition:width 0.6s ease;
+  position:relative;
+}
+#progressFill::after{
+  content:'';position:absolute;right:0;top:-1px;
+  width:4px;height:4px;border-radius:50%;
+  background:var(--gold);
+  box-shadow:0 0 6px var(--gold);
 }
 
-/* ── CONTROLS ── */
+/* ══ CONTROLS ══ */
 #controls{
-  display:flex;align-items:center;gap:12px;
+  display:flex;align-items:center;gap:10px;
   margin-top:12px;
 }
 
-.ctrl-btn{
-  width:40px;height:40px;
-  background:rgba(255,255,255,0.06);
-  border:0.5px solid rgba(212,175,114,0.2);
-  border-radius:50%;color:var(--gold);
-  font-size:16px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
+.ctrl{
+  width:36px;height:36px;
+  background:rgba(255,255,255,0.05);
+  border:0.5px solid rgba(232,200,122,0.15);
+  border-radius:50%;
+  color:rgba(232,200,122,0.7);font-size:14px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
   transition:all 0.15s;
-  -webkit-tap-highlight-color:transparent;
 }
-.ctrl-btn:active{background:rgba(212,175,114,0.15);transform:scale(0.92)}
-.ctrl-btn:disabled{opacity:0.25;cursor:not-allowed}
+.ctrl:active{background:rgba(232,200,122,0.1);transform:scale(0.9)}
+.ctrl:disabled{opacity:0.2;cursor:default}
 
-/* PLAY BUTTON - larger & prominent */
 #playBtn{
-  width:52px;height:52px;
-  background:linear-gradient(135deg,var(--gold2),var(--gold));
+  width:50px;height:50px;
+  background:linear-gradient(135deg,var(--gold3),var(--gold),var(--gold2));
   border:none;border-radius:50%;
-  color:var(--dark);font-size:20px;
+  color:var(--dark);font-size:18px;
   cursor:pointer;
   display:flex;align-items:center;justify-content:center;
-  box-shadow:0 4px 20px rgba(212,175,114,0.3);
+  box-shadow:0 4px 20px rgba(232,200,122,0.25),0 0 0 4px rgba(232,200,122,0.06);
   transition:all 0.15s;
-  -webkit-tap-highlight-color:transparent;
 }
-#playBtn:active{transform:scale(0.93);box-shadow:0 2px 10px rgba(212,175,114,0.2)}
+#playBtn:active{transform:scale(0.92)}
 
-.page-indicator{
-  font-size:10px;color:rgba(255,255,255,0.35);
-  letter-spacing:0.08em;min-width:70px;text-align:center;
-}
-
-/* ── BOTTOM ACTIONS ── */
-#actions{
-  display:flex;gap:8px;margin-top:10px;
-}
-.act-btn{
-  padding:7px 14px;border-radius:16px;
-  border:0.5px solid rgba(212,175,114,0.18);
-  background:rgba(255,255,255,0.04);
-  color:rgba(255,255,255,0.5);
-  font-family:'Jost',sans-serif;font-size:10px;
-  cursor:pointer;display:flex;align-items:center;gap:4px;
-  transition:all 0.15s;
-  -webkit-tap-highlight-color:transparent;
-}
-.act-btn:active{background:rgba(212,175,114,0.1)}
-.act-wa{background:rgba(37,211,102,0.08);border-color:rgba(37,211,102,0.2);color:rgba(37,211,102,0.75)}
-
-/* ── BGM STATUS ── */
-#bgmStatus{
-  position:fixed;top:12px;right:12px;
-  background:rgba(0,0,0,0.5);backdrop-filter:blur(8px);
-  border:0.5px solid rgba(212,175,114,0.15);
-  border-radius:16px;padding:5px 10px;
-  display:none;align-items:center;gap:5px;
-  font-size:9px;color:rgba(255,255,255,0.4);
-  z-index:200;cursor:pointer;
-  -webkit-tap-highlight-color:transparent;
-}
-.music-dot{
-  width:6px;height:6px;border-radius:50%;
-  background:var(--gold);
-  animation:pulse-dot 1.5s ease infinite;
-}
-@keyframes pulse-dot{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.3);opacity:0.7}}
-.music-dot.paused{animation:none;background:rgba(255,255,255,0.2)}
-
-/* Speed indicator */
-#speedLabel{
+.pg-ind{
   font-size:9px;color:rgba(255,255,255,0.25);
-  text-align:center;margin-top:4px;
-  letter-spacing:0.1em;
+  letter-spacing:0.1em;min-width:70px;text-align:center;
 }
+
+/* ══ TITLE ══ */
+#titleBar{
+  text-align:center;margin-bottom:12px;
+  position:relative;z-index:1;
+}
+.tb-name{
+  font-family:'Playfair Display',serif;
+  font-size:16px;font-weight:700;color:white;
+  letter-spacing:0.02em;
+}
+.tb-sub{
+  font-size:8px;color:rgba(232,200,122,0.35);
+  letter-spacing:0.25em;text-transform:uppercase;margin-top:3px;
+}
+
+/* ══ BOTTOM ══ */
+#bottom{
+  display:flex;align-items:center;gap:8px;margin-top:10px;
+}
+.bot-btn{
+  padding:6px 13px;border-radius:14px;
+  border:0.5px solid rgba(232,200,122,0.15);
+  background:rgba(255,255,255,0.03);
+  color:rgba(255,255,255,0.4);
+  font-family:'Montserrat',sans-serif;font-size:9px;font-weight:500;
+  cursor:pointer;
+  display:flex;align-items:center;gap:4px;
+  transition:all 0.15s;letter-spacing:0.05em;
+}
+.bot-btn:active{background:rgba(232,200,122,0.08)}
+.bot-wa{
+  background:rgba(37,211,102,0.07);
+  border-color:rgba(37,211,102,0.2);
+  color:rgba(37,211,102,0.7);
+}
+
+/* Speed */
+#speedInfo{
+  font-size:8px;color:rgba(255,255,255,0.2);
+  text-align:center;margin-top:6px;
+  letter-spacing:0.12em;
+}
+
+/* ══ BGM ══ */
+#bgmPill{
+  position:fixed;top:14px;right:14px;z-index:500;
+  background:rgba(10,8,6,0.7);backdrop-filter:blur(10px);
+  border:0.5px solid rgba(232,200,122,0.15);
+  border-radius:20px;padding:5px 12px;
+  display:none;align-items:center;gap:6px;
+  cursor:pointer;transition:all 0.2s;
+}
+.bgm-bars{display:flex;align-items:flex-end;gap:1.5px;height:12px}
+.bgm-bar{
+  width:2.5px;border-radius:2px;
+  background:var(--gold);
+  animation:eq 1.2s ease infinite;
+}
+.bgm-bar:nth-child(1){height:6px;animation-delay:0s}
+.bgm-bar:nth-child(2){height:10px;animation-delay:0.2s}
+.bgm-bar:nth-child(3){height:8px;animation-delay:0.1s}
+.bgm-bar:nth-child(4){height:12px;animation-delay:0.3s}
+.bgm-bar:nth-child(5){height:7px;animation-delay:0.15s}
+@keyframes eq{0%,100%{transform:scaleY(0.4)}50%{transform:scaleY(1)}}
+.bgm-bar.paused{animation:none;transform:scaleY(0.3);background:rgba(255,255,255,0.2)}
+.bgm-text{font-size:9px;color:rgba(255,255,255,0.35);letter-spacing:0.1em}
 </style>
 </head>
 <body>
 
 <!-- LOADING -->
 <div id="loading">
-  <div class="load-logo">Photo<span>Find</span> Pro</div>
-  <div class="load-sub">Preparing Your Album...</div>
-  <div class="load-bar"><div class="load-fill" id="loadFill"></div></div>
+  <div class="ld-brand">Photo<em>Find</em> Pro</div>
+  <div class="ld-tag">Digital Album</div>
+  <div class="ld-bar"><div class="ld-fill" id="ldFill"></div></div>
+  <div class="ld-status" id="ldStatus">Loading your memories...</div>
 </div>
 
-<!-- BGM STATUS -->
-<div id="bgmStatus" onclick="toggleBGM()">
-  <div class="music-dot" id="musicDot"></div>
-  <span id="bgmLabel">BGM Playing</span>
+<!-- BGM PILL -->
+<div id="bgmPill" onclick="toggleBGM()">
+  <div class="bgm-bars">
+    <div class="bgm-bar" id="b1"></div>
+    <div class="bgm-bar" id="b2"></div>
+    <div class="bgm-bar" id="b3"></div>
+    <div class="bgm-bar" id="b4"></div>
+    <div class="bgm-bar" id="b5"></div>
+  </div>
+  <span class="bgm-text" id="bgmText">BGM</span>
 </div>
 
-<!-- BOOK WRAP -->
-<div id="bookWrap">
-
+<!-- STAGE -->
+<div id="stage">
   <div id="titleBar">
-    <div class="title-name" id="titleName">Your Album</div>
-    <div class="title-sub" id="titleSub">DIGITAL PHOTO BOOK</div>
+    <div class="tb-name" id="tbName">Your Album</div>
+    <div class="tb-sub" id="tbSub">DIGITAL PHOTO BOOK</div>
   </div>
 
-  <div class="book" id="book"></div>
+  <div class="book-container">
+    <div class="book" id="book">
+      <div class="book-spine"></div>
+    </div>
+    <div class="book-shadow"></div>
+    <div class="book-shadow2"></div>
+  </div>
 
-  <!-- PROGRESS -->
   <div id="progressWrap">
-    <div id="progressBar"><div id="progressFill"></div></div>
+    <div id="progressTrack"><div id="progressFill"></div></div>
   </div>
 
-  <!-- CONTROLS -->
   <div id="controls">
-    <button class="ctrl-btn" id="prevBtn" onclick="prevPage()" disabled>‹</button>
-    <button class="ctrl-btn" id="slowBtn" onclick="changeSpeed(-1)" title="Slower">−</button>
+    <button class="ctrl" id="prevBtn" onclick="manualPrev()" disabled>‹</button>
+    <button class="ctrl" onclick="changeSpeed(-1)" title="Slower">−</button>
     <button id="playBtn" onclick="togglePlay()">▶</button>
-    <button class="ctrl-btn" id="fastBtn" onclick="changeSpeed(1)" title="Faster">+</button>
-    <button class="ctrl-btn" id="nextBtn" onclick="nextPage()">›</button>
+    <button class="ctrl" onclick="changeSpeed(1)" title="Faster">+</button>
+    <button class="ctrl" id="nextBtn" onclick="manualNext()">›</button>
   </div>
 
-  <div class="page-indicator" id="pageIndicator">Cover</div>
-  <div id="speedLabel">Auto: 4s/page</div>
+  <div class="pg-ind" id="pgInd">Cover</div>
+  <div id="speedInfo">Auto · 4s / page</div>
 
-  <!-- ACTIONS -->
-  <div id="actions">
-    <button class="act-btn" onclick="shareAlbum()">🔗 Share</button>
-    <button class="act-btn act-wa" onclick="whatsappShare()">💬 WhatsApp</button>
+  <div id="bottom">
+    <button class="bot-btn" onclick="shareAlbum()">🔗 Share</button>
+    <button class="bot-btn bot-wa" onclick="waShare()">💬 WhatsApp</button>
   </div>
-
 </div>
 
-<audio id="bgmAudio" loop preload="auto"></audio>
+<audio id="bgm" loop></audio>
 
 <script>
 const SERVER = 'https://api.templecity.digital';
 const params = new URLSearchParams(window.location.search);
 const eventId = params.get('event');
-const eventType = params.get('type') || 'wedding';
+const eventType = params.get('type') || detectType();
 
-let pages = [];
-let currentPage = 0;
-let isPlaying = false;
-let playInterval = null;
-let slideSpeed = 4000; // ms per page
-let allPhotos = [];
-let eventName = '';
-let eventDate = '';
-let bgmPlaying = false;
-let touchStartX = 0;
+function detectType(){
+  const h = window.location.href.toLowerCase();
+  if(h.includes('wed')||h.includes('marr')) return 'wedding';
+  if(h.includes('birth')||h.includes('bday')) return 'birthday';
+  if(h.includes('corp')||h.includes('conf')) return 'corporate';
+  return 'wedding';
+}
 
-// Speed levels
-const speeds = [2000,3000,4000,6000,8000];
-const speedLabels = ['2s','3s','4s','6s','8s'];
-let speedIdx = 2; // default 4s
+// State
+let pages=[], currentPage=0, isPlaying=false, playTimer=null;
+let allPhotos=[], eventName='', eventDate='';
+let bgmPlaying=false, touchStartX=0;
+let speedIdx=2;
+const speeds=[2000,3000,4000,5000,7000];
+const speedLabels=['2s','3s','4s','5s','7s'];
 
-const captions = [
-  'Every moment tells a story...',
-  'Memories worth keeping forever ♥',
-  'A beautiful day to remember',
-  'Joy captured in time',
-  'Smiles that light up the world',
-  'Together, always ♥',
-  'The best moments of the day',
-  'Pure happiness',
-  'Cherish every memory',
-  'A day full of love',
-  'Moments that matter',
-  'Forever in our hearts',
-];
+// Captions by theme
+const captions={
+  wedding:[
+    'Two souls, one beautiful journey ♥',
+    'Where love stories are written...',
+    'Every glance, a lifetime of love',
+    'The beginning of forever',
+    'Joy uncontained, love unbounded',
+    'This is what happiness looks like',
+    'A day written in golden light',
+    'Hearts full, memories made',
+    'In this moment, everything is perfect',
+    'Love, laughter & forever after',
+  ],
+  birthday:[
+    'Another year of beautiful moments',
+    'Life is a celebration — celebrate it!',
+    'Joy multiplied by everyone here',
+    'Making memories that last forever',
+    'The party of a lifetime',
+  ],
+  corporate:[
+    'Together, we build something great',
+    'Moments that define us',
+    'Excellence captured in time',
+    'The faces behind the success',
+  ],
+};
+
+function getCaption(idx){
+  const pool=captions[eventType]||captions.wedding;
+  return pool[idx%pool.length];
+}
 
 // Loading
-let prog = 0;
-const loadInt = setInterval(() => {
-  prog = Math.min(prog + Math.random() * 10, 88);
-  document.getElementById('loadFill').style.width = prog + '%';
-}, 150);
+let prog=0;
+const ldTimer=setInterval(()=>{
+  prog=Math.min(prog+Math.random()*8,85);
+  document.getElementById('ldFill').style.width=prog+'%';
+},200);
 
-async function init() {
-  try {
-    if (!eventId) { showErr('No event specified'); return; }
+async function init(){
+  try{
+    if(!eventId){showErr('No event specified');return;}
+    document.getElementById('ldStatus').textContent='Fetching your album...';
 
-    // Load events
-    const evRes = await fetch(`${SERVER}/events`);
-    const evData = await evRes.json();
-    const ev = evData.events?.find(e => e.id === eventId);
-    if (ev) {
-      const raw = ev.name.split('__')[0].replace(/^\d{4}-\d{2}-\d{2}_/,'').replace(/-/g,' ');
-      eventName = raw;
-      eventDate = parseDate(ev.name);
-      document.getElementById('titleName').textContent = eventName;
-      document.getElementById('titleSub').textContent = eventDate + ' · DIGITAL PHOTO BOOK';
+    const evRes=await fetch(`${SERVER}/events`);
+    const evData=await evRes.json();
+    const ev=evData.events?.find(e=>e.id===eventId);
+    if(ev){
+      const raw=ev.name.split('__')[0].replace(/^\d{4}-\d{2}-\d{2}_/,'').replace(/-/g,' ');
+      eventName=raw;
+      eventDate=parseDate(ev.name);
+      document.getElementById('tbName').textContent=eventName;
+      document.getElementById('tbSub').textContent=eventDate+' · DIGITAL PHOTO BOOK';
     }
 
-    // Load photos
-    const phRes = await fetch(`${SERVER}/photos/${eventId}`);
-    const phData = await phRes.json();
-    allPhotos = phData.photos || [];
-    if (!allPhotos.length) { showErr('No photos found'); return; }
+    document.getElementById('ldStatus').textContent='Loading photos...';
+    const phRes=await fetch(`${SERVER}/photos/${eventId}`);
+    const phData=await phRes.json();
+    allPhotos=phData.photos||[];
+    if(!allPhotos.length){showErr('No photos in this album yet');return;}
 
+    document.getElementById('ldStatus').textContent='Building your album...';
     buildBook();
     setupInteraction();
-    await loadBGM();
 
-    // Finish loading
-    clearInterval(loadInt);
-    document.getElementById('loadFill').style.width = '100%';
-    setTimeout(() => {
-      document.getElementById('loading').style.opacity = '0';
-      setTimeout(() => {
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('bookWrap').style.display = 'flex';
-        // Auto start play after 1.5s
-        setTimeout(() => startPlay(), 1500);
-      }, 700);
-    }, 400);
+    document.getElementById('ldStatus').textContent='Starting BGM...';
+    await initBGM();
 
-  } catch(e) { showErr(e.message); }
+    clearInterval(ldTimer);
+    document.getElementById('ldFill').style.width='100%';
+    setTimeout(()=>{
+      document.getElementById('loading').style.opacity='0';
+      document.getElementById('loading').style.transition='opacity 0.8s';
+      setTimeout(()=>{
+        document.getElementById('loading').style.display='none';
+        document.getElementById('stage').style.display='flex';
+        // Auto play after 1s
+        setTimeout(()=>startPlay(),1000);
+      },800);
+    },500);
+
+  }catch(e){showErr(e.message);}
 }
 
 // ── BUILD BOOK ──
-function buildBook() {
-  const book = document.getElementById('book');
-  book.innerHTML = '';
-  pages = [];
+function buildBook(){
+  const book=document.getElementById('book');
+  // Remove existing pages (keep spine)
+  [...book.querySelectorAll('.page')].forEach(p=>p.remove());
+  pages=[];
 
-  const coverPage = makePage(0);
-  coverPage.innerHTML = `
-    <div class="page-front">
-      <div class="cover-page">
-        <div class="cover-top-line"></div>
-        <div class="cover-bot-line"></div>
-        <div class="c-corner c-tl"></div><div class="c-corner c-tr"></div>
-        <div class="c-corner c-bl"></div><div class="c-corner c-br"></div>
-        <div class="c-eyebrow">✦ Personal Album ✦</div>
-        <div class="c-photo">
-          <img src="${allPhotos[0]?.thumbnailLink}" onerror="this.parentElement.innerHTML='<div class=c-photo-ph>📸</div>'">
-        </div>
-        <div class="c-name">${eventName}</div>
-        <div class="c-script">A collection of beautiful memories</div>
-        <div class="c-date">${eventDate}</div>
-        <div class="c-divider"></div>
-        <div class="c-stats">
-          <div style="text-align:center">
-            <div class="c-stat-val">${allPhotos.length}</div>
-            <div class="c-stat-lbl">Photos</div>
-          </div>
-        </div>
-      </div>
+  // Cover page
+  const cover=makePg(0);
+  cover.innerHTML=`
+    <div class="page-f">
+      ${buildCover()}
     </div>
-    <div class="page-back">
-      ${makePhotoPageHTML(0, 1)}
+    <div class="page-b">
+      ${buildPhotoPage(0,1,'hero')}
     </div>`;
-  book.appendChild(coverPage);
-  pages.push(coverPage);
+  book.appendChild(cover);
+  pages.push(cover);
 
-  let photoIdx = 1;
-  let pageIdx = 1;
+  // Photo pages
+  let idx=1,pgNum=1;
+  const layouts=['hero','mag','tri','editorial','dipt','polaroid','cinematic','mag','hero','tri'];
 
-  while (photoIdx < allPhotos.length) {
-    const remaining = allPhotos.length - photoIdx;
-    const pg = makePage(pageIdx);
+  while(idx<allPhotos.length){
+    const pg=makePg(pgNum);
+    const li=pgNum%layouts.length;
+    const frontLayout=layouts[li];
+    const backLayout=layouts[(li+3)%layouts.length];
 
-    // Front layout
-    const frontCount = remaining >= 3 && Math.random() > 0.6 ? (Math.random() > 0.5 ? 3 : 2) : (remaining >= 2 && Math.random() > 0.45 ? 2 : 1);
-    const frontActual = Math.min(frontCount, remaining);
-    const frontHTML = makePhotoPageHTML(photoIdx, pageIdx * 2, frontActual);
-    photoIdx += frontActual;
+    const frontCount=photosForLayout(frontLayout);
+    const remaining=allPhotos.length-idx;
+    const actualFront=Math.min(frontCount,remaining);
 
-    // Back layout
-    const remaining2 = allPhotos.length - photoIdx;
-    let backHTML = '';
-    if (remaining2 > 0) {
-      const backCount = remaining2 >= 2 && Math.random() > 0.5 ? 2 : 1;
-      const backActual = Math.min(backCount, remaining2);
-      backHTML = makePhotoPageHTML(photoIdx, pageIdx * 2 + 1, backActual);
-      photoIdx += backActual;
-    } else {
-      backHTML = `<div class="back-cover">
-        <div class="bc-brand">Photo<span>Find</span> Pro</div>
-        <div class="bc-tag">Odisha's First AI Photo Delivery</div>
-        <div class="bc-div"></div>
-        <div class="bc-url">www.templecity.digital</div>
-      </div>`;
+    const frontHTML=buildPhotoPage(idx,pgNum*2,frontLayout,actualFront);
+    idx+=actualFront;
+
+    const remaining2=allPhotos.length-idx;
+    let backHTML='';
+    if(remaining2>0){
+      const backCount=photosForLayout(backLayout);
+      const actualBack=Math.min(backCount,remaining2);
+      backHTML=buildPhotoPage(idx,pgNum*2+1,backLayout,actualBack);
+      idx+=actualBack;
+    }else{
+      backHTML=buildBackCover();
     }
 
-    pg.innerHTML = `<div class="page-front">${frontHTML}</div><div class="page-back">${backHTML}</div>`;
+    pg.innerHTML=`<div class="page-f">${frontHTML}</div><div class="page-b">${backHTML}</div>`;
     book.appendChild(pg);
     pages.push(pg);
-    pageIdx++;
+    pgNum++;
   }
 
-  // Ensure back cover exists
-  const hasBackCover = book.querySelector('.back-cover');
-  if (!hasBackCover) {
-    const lastPg = makePage(pageIdx);
-    lastPg.innerHTML = `
-      <div class="page-front">
-        <div class="photo-page">
+  // Final back cover if missing
+  if(!book.querySelector('.back-cover')){
+    const lastPg=makePg(pgNum);
+    lastPg.innerHTML=`
+      <div class="page-f">
+        <div class="pp">
           <div class="pp-header"><div class="pp-event">${eventName}</div><div class="pp-num">FIN</div></div>
-          <div class="pp-body l-single" style="align-items:center;justify-content:center;display:flex">
-            <div style="text-align:center;padding:20px">
-              <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;color:var(--muted)">The End</div>
-              <div style="font-size:10px;color:rgba(180,140,80,0.35);margin-top:8px">${allPhotos.length} beautiful memories</div>
-            </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--parchment);gap:10px">
+            <div style="font-family:'Playfair Display',serif;font-size:28px;font-style:italic;color:rgba(120,90,40,0.35)">The End</div>
+            <div style="font-size:10px;color:rgba(120,90,40,0.25);letter-spacing:0.12em">${allPhotos.length} memories</div>
           </div>
-          <div class="pp-footer"><div class="pp-caption">Thank you for being part of this day ♥</div></div>
+          <div class="pp-footer"><div class="pp-caption">Thank you for being here ♥</div></div>
         </div>
       </div>
-      <div class="page-back">
-        <div class="back-cover">
-          <div class="bc-brand">Photo<span>Find</span> Pro</div>
-          <div class="bc-tag">Odisha's First AI Photo Delivery</div>
-          <div class="bc-div"></div>
-          <div class="bc-url">www.templecity.digital</div>
-        </div>
-      </div>`;
+      <div class="page-b">${buildBackCover()}</div>`;
     book.appendChild(lastPg);
     pages.push(lastPg);
   }
@@ -562,225 +911,292 @@ function buildBook() {
   updateNav();
 }
 
-function makePage(idx) {
-  const p = document.createElement('div');
-  p.className = 'page';
-  p.style.zIndex = 200 - idx;
+function makePg(idx){
+  const p=document.createElement('div');
+  p.className='page';
+  p.style.zIndex=300-idx;
   return p;
 }
 
-function makePhotoPageHTML(startIdx, pageNum, count = 1) {
-  const caption = captions[startIdx % captions.length];
-  const pn = String(pageNum).padStart(2, '0');
-  const photos = allPhotos.slice(startIdx, startIdx + count);
-  
-  let bodyHTML = '';
-  if (count === 1 && photos[0]) {
-    bodyHTML = `<div class="pp-body l-single"><div class="ps"><img src="${photos[0].thumbnailLink}" loading="lazy"></div></div>`;
-  } else if (count === 2 && photos[1]) {
-    const layout = Math.random() > 0.5 ? 'l-double' : 'l-feature';
-    bodyHTML = `<div class="pp-body ${layout}">
-      <div class="ps"><img src="${photos[0].thumbnailLink}" loading="lazy"></div>
-      <div class="ps"><img src="${photos[1].thumbnailLink}" loading="lazy"></div>
+function photosForLayout(l){
+  if(l==='hero'||l==='cinematic'||l==='polaroid') return 1;
+  if(l==='dipt'||l==='editorial') return 2;
+  if(l==='tri'||l==='mag') return 3;
+  return 1;
+}
+
+function buildCover(){
+  const first=allPhotos[0];
+  const themeClass=eventType;
+  return `<div class="cover ${themeClass}">
+    <div class="cover-geo"></div>
+    <div class="cover-orb1"></div>
+    <div class="cover-orb2"></div>
+    <div class="cover-orb3"></div>
+    <div class="cover-topline"></div>
+    <div class="cover-content">
+      <div class="cover-eyebrow">✦ Personal Album ✦</div>
+      <div class="cover-mandala">
+        <div class="cover-dots"></div>
+        <div class="cover-photo-ring"></div>
+        <div class="cover-photo-inner">
+          ${first?`<img src="${first.thumbnailLink}" onerror="this.parentElement.innerHTML='<div class=cover-photo-ph>📸</div>'">`:'<div class="cover-photo-ph">📸</div>'}
+        </div>
+      </div>
+      <div class="cover-title">${eventName}</div>
+      <div class="cover-subtitle">${getEventSubtitle()}</div>
+      <div class="cover-date">${eventDate}</div>
+      <div class="cover-divider">
+        <div class="cover-divider-line"></div>
+        <div class="cover-divider-diamond"></div>
+        <div class="cover-divider-line r"></div>
+      </div>
+      <div class="cover-stats">
+        <div class="cover-stat">
+          <div class="cover-stat-val">${allPhotos.length}</div>
+          <div class="cover-stat-lbl">Memories</div>
+        </div>
+      </div>
+    </div>
+    <div class="cover-botline"></div>
+  </div>`;
+}
+
+function buildBackCover(){
+  return `<div class="back-cover">
+    <div class="bc-topline"></div>
+    <div class="bc-botline"></div>
+    <div class="bc-brand">Photo<em>Find</em> Pro</div>
+    <div class="bc-tag">Odisha's First AI Photo Delivery</div>
+    <div class="bc-div"></div>
+    <div class="bc-url">www.templecity.digital</div>
+  </div>`;
+}
+
+function buildPhotoPage(startIdx,pageNum,layout,count){
+  count=count||photosForLayout(layout);
+  const photos=allPhotos.slice(startIdx,startIdx+count);
+  if(!photos.length) return buildBackCover();
+
+  const cap=getCaption(startIdx);
+  const pn=String(pageNum).padStart(2,'0');
+
+  let inner='';
+
+  if(layout==='hero'&&photos[0]){
+    inner=`<div class="layout-hero" style="flex:1;position:relative;overflow:hidden">
+      <div class="pp-img" style="position:absolute;inset:0">
+        <img src="${photos[0].thumbnailLink}" style="width:100%;height:100%;object-fit:cover">
+      </div>
+      <div class="layout-hero pp-caption-overlay">
+        <div class="caption-text">${cap}</div>
+      </div>
     </div>`;
-  } else if (count >= 3 && photos[2]) {
-    bodyHTML = `<div class="pp-body l-trio">
+  } else if(layout==='mag'&&photos.length>=3){
+    inner=`<div class="layout-mag" style="flex:1">
+      <div class="ps main"><img src="${photos[0].thumbnailLink}" loading="lazy"></div>
+      <div class="ps accent"><img src="${photos[1].thumbnailLink}" loading="lazy"></div>
+      <div class="ps accent"><img src="${photos[2].thumbnailLink}" loading="lazy"></div>
+    </div>`;
+  } else if(layout==='tri'&&photos.length>=3){
+    inner=`<div class="layout-tri" style="flex:1">
       <div class="ps"><img src="${photos[0].thumbnailLink}" loading="lazy"></div>
-      <div class="ps"><img src="${photos[1].thumbnailLink}" loading="lazy"></div>
+      <div class="ps center"><img src="${photos[1].thumbnailLink}" loading="lazy"></div>
       <div class="ps"><img src="${photos[2].thumbnailLink}" loading="lazy"></div>
     </div>`;
-  } else if (photos[0]) {
-    bodyHTML = `<div class="pp-body l-single"><div class="ps"><img src="${photos[0].thumbnailLink}" loading="lazy"></div></div>`;
+  } else if(layout==='dipt'&&photos.length>=2){
+    inner=`<div class="layout-dipt" style="flex:1">
+      <div class="ps"><img src="${photos[0].thumbnailLink}" loading="lazy"></div>
+      <div class="ps"><img src="${photos[1].thumbnailLink}" loading="lazy"></div>
+    </div>`;
+  } else if(layout==='editorial'&&photos.length>=2){
+    const editorialNum=String(startIdx+1).padStart(2,'0');
+    inner=`<div class="layout-editorial" style="flex:1">
+      <div class="editorial-main"><img src="${photos[0].thumbnailLink}" loading="lazy" style="width:100%;height:100%;object-fit:cover"></div>
+      <div class="editorial-side">
+        <div class="editorial-num">${editorialNum}</div>
+        <div class="editorial-gold-line"></div>
+        <div class="editorial-quote">${cap}</div>
+        <div class="editorial-gold-line"></div>
+        ${photos[1]?`<div style="width:100%;aspect-ratio:1;overflow:hidden;border-radius:4px"><img src="${photos[1].thumbnailLink}" loading="lazy" style="width:100%;height:100%;object-fit:cover"></div>`:''}
+      </div>
+    </div>`;
+  } else if(layout==='polaroid'&&photos[0]){
+    inner=`<div class="layout-polaroid" style="flex:1">
+      <div class="polaroid">
+        <img src="${photos[0].thumbnailLink}" loading="lazy">
+        <div class="polaroid-caption">${cap}</div>
+      </div>
+    </div>`;
+  } else if(layout==='cinematic'&&photos[0]){
+    inner=`<div class="layout-cinematic" style="flex:1">
+      <div class="ps"><img src="${photos[0].thumbnailLink}" loading="lazy"></div>
+    </div>`;
+  } else if(photos[0]){
+    // Fallback
+    inner=`<div style="flex:1;position:relative;overflow:hidden">
+      <img src="${photos[0].thumbnailLink}" style="width:100%;height:100%;object-fit:cover" loading="lazy">
+    </div>`;
   }
 
-  return `<div class="photo-page">
+  return `<div class="pp">
     <div class="pp-header">
       <div class="pp-event">${eventName}</div>
       <div class="pp-num">${pn}</div>
     </div>
-    ${bodyHTML}
-    <div class="pp-footer"><div class="pp-caption">${caption}</div></div>
+    ${inner}
+    <div class="pp-footer">
+      <div class="pp-caption">${layout!=='hero'?cap:''}</div>
+      <div class="pp-logo">PhotoFind Pro</div>
+    </div>
   </div>`;
 }
 
-// ── PAGE FLIP ──
-function nextPage() {
-  if (currentPage >= pages.length - 1) {
-    stopPlay();
-    return;
-  }
+function getEventSubtitle(){
+  const subs={
+    wedding:'A Wedding to Remember Forever',
+    birthday:'A Birthday to Celebrate',
+    corporate:'Corporate Event Memories',
+  };
+  return subs[eventType]||'A Collection of Beautiful Memories';
+}
+
+// ── FLIP ──
+function nextPage(){
+  if(currentPage>=pages.length-1) return false;
   pages[currentPage].classList.add('flipped');
   currentPage++;
   updateNav();
+  return true;
 }
-
-function prevPage() {
-  if (currentPage <= 0) return;
+function prevPage(){
+  if(currentPage<=0) return;
   currentPage--;
   pages[currentPage].classList.remove('flipped');
   updateNav();
 }
+function manualNext(){stopPlay();nextPage();}
+function manualPrev(){stopPlay();prevPage();}
 
-function updateNav() {
-  const total = pages.length - 1;
-  const pct = total > 0 ? (currentPage / total) * 100 : 0;
-  document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('prevBtn').disabled = currentPage === 0;
-  document.getElementById('nextBtn').disabled = currentPage >= pages.length - 1;
-
-  const ind = document.getElementById('pageIndicator');
-  if (currentPage === 0) ind.textContent = 'Cover';
-  else if (currentPage >= pages.length - 1) ind.textContent = 'The End';
-  else ind.textContent = `Page ${currentPage} of ${pages.length - 1}`;
+function updateNav(){
+  const total=pages.length-1;
+  const pct=total>0?(currentPage/total)*100:0;
+  document.getElementById('progressFill').style.width=pct+'%';
+  document.getElementById('prevBtn').disabled=currentPage===0;
+  document.getElementById('nextBtn').disabled=currentPage>=pages.length-1;
+  const ind=document.getElementById('pgInd');
+  if(currentPage===0) ind.textContent='Cover';
+  else if(currentPage>=pages.length-1) ind.textContent='The End';
+  else ind.textContent=`Page ${currentPage} of ${pages.length-1}`;
 }
 
-// ── AUTO PLAY ──
-function startPlay() {
-  if (isPlaying) return;
-  isPlaying = true;
-  document.getElementById('playBtn').textContent = '⏸';
-  playInterval = setInterval(() => {
-    if (currentPage >= pages.length - 1) {
-      stopPlay();
-    } else {
-      nextPage();
-    }
-  }, slideSpeed);
+// ── AUTOPLAY ──
+function startPlay(){
+  if(isPlaying) return;
+  isPlaying=true;
+  document.getElementById('playBtn').textContent='⏸';
+  playTimer=setInterval(()=>{
+    const ok=nextPage();
+    if(!ok) stopPlay();
+  },speeds[speedIdx]);
+}
+function stopPlay(){
+  isPlaying=false;
+  document.getElementById('playBtn').textContent='▶';
+  clearInterval(playTimer);playTimer=null;
+}
+function togglePlay(){isPlaying?stopPlay():startPlay();}
+
+function changeSpeed(d){
+  speedIdx=Math.max(0,Math.min(speeds.length-1,speedIdx+d));
+  document.getElementById('speedInfo').textContent=`Auto · ${speedLabels[speedIdx]} / page`;
+  if(isPlaying){stopPlay();startPlay();}
 }
 
-function stopPlay() {
-  isPlaying = false;
-  document.getElementById('playBtn').textContent = '▶';
-  clearInterval(playInterval);
-  playInterval = null;
-}
-
-function togglePlay() {
-  if (isPlaying) stopPlay();
-  else startPlay();
-}
-
-function changeSpeed(dir) {
-  speedIdx = Math.max(0, Math.min(speeds.length - 1, speedIdx + dir));
-  slideSpeed = speeds[speedIdx];
-  document.getElementById('speedLabel').textContent = `Auto: ${speedLabels[speedIdx]}/page`;
-  if (isPlaying) {
-    stopPlay();
-    startPlay();
-  }
-}
-
-// ── SWIPE & TOUCH ──
-function setupInteraction() {
-  const book = document.getElementById('book');
-  book.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, {passive:true});
-  book.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    if (Math.abs(dx) > 35) {
-      stopPlay();
-      if (dx < 0) nextPage();
-      else prevPage();
-    }
-  }, {passive:true});
-
-  book.addEventListener('click', e => {
-    const rect = book.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    if (x > rect.width * 0.65) { stopPlay(); nextPage(); }
-    else if (x < rect.width * 0.35) { stopPlay(); prevPage(); }
+// ── TOUCH & SWIPE ──
+function setupInteraction(){
+  const book=document.getElementById('book');
+  book.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX;},{passive:true});
+  book.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-touchStartX;
+    if(Math.abs(dx)>40){stopPlay();dx<0?nextPage():prevPage();}
+  },{passive:true});
+  book.addEventListener('click',e=>{
+    const r=book.getBoundingClientRect();
+    const x=e.clientX-r.left;
+    if(x>r.width*0.65){stopPlay();nextPage();}
+    else if(x<r.width*0.35){stopPlay();prevPage();}
     else togglePlay();
   });
-
-  // Keyboard
-  document.addEventListener('keydown', e => {
-    if (e.key === 'ArrowRight') { stopPlay(); nextPage(); }
-    if (e.key === 'ArrowLeft') { stopPlay(); prevPage(); }
-    if (e.key === ' ') { e.preventDefault(); togglePlay(); }
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'){stopPlay();nextPage();}
+    else if(e.key==='ArrowLeft'){stopPlay();prevPage();}
+    else if(e.key===' '){e.preventDefault();togglePlay();}
   });
 }
 
 // ── BGM ──
-async function loadBGM() {
-  try {
-    const audio = document.getElementById('bgmAudio');
-    
-    // Try to get BGM from our server
-    const bgmUrls = {
-      wedding: 'https://www.bensound.com/bensound-music/bensound-romantic.mp3',
-      birthday: 'https://www.bensound.com/bensound-music/bensound-sunny.mp3',
-      corporate: 'https://www.bensound.com/bensound-music/bensound-inspire.mp3',
+async function initBGM(){
+  try{
+    const audio=document.getElementById('bgm');
+    // Royalty free BGM from pixabay fallback
+    const bgmMap={
+      wedding:'https://cdn.pixabay.com/audio/2022/08/04/audio_2dde668d05.mp3',
+      birthday:'https://cdn.pixabay.com/audio/2022/03/10/audio_c8c8a73467.mp3',
+      corporate:'https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3',
     };
-
-    audio.src = bgmUrls[eventType] || bgmUrls.wedding;
-    audio.volume = 0.25;
-
-    // Show BGM indicator
-    document.getElementById('bgmStatus').style.display = 'flex';
-
-    // Auto play BGM
-    const playPromise = audio.play();
-    if (playPromise) {
-      playPromise.then(() => {
-        bgmPlaying = true;
-        document.getElementById('bgmLabel').textContent = 'BGM Playing';
-      }).catch(() => {
-        bgmPlaying = false;
-        document.getElementById('bgmLabel').textContent = 'Tap for BGM';
-        document.getElementById('musicDot').classList.add('paused');
-      });
+    audio.src=bgmMap[eventType]||bgmMap.wedding;
+    audio.volume=0.22;
+    document.getElementById('bgmPill').style.display='flex';
+    // Try autoplay
+    try{
+      await audio.play();
+      bgmPlaying=true;
+      document.getElementById('bgmText').textContent='BGM';
+    }catch(e){
+      bgmPlaying=false;
+      document.getElementById('bgmText').textContent='▶ BGM';
+      ['b1','b2','b3','b4','b5'].forEach(id=>document.getElementById(id).classList.add('paused'));
     }
-  } catch(e) {}
+  }catch(e){}
 }
 
-function toggleBGM() {
-  const audio = document.getElementById('bgmAudio');
-  const dot = document.getElementById('musicDot');
-  const label = document.getElementById('bgmLabel');
-  if (bgmPlaying) {
-    audio.pause();
-    bgmPlaying = false;
-    label.textContent = 'BGM Paused';
-    dot.classList.add('paused');
-  } else {
-    audio.play().then(() => {
-      bgmPlaying = true;
-      label.textContent = 'BGM Playing';
-      dot.classList.remove('paused');
-    }).catch(() => {});
+function toggleBGM(){
+  const audio=document.getElementById('bgm');
+  const bars=['b1','b2','b3','b4','b5'].map(id=>document.getElementById(id));
+  if(bgmPlaying){
+    audio.pause();bgmPlaying=false;
+    document.getElementById('bgmText').textContent='▶ BGM';
+    bars.forEach(b=>b.classList.add('paused'));
+  }else{
+    audio.play().then(()=>{
+      bgmPlaying=true;
+      document.getElementById('bgmText').textContent='BGM';
+      bars.forEach(b=>b.classList.remove('paused'));
+    }).catch(()=>{});
   }
 }
 
 // ── SHARE ──
-function shareAlbum() {
-  const url = window.location.href;
-  if (navigator.share) {
-    navigator.share({ title: `${eventName} — My Album`, url });
-  } else {
-    navigator.clipboard.writeText(url).then(() => alert('Album link copied!'));
-  }
+function shareAlbum(){
+  const url=window.location.href;
+  if(navigator.share) navigator.share({title:`${eventName} Album`,url});
+  else navigator.clipboard.writeText(url).then(()=>alert('Link copied!'));
 }
-
-function whatsappShare() {
-  const url = window.location.href;
-  const msg = `📸 *My Photo Album — ${eventName}*\n\n🎬 View my beautiful digital flip book:\n${url}\n\n_Powered by PhotoFind Pro_\n🌐 www.templecity.digital`;
-  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+function waShare(){
+  const msg=`📸 *${eventName} — My Photo Album*\n\n🎬 View my cinematic digital album:\n${window.location.href}\n\n_PhotoFind Pro · www.templecity.digital_`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
 }
 
 // ── HELPERS ──
-function parseDate(name) {
-  const m = name.match(/^(\d{4}-\d{2}-\d{2})/);
-  if (m) return new Date(m[1]).toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
+function parseDate(n){
+  const m=n.match(/^(\d{4}-\d{2}-\d{2})/);
+  if(m) return new Date(m[1]).toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'});
   return '2026';
 }
-
-function showErr(msg) {
-  clearInterval(loadInt);
-  document.getElementById('loading').innerHTML = `
-    <div style="text-align:center;padding:40px">
-      <div style="font-size:40px;margin-bottom:16px">😔</div>
-      <div style="color:white;font-size:16px;margin-bottom:8px">Album not found</div>
-      <div style="color:rgba(255,255,255,0.4);font-size:13px">${msg}</div>
-    </div>`;
+function showErr(msg){
+  clearInterval(ldTimer);
+  document.getElementById('loading').innerHTML=`<div style="text-align:center;padding:40px"><div style="font-size:44px;margin-bottom:16px">📷</div><div style="color:white;font-size:16px;margin-bottom:8px">Album not found</div><div style="color:rgba(255,255,255,0.3);font-size:12px">${msg}</div></div>`;
 }
 
 init();
