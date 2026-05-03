@@ -244,6 +244,14 @@ select option{background:#151820}
           </div>
           <button class="copy-btn" onclick="copyLink('guestLink')">Copy</button>
         </div>
+        <div class="link-row">
+          <span class="link-icon">📖</span>
+          <div class="link-info">
+            <strong>Client Digital Album</strong>
+            <a id="albumLinkDisplay" href="#" target="_blank">Loading...</a>
+          </div>
+          <button class="copy-btn" onclick="copyLink('albumLink')">Copy</button>
+        </div>
       </div>
 
       <button class="wa-btn" id="waBtn">
@@ -468,6 +476,7 @@ function showSuccess(data) {
   document.getElementById('successPage').style.display = 'block';
 
   const driveLink = `https://drive.google.com/drive/folders/${data.eventId}`;
+  const albumLink = data.albumLink || `https://www.templecity.digital/album.html?event=${data.eventId}`;
 
   document.getElementById('uploadLinkDisplay').textContent = data.uploadLink;
   document.getElementById('uploadLinkDisplay').href = data.uploadLink;
@@ -475,6 +484,8 @@ function showSuccess(data) {
   document.getElementById('driveLinkDisplay').href = driveLink;
   document.getElementById('guestLinkDisplay').textContent = data.guestLink;
   document.getElementById('guestLinkDisplay').href = data.guestLink;
+  document.getElementById('albumLinkDisplay').textContent = albumLink;
+  document.getElementById('albumLinkDisplay').href = albumLink;
 
   document.getElementById('waBtn').onclick = () => window.open(data.waLink, '_blank');
   window.scrollTo(0, 0);
@@ -485,6 +496,7 @@ function copyLink(type) {
     uploadLink: document.getElementById('uploadLinkDisplay').textContent,
     driveLink: document.getElementById('driveLinkDisplay').textContent,
     guestLink: document.getElementById('guestLinkDisplay').textContent,
+    albumLink: document.getElementById('albumLinkDisplay').textContent,
   };
   navigator.clipboard.writeText(links[type]);
   toast('✅ Link copied!');
