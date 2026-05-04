@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PhotoFind Pro — Virtual Exhibition</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Montserrat:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gold:#E8C87A;--gold2:#C9A84C;--gold3:#A07830;
+  --dark:#0C0A07;--dark2:#1A1208;--dark3:#120E0A;
+  --wall:#1E1810;--floor:#0A0806;
+  --frame-outer:#4A3820;--frame-inner:#C9A84C;
+}
+
+html,body{width:100%;height:100%;overflow:hidden;margin:0;padding:0}
+
+body{
+  font-family:'Montserrat',sans-serif;
+  background:var(--dark);
+  color:white;
+}
+
+/* ══ LOADING ══ */
+#loading{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--dark);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:8px;
+}
+.ld-logo{font-family:'Playfair Display',serif;font-size:36px;font-weight:900}
+.ld-logo em{color:var(--gold);font-style:normal}
+.ld-tag{font-size:9px;color:rgba(232,200,122,0.4);letter-spacing:0.4em;margin-bottom:20px}
+.ld-bar{width:150px;height:1.5px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden}
+.ld-fill{height:100%;width:0;background:linear-gradient(90deg,var(--gold3),var(--gold));transition:width 0.2s}
+.ld-status{font-size:10px;color:rgba(255,255,255,0.2);letter-spacing:0.15em;margin-top:10px}
+
+/* ══ HEADER ══ */
+#header{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  height:52px;
+  background:rgba(12,10,7,0.9);backdrop-filter:blur(12px);
+  border-bottom:0.5px solid rgba(232,200,122,0.1);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;
+}
+.h-logo{font-family:'Playfair Display',serif;font-size:16px;font-weight:900}
+.h-logo em{color:var(--gold);font-style:normal}
+.h-title{font-size:10px;color:rgba(232,200,122,0.5);letter-spacing:0.2em;text-transform:uppercase}
+.h-btns{display:flex;gap:8px}
+.h-btn{
+  padding:5px 12px;border-radius:16px;
+  border:0.5px solid rgba(232,200,122,0.2);
+  background:rgba(255,255,255,0.04);
+  color:rgba(255,255,255,0.5);font-size:10px;
+  cursor:pointer;transition:all 0.15s;
+}
+.h-btn:active{background:rgba(232,200,122,0.08)}
+.h-btn.active{background:rgba(232,200,122,0.1);color:var(--gold);border-color:rgba(232,200,122,0.3)}
+
+/* ══ MODE: GALLERY (Default scroll view) ══ */
+#galleryMode{
+  display:none;
+  padding-top:52px;
+  min-height:100vh;
+  background:var(--wall);
+}
+
+/* Gallery ceiling */
+.gallery-ceiling{
+  height:40px;
+  background:linear-gradient(180deg,#0A0806,#1A1208);
+  border-bottom:3px solid rgba(232,200,122,0.15);
+  position:relative;
+}
+.gallery-ceiling::after{
+  content:'';position:absolute;
+  bottom:-1px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(232,200,122,0.3),transparent);
+}
+
+/* Spotlight effect */
+.gallery-ceiling-light{
+  position:absolute;bottom:-80px;
+  width:160px;height:80px;
+  background:radial-gradient(ellipse at 50% 0%,rgba(255,240,200,0.06),transparent 70%);
+  pointer-events:none;
+}
+
+/* Gallery walls */
+.gallery-room{
+  padding:20px 16px 60px;
+  max-width:100%;
+  position:relative;
+}
+
+/* Wall texture */
+.gallery-room::before{
+  content:'';position:fixed;
+  top:92px;left:0;right:0;bottom:0;
+  background:
+    repeating-linear-gradient(90deg,rgba(0,0,0,0.03) 0px,transparent 1px,transparent 60px,rgba(0,0,0,0.03) 61px),
+    repeating-linear-gradient(0deg,rgba(0,0,0,0.03) 0px,transparent 1px,transparent 60px,rgba(0,0,0,0.03) 61px);
+  pointer-events:none;z-index:0;
+}
+
+/* Section label */
+.gallery-section{
+  display:flex;align-items:center;gap:12px;
+  margin:16px 0 12px;position:relative;z-index:1;
+}
+.gs-line{flex:1;height:0.5px;background:linear-gradient(90deg,rgba(232,200,122,0.3),transparent)}
+.gs-label{
+  font-size:9px;letter-spacing:0.3em;text-transform:uppercase;
+  color:rgba(232,200,122,0.5);white-space:nowrap;
+}
+
+/* Gallery rows */
+.gallery-row{
+  display:flex;gap:12px;margin-bottom:20px;
+  position:relative;z-index:1;
+  overflow-x:auto;padding-bottom:4px;
+}
+.gallery-row::-webkit-scrollbar{display:none}
+
+/* Photo frames on wall */
+.wall-frame{
+  flex-shrink:0;
+  position:relative;cursor:pointer;
+  transition:transform 0.2s;
+}
+.wall-frame:active{transform:scale(0.97)}
+
+/* Gold picture frame */
+.frame-outer{
+  background:linear-gradient(145deg,#6A4A20,#4A3010,#8A6A30,#4A3010);
+  padding:8px;
+  border-radius:2px;
+  box-shadow:
+    0 4px 20px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,220,100,0.3),
+    inset 0 -1px 0 rgba(0,0,0,0.5);
+}
+.frame-inner{
+  background:linear-gradient(145deg,#E8C87A,#C9A84C,#E8C87A,#B09030);
+  padding:3px;
+}
+.frame-mat{
+  background:#F5F0E8;
+  padding:6px;
+}
+.frame-photo{
+  display:block;
+  object-fit:cover;
+}
+
+/* Frame sizes */
+.frame-lg .frame-photo{width:200px;height:150px}
+.frame-md .frame-photo{width:150px;height:150px}
+.frame-sm .frame-photo{width:120px;height:90px}
+.frame-tall .frame-photo{width:120px;height:180px}
+.frame-wide .frame-photo{width:240px;height:130px}
+
+/* Frame number plate */
+.frame-plate{
+  position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,#4A3820,#6A5030);
+  border:0.5px solid rgba(232,200,122,0.3);
+  border-radius:3px;padding:2px 10px;
+  font-size:8px;color:rgba(232,200,122,0.6);
+  letter-spacing:0.1em;white-space:nowrap;
+}
+
+/* Spotlight cone above frame */
+.frame-spotlight{
+  position:absolute;
+  top:-30px;left:50%;transform:translateX(-50%);
+  width:0;height:0;
+  border-left:30px solid transparent;
+  border-right:30px solid transparent;
+  border-top:30px solid rgba(255,240,200,0.04);
+  pointer-events:none;
+}
+
+/* Floor strip */
+.gallery-floor{
+  position:fixed;bottom:0;left:0;right:0;height:50px;
+  background:linear-gradient(0deg,#050403,#0A0806);
+  border-top:1px solid rgba(232,200,122,0.08);
+  z-index:50;
+}
+
+/* ══ MODE: 3D WALK ══ */
+#walkMode{
+  display:none;
+  position:fixed;
+  top:52px;left:0;right:0;bottom:0;
+  background:var(--dark);
+  overflow:hidden;
+}
+
+/* 3D corridor */
+#corridor{
+  width:100%;height:100%;
+  position:relative;
+  perspective:800px;
+  perspective-origin:50% 50%;
+  overflow:hidden;
+}
+
+/* Floor */
+.corridor-floor{
+  position:absolute;
+  bottom:0;left:-50%;right:-50%;
+  height:50%;
+  background:linear-gradient(0deg,#050302 0%,#0A0806 60%,#1A1208 100%);
+  transform:rotateX(30deg);
+  transform-origin:bottom center;
+}
+.floor-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(232,200,122,0.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(232,200,122,0.05) 1px,transparent 1px);
+  background-size:80px 80px;
+}
+
+/* Ceiling */
+.corridor-ceiling{
+  position:absolute;
+  top:0;left:-50%;right:-50%;
+  height:40%;
+  background:linear-gradient(180deg,#040302,#0A0806,#1A1208);
+  transform:rotateX(-25deg);
+  transform-origin:top center;
+}
+
+/* Walls */
+.corridor-wall-l,.corridor-wall-r{
+  position:absolute;top:0;bottom:0;width:30%;
+  background:var(--wall);
+}
+.corridor-wall-l{left:0;transform-origin:left center}
+.corridor-wall-r{right:0;transform-origin:right center}
+
+/* Walk photos */
+.walk-gallery{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+
+.walk-row{
+  display:flex;align-items:center;gap:0;
+  position:absolute;
+  transition:all 0.6s ease;
+}
+
+/* ══ LIGHTBOX ══ */
+#lightbox{
+  position:fixed;inset:0;z-index:500;
+  background:rgba(0,0,0,0.96);
+  display:none;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:20px;
+}
+.lb-close{
+  position:absolute;top:16px;right:16px;
+  width:36px;height:36px;
+  background:rgba(255,255,255,0.08);
+  border:none;border-radius:50%;color:white;
+  font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.lb-frame{
+  max-width:min(500px,90vw);
+  position:relative;
+}
+.lb-frame-outer{
+  background:linear-gradient(145deg,#6A4A20,#4A3010,#8A6A30,#4A3010);
+  padding:12px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.8);
+}
+.lb-frame-inner{
+  background:linear-gradient(145deg,#E8C87A,#C9A84C,#E8C87A);
+  padding:4px;
+}
+.lb-frame-mat{background:#F5F0E8;padding:8px}
+#lbImg{
+  display:block;
+  max-width:100%;max-height:60vh;
+  object-fit:contain;
+}
+.lb-info{
+  margin-top:16px;text-align:center;
+}
+.lb-title{font-family:'Playfair Display',serif;font-size:14px;font-style:italic;color:rgba(255,255,255,0.6)}
+.lb-num{font-size:10px;color:rgba(255,255,255,0.3);margin-top:4px;letter-spacing:0.1em}
+.lb-actions{display:flex;gap:10px;margin-top:12px;justify-content:center}
+.lb-btn{
+  padding:8px 18px;border-radius:8px;
+  font-family:'Montserrat',sans-serif;font-size:11px;
+  cursor:pointer;border:none;
+  display:flex;align-items:center;gap:5px;
+}
+.lb-dl{background:var(--gold);color:var(--dark);font-weight:700}
+.lb-cl{background:rgba(255,255,255,0.08);color:white}
+
+/* ══ WALK CONTROLS ══ */
+#walkControls{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  display:none;z-index:200;
+  background:rgba(12,10,7,0.9);backdrop-filter:blur(10px);
+  border:0.5px solid rgba(232,200,122,0.15);
+  border-radius:30px;padding:8px 16px;
+  display:flex;align-items:center;gap:12px;
+}
+.wc-btn{
+  width:36px;height:36px;
+  background:rgba(255,255,255,0.06);
+  border:0.5px solid rgba(232,200,122,0.15);
+  border-radius:50%;color:var(--gold);
+  font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.15s;
+}
+.wc-btn:active{background:rgba(232,200,122,0.1);transform:scale(0.9)}
+.wc-btn:disabled{opacity:0.25}
+.wc-pos{font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:0.1em;min-width:60px;text-align:center}
+
+/* ══ VISITOR COUNT ══ */
+#visitorCount{
+  position:fixed;bottom:80px;right:16px;z-index:200;
+  background:rgba(12,10,7,0.85);backdrop-filter:blur(8px);
+  border:0.5px solid rgba(232,200,122,0.1);
+  border-radius:12px;padding:8px 12px;
+  text-align:center;
+}
+.vc-num{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--gold)}
+.vc-label{font-size:8px;color:rgba(255,255,255,0.25);letter-spacing:0.15em;text-transform:uppercase}
+
+/* ══ GALLERY INFO ══ */
+#galleryInfo{
+  position:fixed;bottom:80px;left:16px;z-index:200;
+  background:rgba(12,10,7,0.85);backdrop-filter:blur(8px);
+  border:0.5px solid rgba(232,200,122,0.1);
+  border-radius:12px;padding:10px 14px;
+  max-width:160px;
+}
+.gi-name{font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:white;margin-bottom:2px}
+.gi-date{font-size:9px;color:rgba(232,200,122,0.5);letter-spacing:0.1em}
+.gi-count{font-size:9px;color:rgba(255,255,255,0.25);margin-top:4px}
+
+/* ══ THEME SELECTOR ══ */
+#themeBar{
+  position:fixed;top:60px;right:8px;z-index:200;
+  display:flex;flex-direction:column;gap:4px;
+}
+.theme-dot{
+  width:20px;height:20px;border-radius:50%;
+  cursor:pointer;border:1.5px solid transparent;
+  transition:all 0.15s;
+}
+.theme-dot.active{border-color:white;transform:scale(1.2)}
+.td-warm{background:linear-gradient(135deg,#3A2A10,#6A4A20)}
+.td-cool{background:linear-gradient(135deg,#0A1A2A,#0A2A3A)}
+.td-dark{background:linear-gradient(135deg,#0A0A0A,#1A1A1A)}
+.td-garden{background:linear-gradient(135deg,#0A1A0A,#1A2A10)}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="ld-logo">Photo<em>Find</em> Pro</div>
+  <div class="ld-tag">Virtual Exhibition</div>
+  <div class="ld-bar"><div class="ld-fill" id="ldFill"></div></div>
+  <div class="ld-status" id="ldStatus">Preparing the gallery...</div>
+</div>
+
+<!-- HEADER -->
+<div id="header">
+  <div>
+    <div class="h-logo">Photo<em>Find</em> Pro</div>
+  </div>
+  <div class="h-title" id="hTitle">Virtual Exhibition</div>
+  <div class="h-btns">
+    <button class="h-btn active" id="btnGallery" onclick="setMode('gallery')">🖼 Gallery</button>
+    <button class="h-btn" id="btn3D" onclick="setMode('walk')">🏛 3D Walk</button>
+  </div>
+</div>
+
+<!-- GALLERY MODE -->
+<div id="galleryMode">
+  <div class="gallery-ceiling" id="galleryCeiling"></div>
+  <div class="gallery-room" id="galleryRoom"></div>
+  <div class="gallery-floor"></div>
+</div>
+
+<!-- WALK MODE -->
+<div id="walkMode">
+  <div id="corridor">
+    <div class="corridor-floor"><div class="floor-grid"></div></div>
+    <div class="corridor-ceiling"></div>
+    <div id="walkGallery" class="walk-gallery"></div>
+  </div>
+</div>
+
+<!-- WALK CONTROLS -->
+<div id="walkControls">
+  <button class="wc-btn" id="walkPrev" onclick="walkPrev()" disabled>‹</button>
+  <div class="wc-pos" id="walkPos">1 / 1</div>
+  <button class="wc-btn" id="walkNext" onclick="walkNext()">›</button>
+</div>
+
+<!-- GALLERY INFO -->
+<div id="galleryInfo">
+  <div class="gi-name" id="giName">Exhibition</div>
+  <div class="gi-date" id="giDate">2026</div>
+  <div class="gi-count" id="giCount">Loading...</div>
+</div>
+
+<!-- VISITOR COUNT -->
+<div id="visitorCount">
+  <div class="vc-num" id="vcNum">—</div>
+  <div class="vc-label">Visitors</div>
+</div>
+
+<!-- THEME SELECTOR -->
+<div id="themeBar">
+  <div class="theme-dot td-warm active" onclick="setTheme('warm')" title="Warm"></div>
+  <div class="theme-dot td-cool" onclick="setTheme('cool')" title="Cool"></div>
+  <div class="theme-dot td-dark" onclick="setTheme('dark')" title="Dark"></div>
+  <div class="theme-dot td-garden" onclick="setTheme('garden')" title="Garden"></div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox">
+  <button class="lb-close" onclick="closeLB()">✕</button>
+  <div class="lb-frame">
+    <div class="lb-frame-outer">
+      <div class="lb-frame-inner">
+        <div class="lb-frame-mat">
+          <img id="lbImg" src="" alt="">
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="lb-info">
+    <div class="lb-title" id="lbTitle">Photograph</div>
+    <div class="lb-num" id="lbNum"></div>
+    <div class="lb-actions">
+      <a id="lbDl" href="#" target="_blank" class="lb-btn lb-dl">⬇ Download</a>
+      <button class="lb-btn lb-cl" onclick="closeLB()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SERVER = 'https://api.templecity.digital';
+const params = new URLSearchParams(window.location.search);
+const eventId = params.get('event');
+
+let allPhotos = [];
+let eventName = '';
+let eventDate = '';
+let currentMode = 'gallery';
+let walkIndex = 0;
+let currentTheme = 'warm';
+let touchStartX = 0;
+
+const themes = {
+  warm: { wall:'#1E1810', accent:'rgba(232,200,122,0.15)', light:'rgba(255,240,180,0.06)' },
+  cool: { wall:'#0E1822', accent:'rgba(100,180,232,0.15)', light:'rgba(150,200,255,0.05)' },
+  dark: { wall:'#111111', accent:'rgba(200,200,200,0.1)', light:'rgba(255,255,255,0.04)' },
+  garden: { wall:'#0E1A0E', accent:'rgba(100,200,100,0.15)', light:'rgba(150,255,100,0.04)' },
+};
+
+// Loading
+let prog = 0;
+const ldTimer = setInterval(() => {
+  prog = Math.min(prog + Math.random() * 10, 85);
+  document.getElementById('ldFill').style.width = prog + '%';
+}, 150);
+
+async function init() {
+  try {
+    if (!eventId) { showErr('No event specified'); return; }
+
+    document.getElementById('ldStatus').textContent = 'Fetching exhibition data...';
+
+    // Load events
+    const evRes = await fetch(`${SERVER}/events`);
+    const evData = await evRes.json();
+    const ev = evData.events?.find(e => e.id === eventId);
+    if (ev) {
+      const raw = ev.name.split('__')[0].replace(/^\d{4}-\d{2}-\d{2}_/, '').replace(/-/g, ' ');
+      eventName = raw;
+      eventDate = parseDate(ev.name);
+      document.getElementById('hTitle').textContent = eventName;
+      document.getElementById('giName').textContent = eventName;
+      document.getElementById('giDate').textContent = eventDate;
+    }
+
+    document.getElementById('ldStatus').textContent = 'Hanging photos on the walls...';
+
+    // Load photos
+    const phRes = await fetch(`${SERVER}/photos/${eventId}`);
+    const phData = await phRes.json();
+    allPhotos = phData.photos || [];
+
+    document.getElementById('giCount').textContent = `${allPhotos.length} photographs`;
+    document.getElementById('vcNum').textContent = Math.floor(Math.random() * 200 + 50);
+
+    buildGallery();
+    buildWalkMode();
+
+    clearInterval(ldTimer);
+    document.getElementById('ldFill').style.width = '100%';
+    setTimeout(() => {
+      document.getElementById('loading').style.opacity = '0';
+      document.getElementById('loading').style.transition = 'opacity 0.8s';
+      setTimeout(() => {
+        document.getElementById('loading').style.display = 'none';
+        setMode('gallery');
+      }, 800);
+    }, 500);
+
+  } catch(e) { showErr(e.message); }
+}
+
+// ── BUILD GALLERY ──
+function buildGallery() {
+  const room = document.getElementById('galleryRoom');
+  room.innerHTML = '';
+
+  if (!allPhotos.length) {
+    room.innerHTML = '<div style="padding:60px;text-align:center;color:rgba(255,255,255,0.2)">No photos in this exhibition yet</div>';
+    return;
+  }
+
+  // Add spotlights to ceiling
+  const ceiling = document.getElementById('galleryCeiling');
+  ceiling.innerHTML = '';
+  for (let i = 0; i < 6; i++) {
+    const light = document.createElement('div');
+    light.className = 'gallery-ceiling-light';
+    light.style.left = (10 + i * 16) + '%';
+    ceiling.appendChild(light);
+  }
+
+  // Create rows with different layouts
+  const layouts = [
+    { sizes: ['frame-lg', 'frame-md', 'frame-tall', 'frame-md'], count: 4 },
+    { sizes: ['frame-wide', 'frame-md', 'frame-wide'], count: 3 },
+    { sizes: ['frame-md', 'frame-tall', 'frame-lg', 'frame-sm'], count: 4 },
+    { sizes: ['frame-sm', 'frame-wide', 'frame-md', 'frame-sm'], count: 4 },
+    { sizes: ['frame-lg', 'frame-tall', 'frame-md'], count: 3 },
+  ];
+
+  let photoIdx = 0;
+  let layoutIdx = 0;
+
+  // Section label
+  const sectionDiv = document.createElement('div');
+  sectionDiv.className = 'gallery-section';
+  sectionDiv.innerHTML = `
+    <div class="gs-line"></div>
+    <div class="gs-label">✦ ${eventName} — ${allPhotos.length} Photographs ✦</div>
+    <div class="gs-line"></div>`;
+  room.appendChild(sectionDiv);
+
+  while (photoIdx < allPhotos.length) {
+    const layout = layouts[layoutIdx % layouts.length];
+    const row = document.createElement('div');
+    row.className = 'gallery-row';
+
+    const count = Math.min(layout.count, allPhotos.length - photoIdx);
+    for (let i = 0; i < count; i++) {
+      const photo = allPhotos[photoIdx + i];
+      const size = layout.sizes[i] || 'frame-md';
+      const frame = createFrameEl(photo, photoIdx + i, size);
+      row.appendChild(frame);
+    }
+
+    room.appendChild(row);
+    photoIdx += count;
+    layoutIdx++;
+
+    // Add section divider every 2 rows
+    if (layoutIdx % 3 === 0 && photoIdx < allPhotos.length) {
+      const div = document.createElement('div');
+      div.className = 'gallery-section';
+      div.innerHTML = `
+        <div class="gs-line"></div>
+        <div class="gs-label">✦ Gallery ${Math.ceil(layoutIdx/3) + 1} ✦</div>
+        <div class="gs-line"></div>`;
+      room.appendChild(div);
+    }
+  }
+}
+
+function createFrameEl(photo, idx, sizeClass) {
+  const wrap = document.createElement('div');
+  wrap.className = `wall-frame ${sizeClass}`;
+  wrap.style.marginBottom = '24px';
+
+  wrap.innerHTML = `
+    <div class="frame-spotlight"></div>
+    <div class="frame-outer">
+      <div class="frame-inner">
+        <div class="frame-mat">
+          <img class="frame-photo" src="${photo.thumbnailLink}" loading="lazy" alt="Photo ${idx+1}">
+        </div>
+      </div>
+    </div>
+    <div class="frame-plate">No. ${String(idx+1).padStart(3,'0')}</div>`;
+
+  wrap.onclick = () => openLB(idx);
+  return wrap;
+}
+
+// ── BUILD WALK MODE ──
+function buildWalkMode() {
+  const gallery = document.getElementById('walkGallery');
+  gallery.innerHTML = '';
+
+  if (!allPhotos.length) return;
+
+  // Create panels of 3 photos each
+  allPhotos.forEach((photo, idx) => {
+    const panel = document.createElement('div');
+    panel.className = 'walk-row';
+    panel.id = `wp-${idx}`;
+
+    panel.innerHTML = `
+      <div style="position:relative;padding:12px;background:var(--wall);border:0.5px solid rgba(232,200,122,0.1);cursor:pointer"
+           onclick="openLB(${idx})" ontouchend="openLB(${idx})">
+        <div style="background:linear-gradient(145deg,#6A4A20,#4A3010,#8A6A30);padding:6px">
+          <div style="background:linear-gradient(145deg,#E8C87A,#C9A84C);padding:2px">
+            <div style="background:#F5F0E8;padding:5px">
+              <img src="${photo.thumbnailLink}" style="width:220px;height:160px;object-fit:cover;display:block">
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:8px;font-size:9px;color:rgba(232,200,122,0.4);letter-spacing:0.1em">
+          No. ${String(idx+1).padStart(3,'0')}
+        </div>
+      </div>`;
+
+    panel.style.cssText = `
+      position:absolute;
+      top:50%;left:50%;
+      transform:translate(-50%,-50%) translateZ(0) scale(0.3);
+      opacity:0;
+      transition:all 0.5s ease;
+    `;
+
+    gallery.appendChild(panel);
+  });
+
+  updateWalkView();
+}
+
+function updateWalkView() {
+  const total = allPhotos.length;
+  document.getElementById('walkPos').textContent = `${walkIndex + 1} / ${total}`;
+  document.getElementById('walkPrev').disabled = walkIndex === 0;
+  document.getElementById('walkNext').disabled = walkIndex >= total - 1;
+
+  allPhotos.forEach((_, idx) => {
+    const panel = document.getElementById(`wp-${idx}`);
+    if (!panel) return;
+
+    const diff = idx - walkIndex;
+    let transform, opacity, zIndex;
+
+    if (diff === 0) {
+      // Current
+      transform = 'translate(-50%,-50%) translateZ(200px) scale(1)';
+      opacity = '1';
+      zIndex = '10';
+    } else if (diff === 1) {
+      // Next
+      transform = 'translate(30%,-50%) translateZ(100px) scale(0.7)';
+      opacity = '0.6';
+      zIndex = '9';
+    } else if (diff === -1) {
+      // Previous
+      transform = 'translate(-130%,-50%) translateZ(100px) scale(0.7)';
+      opacity = '0.6';
+      zIndex = '9';
+    } else if (diff === 2) {
+      transform = 'translate(80%,-50%) translateZ(0) scale(0.4)';
+      opacity = '0.2';
+      zIndex = '8';
+    } else if (diff === -2) {
+      transform = 'translate(-180%,-50%) translateZ(0) scale(0.4)';
+      opacity = '0.2';
+      zIndex = '8';
+    } else {
+      transform = 'translate(-50%,-50%) translateZ(-100px) scale(0.1)';
+      opacity = '0';
+      zIndex = '1';
+    }
+
+    panel.style.transform = transform;
+    panel.style.opacity = opacity;
+    panel.style.zIndex = zIndex;
+  });
+}
+
+function walkNext() {
+  if (walkIndex < allPhotos.length - 1) {
+    walkIndex++;
+    updateWalkView();
+  }
+}
+
+function walkPrev() {
+  if (walkIndex > 0) {
+    walkIndex--;
+    updateWalkView();
+  }
+}
+
+// ── MODE SWITCH ──
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('galleryMode').style.display = mode === 'gallery' ? 'block' : 'none';
+  document.getElementById('walkMode').style.display = mode === 'walk' ? 'block' : 'none';
+  document.getElementById('walkControls').style.display = mode === 'walk' ? 'flex' : 'none';
+  document.getElementById('btnGallery').classList.toggle('active', mode === 'gallery');
+  document.getElementById('btn3D').classList.toggle('active', mode === 'walk');
+}
+
+// ── THEME ──
+function setTheme(theme) {
+  currentTheme = theme;
+  const t = themes[theme];
+  document.documentElement.style.setProperty('--wall', t.wall);
+  document.querySelectorAll('.theme-dot').forEach(d => d.classList.remove('active'));
+  document.querySelector(`.td-${theme}`).classList.add('active');
+  buildGallery();
+}
+
+// ── LIGHTBOX ──
+function openLB(idx) {
+  const photo = allPhotos[idx];
+  if (!photo) return;
+  document.getElementById('lbImg').src = photo.thumbnailLink;
+  document.getElementById('lbDl').href = photo.viewLink;
+  document.getElementById('lbTitle').textContent = eventName;
+  document.getElementById('lbNum').textContent = `Photograph No. ${String(idx+1).padStart(3,'0')} of ${allPhotos.length}`;
+  document.getElementById('lightbox').style.display = 'flex';
+}
+
+function closeLB() {
+  document.getElementById('lightbox').style.display = 'none';
+}
+
+// Touch swipe for walk mode
+document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, {passive:true});
+document.addEventListener('touchend', e => {
+  if (currentMode !== 'walk') return;
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  if (Math.abs(dx) > 40) { dx < 0 ? walkNext() : walkPrev(); }
+}, {passive:true});
+
+// Keyboard for walk mode
+document.addEventListener('keydown', e => {
+  if (currentMode !== 'walk') return;
+  if (e.key === 'ArrowRight') walkNext();
+  if (e.key === 'ArrowLeft') walkPrev();
+  if (e.key === 'Escape') closeLB();
+});
+
+function parseDate(name) {
+  const m = name.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (m) return new Date(m[1]).toLocaleDateString('en-IN', {day:'numeric',month:'long',year:'numeric'});
+  return '2026';
+}
+
+function showErr(msg) {
+  clearInterval(ldTimer);
+  document.getElementById('loading').innerHTML = `
+    <div style="text-align:center;padding:40px">
+      <div style="font-size:40px;margin-bottom:16px">🏛️</div>
+      <div style="color:white;font-size:16px;margin-bottom:8px">Exhibition not found</div>
+      <div style="color:rgba(255,255,255,0.3);font-size:12px">${msg}</div>
+    </div>`;
+}
+
+init();
+</script>
+</body>
+</html>

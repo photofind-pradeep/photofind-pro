@@ -700,6 +700,7 @@ app.post('/payment/verify', async (req, res) => {
     const driveLink = `https://drive.google.com/drive/folders/${eventFolder.id}`;
     const albumLink = `${baseUrl}/album.html?event=${eventFolder.id}&type=${eventType}`;
     const videoLink = `${baseUrl}/video.html?event=${eventFolder.id}`;
+    const exhibitionLink = `${baseUrl}/exhibition.html?event=${eventFolder.id}`;
 
     const whatsappMsg =
       `📸 *PhotoFind Pro — ${pkgConfig.name} Plan Ready!*\n\n` +
@@ -719,6 +720,8 @@ app.post('/payment/verify', async (req, res) => {
       `_Beautiful cinematic album with BGM — share with family!_\n\n` +
       `*🎬 Event Video Page:*\n${videoLink}\n` +
       `_Upload your final edited video here — family watches online!_\n\n` +
+      `*🏛️ Virtual Exhibition:*\n${exhibitionLink}\n` +
+      `_Beautiful gallery — guests browse all event photos online!_\n\n` +
       `*━━━ YOUR PLAN INCLUDES ━━━*\n\n` +
       `✅ AI Face Recognition\n` +
       `✅ Solo + Group Photos\n` +
