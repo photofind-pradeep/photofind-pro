@@ -131,9 +131,8 @@ select option{background:#151820}
           ✓ Solo + Group Photos<br>
           ✓ Instagram Reels + BGM<br>
           ✓ Duplicate Detection<br>
-          ✓ Best Photo AI<br>
           ✓ Multi Photographer<br>
-          ✓ Face Swap<br>
+          ✓ Face Swap + Fun Zone<br>
           ✓ Print Order<br>
           ✓ WhatsApp Bot<br>
           ✓ Unlimited photos<br>
@@ -152,6 +151,21 @@ select option{background:#151820}
           ✓ Final Video Delivery<br>
           ✓ Virtual Exhibition<br>
           ✓ 90 days access
+        </div>
+      </div>
+      <div class="pkg" id="pkg-premium" onclick="selectPackage('premium')" style="position:relative">
+        <div class="pkg-popular" style="background:linear-gradient(135deg,#9B89D4,#6B4DA4);color:white">✨ PREMIUM</div>
+        <div class="pkg-name">Premium</div>
+        <div class="pkg-price">₹8,000 <span>/event</span></div>
+        <div class="pkg-features">
+          ✓ Everything in Advanced<br>
+          ✓ Best Photo AI Selection<br>
+          ✓ <strong style="color:var(--gold)">Smart Album Designer</strong><br>
+          &nbsp;&nbsp;→ Auto layout engine<br>
+          &nbsp;&nbsp;→ 20+ print templates<br>
+          &nbsp;&nbsp;→ Export PDF/JPEG<br>
+          &nbsp;&nbsp;→ Print-ready output<br>
+          ✓ 180 days access
         </div>
       </div>
     </div>
@@ -276,7 +290,7 @@ let bookingData = null;
 let appliedCoupon = null;
 
 const prices = { basic: 3000, advanced: 5000 };
-const pkgNames = { basic: 'Basic', advanced: 'Advanced' };
+const pkgNames = { basic: 'Basic', advanced: 'Advanced', premium: 'Premium' };
 
 function selectPackage(pkg) {
   selectedPkg = pkg;
@@ -291,6 +305,8 @@ function selectPackage(pkg) {
   document.getElementById(`pkg-${pkg}`).style.background = 'var(--gold-dim)';
   updateTotal();
 }
+
+async function applyCoupon() {
   const code = document.getElementById('couponCode').value.trim();
   const msgEl = document.getElementById('couponMsg');
 
