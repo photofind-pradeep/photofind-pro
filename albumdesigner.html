@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PhotoFind Pro — Smart Album Designer</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Montserrat:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Montserrat',sans-serif;background:#0C0A07;color:white;display:flex;flex-direction:column}
+
+.header{height:48px;flex-shrink:0;background:rgba(12,10,7,0.98);border-bottom:0.5px solid rgba(232,200,122,0.12);display:flex;align-items:center;justify-content:space-between;padding:0 12px;z-index:100}
+.logo{font-family:'Playfair Display',serif;font-size:14px;font-weight:900}
+.logo em{color:#E8C87A;font-style:normal}
+.h-badge{background:linear-gradient(135deg,#6B4DA4,#9B89D4);font-size:8px;font-weight:700;color:white;padding:3px 8px;border-radius:8px;letter-spacing:0.1em}
+.h-right{display:flex;gap:6px}
+.h-btn{padding:6px 10px;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:10px;font-weight:600;cursor:pointer;border:none;transition:all 0.15s;display:flex;align-items:center;gap:4px}
+.h-btn:active{transform:scale(0.95)}
+.btn-pdf{background:linear-gradient(135deg,#A07830,#E8C87A);color:#0C0A07}
+.btn-jpg{background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.6)}
+
+.main{flex:1;display:flex;overflow:hidden}
+
+.panel-left{width:190px;flex-shrink:0;background:rgba(26,18,8,0.9);border-right:0.5px solid rgba(232,200,122,0.08);overflow-y:auto;display:flex;flex-direction:column}
+.panel-left::-webkit-scrollbar{width:2px}
+.panel-left::-webkit-scrollbar-thumb{background:rgba(232,200,122,0.2)}
+
+.p-sec{padding:8px 10px 5px;font-size:8px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(232,200,122,0.4);font-weight:700;border-bottom:0.5px solid rgba(255,255,255,0.04)}
+
+.photos-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:6px}
+.pt{aspect-ratio:1;border-radius:3px;overflow:hidden;cursor:pointer;border:1.5px solid transparent;transition:all 0.15s;position:relative}
+.pt img{width:100%;height:100%;object-fit:cover;display:block}
+.pt:active{transform:scale(0.95)}
+.pt.sel{border-color:#E8C87A}
+.pt-n{position:absolute;bottom:2px;right:2px;background:rgba(0,0,0,0.6);font-size:7px;color:white;padding:1px 3px;border-radius:2px}
+
+.tmpls{padding:6px;display:flex;flex-direction:column;gap:4px}
+.ti{border-radius:7px;overflow:hidden;cursor:pointer;border:1.5px solid transparent;background:rgba(255,255,255,0.02);transition:all 0.15s}
+.ti.active{border-color:#E8C87A}
+.ti:active{transform:scale(0.97)}
+.ti-prev{height:44px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:9px;font-weight:700}
+.ti-lbl{padding:4px 8px;font-size:9px;color:rgba(255,255,255,0.4);border-top:0.5px solid rgba(255,255,255,0.04)}
+
+.pages-list{padding:6px;display:flex;flex-direction:column;gap:4px}
+.pg-th{border-radius:6px;overflow:hidden;cursor:pointer;border:1.5px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);padding:6px;transition:all 0.15s}
+.pg-th.active{border-color:#E8C87A;background:rgba(232,200,122,0.05)}
+.pg-th-prev{aspect-ratio:3/2;border-radius:3px;background:rgba(255,255,255,0.04);margin-bottom:3px;overflow:hidden}
+.pg-th-lbl{font-size:8px;color:rgba(255,255,255,0.3);text-align:center}
+.add-pg{margin:4px 6px;padding:7px;border-radius:7px;border:1px dashed rgba(232,200,122,0.18);background:transparent;color:rgba(232,200,122,0.45);font-family:'Montserrat',sans-serif;font-size:9px;cursor:pointer;text-align:center;transition:all 0.2s;width:calc(100% - 12px)}
+.add-pg:active{background:rgba(232,200,122,0.04)}
+
+.canvas-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;background:radial-gradient(ellipse at 20% 20%,rgba(232,200,122,0.02),transparent 40%),#080604;overflow:auto;padding:16px}
+.canvas-area::-webkit-scrollbar{width:4px;height:4px}
+.canvas-area::-webkit-scrollbar-thumb{background:rgba(232,200,122,0.2)}
+.canvas-wrap{box-shadow:0 20px 80px rgba(0,0,0,0.7)}
+#albumCanvas{display:block}
+
+.pg-nav{display:flex;align-items:center;gap:10px;margin-top:12px}
+.pn-btn{width:30px;height:30px;background:rgba(255,255,255,0.05);border:0.5px solid rgba(232,200,122,0.15);border-radius:50%;color:#E8C87A;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s}
+.pn-btn:active{background:rgba(232,200,122,0.1);transform:scale(0.9)}
+.pn-btn:disabled{opacity:0.2}
+.pn-info{font-size:9px;color:rgba(255,255,255,0.25);letter-spacing:0.1em}
+
+.panel-right{width:170px;flex-shrink:0;background:rgba(26,18,8,0.9);border-left:0.5px solid rgba(232,200,122,0.08);overflow-y:auto}
+.panel-right::-webkit-scrollbar{width:2px}
+
+.layouts-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:6px}
+.lo{aspect-ratio:3/2;border-radius:5px;border:1.5px solid rgba(255,255,255,0.08);cursor:pointer;background:rgba(255,255,255,0.02);transition:all 0.15s;overflow:hidden}
+.lo:active{transform:scale(0.95)}
+.lo.active{border-color:#E8C87A;background:rgba(232,200,122,0.06)}
+
+.txt-ctrl{padding:8px;display:flex;flex-direction:column;gap:5px}
+.tc-lbl{font-size:7px;color:rgba(255,255,255,0.25);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:1px}
+.tc-inp{width:100%;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);border-radius:5px;padding:6px 8px;color:white;font-family:'Montserrat',sans-serif;font-size:10px;outline:none}
+.tc-inp:focus{border-color:rgba(232,200,122,0.3)}
+
+.clr-row{display:flex;gap:4px;flex-wrap:wrap;padding:6px 8px}
+.cd{width:18px;height:18px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all 0.15s}
+.cd.active{border-color:white;transform:scale(1.2)}
+
+.sz-opts{padding:6px;display:flex;flex-direction:column;gap:3px}
+.so{padding:6px 8px;border-radius:5px;border:0.5px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.02);cursor:pointer;font-size:9px;color:rgba(255,255,255,0.45);display:flex;justify-content:space-between;align-items:center;transition:all 0.15s}
+.so.active{border-color:#E8C87A;color:#E8C87A;background:rgba(232,200,122,0.05)}
+.so-sub{font-size:7px;color:rgba(255,255,255,0.2)}
+
+#loading{position:fixed;inset:0;z-index:999;background:#0C0A07;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.ld-logo{font-family:'Playfair Display',serif;font-size:32px;font-weight:900}
+.ld-logo em{color:#E8C87A;font-style:normal}
+.ld-tag{font-size:8px;color:rgba(232,200,122,0.3);letter-spacing:0.35em;margin-bottom:14px}
+.ld-bar{width:130px;height:1.5px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden}
+.ld-fill{height:100%;width:0;background:linear-gradient(90deg,#A07830,#E8C87A);transition:width 0.2s}
+.ld-st{font-size:9px;color:rgba(255,255,255,0.18);margin-top:7px;letter-spacing:0.12em}
+
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:rgba(232,200,122,0.92);color:#0C0A07;padding:7px 16px;border-radius:16px;font-size:10px;font-weight:600;z-index:999;pointer-events:none;opacity:0;transition:opacity 0.3s;white-space:nowrap}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="ld-logo">Photo<em>Find</em> Pro</div>
+  <div class="ld-tag">Smart Album Designer</div>
+  <div class="ld-bar"><div class="ld-fill" id="ldFill"></div></div>
+  <div class="ld-st" id="ldSt">Loading photos...</div>
+</div>
+
+<div class="header">
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="logo">Photo<em>Find</em> Pro</div>
+    <div class="h-badge">✨ ALBUM DESIGNER</div>
+  </div>
+  <div class="h-right">
+    <button class="h-btn btn-jpg" onclick="exportJPEG()">📸 JPEG</button>
+    <button class="h-btn btn-pdf" onclick="exportPDF()">📄 PDF</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="panel-left">
+    <div class="p-sec">📸 Photos</div>
+    <div class="photos-grid" id="photosGrid"></div>
+    <div class="p-sec" style="margin-top:4px">🎨 Templates</div>
+    <div class="tmpls" id="tmplsList"></div>
+    <div class="p-sec" style="margin-top:4px">📄 Pages</div>
+    <div class="pages-list" id="pagesList"></div>
+    <button class="add-pg" onclick="addPage()">+ Add Page</button>
+  </div>
+
+  <div class="canvas-area">
+    <div class="canvas-wrap">
+      <canvas id="albumCanvas"></canvas>
+    </div>
+    <div class="pg-nav">
+      <button class="pn-btn" id="prevBtn" onclick="prevPage()" disabled>‹</button>
+      <div class="pn-info" id="pgInfo">Page 1 of 1</div>
+      <button class="pn-btn" id="nextBtn" onclick="nextPage()">›</button>
+    </div>
+  </div>
+
+  <div class="panel-right">
+    <div class="p-sec">📐 Layout</div>
+    <div class="layouts-grid" id="layoutsGrid"></div>
+    <div class="p-sec" style="margin-top:4px">✏️ Text</div>
+    <div class="txt-ctrl">
+      <div><div class="tc-lbl">Title</div><input class="tc-inp" id="inTitle" placeholder="Event title..." oninput="updateText()"></div>
+      <div><div class="tc-lbl">Subtitle</div><input class="tc-inp" id="inSub" placeholder="Date or name..." oninput="updateText()"></div>
+      <div><div class="tc-lbl">Caption</div><input class="tc-inp" id="inCap" placeholder="Page caption..." oninput="updateText()"></div>
+    </div>
+    <div class="p-sec" style="margin-top:4px">🎨 Theme</div>
+    <div class="clr-row" id="clrRow"></div>
+    <div class="p-sec" style="margin-top:4px">📏 Size</div>
+    <div class="sz-opts" id="szOpts"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SERVER='https://api.templecity.digital';
+const params=new URLSearchParams(window.location.search);
+const eventId=params.get('event');
+
+let allPhotos=[],eventName='Sample Event',pages=[],curPage=0;
+let selLayout='layout1',selTemplate='wedding',selSize='a4l';
+let curTheme={bg:'#FDFBF5',text:'#2A1E0E',accent:'#D4AF72',line:'#E8C87A'};
+
+const SIZES={
+  a4l:{label:'A4 Landscape',sub:'297×210mm',w:1123,h:794,pw:297,ph:210},
+  a4p:{label:'A4 Portrait',sub:'210×297mm',w:794,h:1123,pw:210,ph:297},
+  sq12:{label:'12×12 Square',sub:'305×305mm',w:1152,h:1152,pw:305,ph:305},
+  sq10:{label:'10×10 Square',sub:'254×254mm',w:960,h:960,pw:254,ph:254},
+  a3l:{label:'A3 Landscape',sub:'420×297mm',w:1587,h:1123,pw:420,ph:297},
+};
+
+const THEMES={
+  ivory:{bg:'#FDFBF5',text:'#2A1E0E',accent:'#D4AF72',line:'#E8C87A'},
+  dark:{bg:'#1A1208',text:'#F5EDD8',accent:'#E8C87A',line:'#C9A84C'},
+  blush:{bg:'#FDF0F3',text:'#3A1A2A',accent:'#C87A8A',line:'#E8A0B0'},
+  sage:{bg:'#F0F5F0',text:'#1A2A1A',accent:'#6A9A6A',line:'#8ABB8A'},
+  slate:{bg:'#F0F3F8',text:'#1A2030',accent:'#6A7A9A',line:'#8A9ABB'},
+  black:{bg:'#111111',text:'#F0F0F0',accent:'#C0C0C0',line:'#888'},
+};
+
+const TMPLS={
+  wedding:{label:'Wedding',bg:'#1A0A1A',acc:'#E8C87A'},
+  modern:{label:'Modern',bg:'#0A1A2A',acc:'#6BD4FF'},
+  birthday:{label:'Birthday',bg:'#1A0A0A',acc:'#FF6B9D'},
+  corporate:{label:'Corporate',bg:'#0A0A1A',acc:'#89B4D4'},
+  nature:{label:'Nature',bg:'#0A1A0A',acc:'#8ABB8A'},
+  vintage:{label:'Vintage',bg:'#1A1208',acc:'#D4B896'},
+  black:{label:'Black',bg:'#000',acc:'#FFF'},
+  golden:{label:'Golden',bg:'#1A1400',acc:'#E8C87A'},
+};
+
+const LAYOUTS={
+  layout1:{slots:[{x:0,y:0,w:1,h:1}]},
+  layout2:{slots:[{x:0,y:0,w:.5,h:1},{x:.5,y:0,w:.5,h:1}]},
+  layout3:{slots:[{x:0,y:0,w:1,h:.6},{x:0,y:.6,w:.5,h:.4},{x:.5,y:.6,w:.5,h:.4}]},
+  layout4:{slots:[{x:0,y:0,w:.5,h:.6},{x:.5,y:0,w:.5,h:.6},{x:0,y:.6,w:1,h:.4}]},
+  layout5:{slots:[{x:0,y:0,w:.33,h:1},{x:.33,y:0,w:.34,h:1},{x:.67,y:0,w:.33,h:1}]},
+  layout6:{slots:[{x:0,y:0,w:.65,h:1},{x:.65,y:0,w:.35,h:.5},{x:.65,y:.5,w:.35,h:.5}]},
+  layout7:{slots:[{x:0,y:0,w:.5,h:.5},{x:.5,y:0,w:.5,h:.5},{x:0,y:.5,w:.5,h:.5},{x:.5,y:.5,w:.5,h:.5}]},
+  layout8:{slots:[{x:0,y:0,w:.55,h:1},{x:.55,y:0,w:.45,h:.33},{x:.55,y:.33,w:.45,h:.34},{x:.55,y:.67,w:.45,h:.33}]},
+};
+
+const LO_SVG={
+  layout1:'<rect x="2" y="2" width="96%" height="96%" fill="rgba(255,255,255,0.2)" rx="1"/>',
+  layout2:'<rect x="2" y="2" width="47%" height="96%" fill="rgba(255,255,255,0.2)" rx="1"/><rect x="51%" y="2" width="47%" height="96%" fill="rgba(255,255,255,0.15)" rx="1"/>',
+  layout3:'<rect x="2" y="2" width="96%" height="56%" fill="rgba(255,255,255,0.2)" rx="1"/><rect x="2" y="61%" width="47%" height="37%" fill="rgba(255,255,255,0.15)" rx="1"/><rect x="51%" y="61%" width="47%" height="37%" fill="rgba(255,255,255,0.12)" rx="1"/>',
+  layout4:'<rect x="2" y="2" width="47%" height="56%" fill="rgba(255,255,255,0.2)" rx="1"/><rect x="51%" y="2" width="47%" height="56%" fill="rgba(255,255,255,0.18)" rx="1"/><rect x="2" y="61%" width="96%" height="37%" fill="rgba(255,255,255,0.12)" rx="1"/>',
+  layout5:'<rect x="2" y="2" width="30%" height="96%" fill="rgba(255,255,255,0.2)" rx="1"/><rect x="35%" y="2" width="30%" height="96%" fill="rgba(255,255,255,0.16)" rx="1"/><rect x="68%" y="2" width="30%" height="96%" fill="rgba(255,255,255,0.12)" rx="1"/>',
+  layout6:'<rect x="2" y="2" width="62%" height="96%" fill="rgba(255,255,255,0.2)" rx="1"/><rect x="66%" y="2" width="32%" height="47%" fill="rgba(255,255,255,0.15)" rx="1"/><rect x="66%" y="51%" width="32%" height="47%" fill="rgba(255,255,255,0.1)" rx="1"/>',
+  layout7:'<rect x="2" y="2" width="47%" height="47%" fill="rgba(255,255,255,0.2)" rx="1"/><rect x="51%" y="2" width="47%" height="47%" fill="rgba(255,255,255,0.17)" rx="1"/><rect x="2" y="51%" width="47%" height="47%" fill="rgba(255,255,255,0.14)" rx="1"/><rect x="51%" y="51%" width="47%" height="47%" fill="rgba(255,255,255,0.11)" rx="1"/>',
+  layout8:'<rect x="2" y="2" width="52%" height="96%" fill="rgba(255,255,255,0.2)" rx="1"/><rect x="56%" y="2" width="42%" height="30%" fill="rgba(255,255,255,0.15)" rx="1"/><rect x="56%" y="35%" width="42%" height="30%" fill="rgba(255,255,255,0.12)" rx="1"/><rect x="56%" y="68%" width="42%" height="30%" fill="rgba(255,255,255,0.1)" rx="1"/>',
+};
+
+const CAPS=['Every moment tells a story ♥','Memories worth keeping forever','A beautiful day to remember','Joy captured in time','Smiles that light up the world','Together, always ♥','Pure happiness','Cherish every memory'];
+
+// Loading
+let prog=0;
+const ldt=setInterval(()=>{prog=Math.min(prog+Math.random()*10,85);document.getElementById('ldFill').style.width=prog+'%';},150);
+
+async function init(){
+  try{
+    if(eventId){
+      document.getElementById('ldSt').textContent='Loading event...';
+      const er=await fetch(`${SERVER}/events`);
+      const ed=await er.json();
+      const ev=ed.events?.find(e=>e.id===eventId);
+      if(ev){eventName=ev.name.split('__')[0].replace(/^\d{4}-\d{2}-\d{2}_/,'').replace(/-/g,' ');}
+      document.getElementById('ldSt').textContent='Fetching photos...';
+      const pr=await fetch(`${SERVER}/photos/${eventId}`);
+      const pd=await pr.json();
+      allPhotos=pd.photos||[];
+    }
+    buildUI();initPages();
+    clearInterval(ldt);
+    document.getElementById('ldFill').style.width='100%';
+    setTimeout(()=>{
+      document.getElementById('loading').style.opacity='0';
+      document.getElementById('loading').style.transition='opacity 0.6s';
+      setTimeout(()=>{document.getElementById('loading').style.display='none';renderPage();},600);
+    },300);
+  }catch(e){buildUI();initPages();clearInterval(ldt);document.getElementById('loading').style.display='none';renderPage();}
+}
+
+function buildUI(){buildPhotos();buildTmpls();buildLayouts();buildColors();buildSizes();}
+
+function buildPhotos(){
+  const g=document.getElementById('photosGrid');
+  if(!allPhotos.length){g.innerHTML='<div style="grid-column:span 2;padding:10px;text-align:center;font-size:9px;color:rgba(255,255,255,0.2)">No photos</div>';return;}
+  g.innerHTML='';
+  allPhotos.forEach((p,i)=>{
+    const d=document.createElement('div');d.className='pt';
+    d.innerHTML=`<img src="${p.thumbnailLink}" loading="lazy"><div class="pt-n">${i+1}</div>`;
+    d.onclick=()=>addPhotoToPage(p);
+    g.appendChild(d);
+  });
+}
+
+function buildTmpls(){
+  const l=document.getElementById('tmplsList');l.innerHTML='';
+  Object.entries(TMPLS).forEach(([k,t])=>{
+    const d=document.createElement('div');d.className='ti'+(k===selTemplate?' active':'');
+    d.innerHTML=`<div class="ti-prev" style="background:${t.bg};color:${t.acc}"><span>📷</span><span>${t.label}</span></div><div class="ti-lbl">${t.label}</div>`;
+    d.onclick=()=>{
+      selTemplate=k;
+      document.querySelectorAll('.ti').forEach(x=>x.classList.remove('active'));d.classList.add('active');
+      const tm={wedding:'ivory',modern:'slate',birthday:'blush',corporate:'slate',nature:'sage',vintage:'ivory',black:'black',golden:'ivory'};
+      curTheme=THEMES[tm[k]]||THEMES.ivory;
+      document.querySelectorAll('.cd').forEach((x,i)=>{x.classList.toggle('active',Object.values(THEMES)[i]===curTheme);});
+      renderPage();
+    };
+    l.appendChild(d);
+  });
+}
+
+function buildLayouts(){
+  const g=document.getElementById('layoutsGrid');g.innerHTML='';
+  Object.entries(LAYOUTS).forEach(([k])=>{
+    const d=document.createElement('div');d.className='lo'+(k===selLayout?' active':'');
+    d.innerHTML=`<svg viewBox="0 0 100 66" style="width:100%;height:100%;padding:3px">${LO_SVG[k]||''}</svg>`;
+    d.onclick=()=>{
+      selLayout=k;
+      document.querySelectorAll('.lo').forEach(x=>x.classList.remove('active'));d.classList.add('active');
+      if(pages[curPage]){
+        pages[curPage].slots=LAYOUTS[k].slots.map((s,i)=>({...s,photo:pages[curPage].slots[i]?.photo||null}));
+        pages[curPage].layout=k;renderPage();
+      }
+    };
+    g.appendChild(d);
+  });
+}
+
+function buildColors(){
+  const r=document.getElementById('clrRow');r.innerHTML='';
+  Object.entries(THEMES).forEach(([k,t])=>{
+    const d=document.createElement('div');d.className='cd'+(t===curTheme?' active':'');
+    d.style.background=`linear-gradient(135deg,${t.bg},${t.accent})`;d.title=k;
+    d.onclick=()=>{curTheme=t;document.querySelectorAll('.cd').forEach(x=>x.classList.remove('active'));d.classList.add('active');renderPage();};
+    r.appendChild(d);
+  });
+}
+
+function buildSizes(){
+  const c=document.getElementById('szOpts');c.innerHTML='';
+  Object.entries(SIZES).forEach(([k,s])=>{
+    const d=document.createElement('div');d.className='so'+(k===selSize?' active':'');
+    d.innerHTML=`<span>${s.label}</span><span class="so-sub">${s.sub}</span>`;
+    d.onclick=()=>{selSize=k;document.querySelectorAll('.so').forEach(x=>x.classList.remove('active'));d.classList.add('active');renderPage();};
+    c.appendChild(d);
+  });
+}
+
+function initPages(){
+  pages=[];
+  pages.push({type:'cover',layout:'layout1',slots:[{x:0,y:0,w:1,h:1,photo:allPhotos[0]||null}],title:eventName,subtitle:new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}),caption:'A collection of beautiful memories'});
+  let pi=1,li=0;
+  const lkeys=Object.keys(LAYOUTS);
+  while(pi<allPhotos.length||pages.length<4){
+    const lk=lkeys[li%lkeys.length];
+    const sc=LAYOUTS[lk].slots.length;
+    pages.push({type:'photo',layout:lk,slots:LAYOUTS[lk].slots.map((s,i)=>({...s,photo:allPhotos[pi+i]||null})),title:eventName,subtitle:'',caption:CAPS[li%CAPS.length]});
+    pi+=sc;li++;
+    if(pi>=allPhotos.length&&pages.length>=5)break;
+  }
+  pages.push({type:'back',layout:'layout1',slots:[{x:0,y:0,w:1,h:1,photo:allPhotos[allPhotos.length-1]||null}],title:'Thank You',subtitle:'For being part of this beautiful day',caption:'PhotoFind Pro · www.templecity.digital'});
+  buildPages();updateNav();
+  document.getElementById('inTitle').value=pages[0].title||'';
+}
+
+function buildPages(){
+  const l=document.getElementById('pagesList');l.innerHTML='';
+  pages.forEach((p,i)=>{
+    const d=document.createElement('div');d.className='pg-th'+(i===curPage?' active':'');
+    d.innerHTML=`<div class="pg-th-prev" style="background:${curTheme.bg}"></div><div class="pg-th-lbl">${p.type==='cover'?'Cover':p.type==='back'?'Back':'Page '+i}</div>`;
+    d.onclick=()=>{curPage=i;buildPages();updateNav();renderPage();selLayout=pages[i].layout||'layout1';document.querySelectorAll('.lo').forEach((x,j)=>{x.classList.toggle('active',Object.keys(LAYOUTS)[j]===selLayout);});};
+    l.appendChild(d);
+  });
+}
+
+function addPage(){
+  pages.splice(pages.length-1,0,{type:'photo',layout:'layout2',slots:LAYOUTS.layout2.slots.map(s=>({...s,photo:null})),title:eventName,subtitle:'',caption:'Beautiful memories'});
+  curPage=pages.length-2;buildPages();updateNav();renderPage();showToast('✅ Page added!');
+}
+
+function updateNav(){
+  document.getElementById('prevBtn').disabled=curPage===0;
+  document.getElementById('nextBtn').disabled=curPage>=pages.length-1;
+  document.getElementById('pgInfo').textContent=`Page ${curPage+1} of ${pages.length}`;
+  const p=pages[curPage];
+  if(p){document.getElementById('inTitle').value=p.title||'';document.getElementById('inSub').value=p.subtitle||'';document.getElementById('inCap').value=p.caption||'';}
+}
+
+function prevPage(){if(curPage>0){curPage--;buildPages();updateNav();renderPage();}}
+function nextPage(){if(curPage<pages.length-1){curPage++;buildPages();updateNav();renderPage();}}
+function updateText(){const p=pages[curPage];if(!p)return;p.title=document.getElementById('inTitle').value;p.subtitle=document.getElementById('inSub').value;p.caption=document.getElementById('inCap').value;renderPage();}
+
+function addPhotoToPage(photo){
+  const p=pages[curPage];if(!p)return;
+  const empty=p.slots.find(s=>!s.photo);
+  if(empty)empty.photo=photo;else p.slots[p.slots.length-1].photo=photo;
+  renderPage();showToast('✅ Photo added!');
+}
+
+// ── RENDER ──
+function renderPage(){
+  const p=pages[curPage];if(!p)return;
+  const sz=SIZES[selSize];
+  const avW=window.innerWidth-380,avH=window.innerHeight-100;
+  const scale=Math.min(avW/sz.w,avH/sz.h,1);
+  const dW=Math.floor(sz.w*scale),dH=Math.floor(sz.h*scale);
+  const c=document.getElementById('albumCanvas');
+  c.width=sz.w;c.height=sz.h;c.style.width=dW+'px';c.style.height=dH+'px';
+  const ctx=c.getContext('2d');
+  if(p.type==='cover')drawCover(ctx,p,sz.w,sz.h);
+  else if(p.type==='back')drawBack(ctx,p,sz.w,sz.h);
+  else drawPhoto(ctx,p,sz.w,sz.h);
+}
+
+function drawCover(ctx,p,W,H){
+  const t=TMPLS[selTemplate];
+  ctx.fillStyle=t.bg;ctx.fillRect(0,0,W,H);
+  // Photo bg
+  if(p.slots[0]?.photo){
+    const img=getImg(p.slots[0].photo.thumbnailLink);
+    if(img?.complete&&img.naturalWidth){
+      ctx.save();const sc=Math.max(W/img.width,H/img.height);const sw=img.width*sc,sh=img.height*sc;
+      ctx.globalAlpha=0.35;ctx.drawImage(img,(W-sw)/2,(H-sh)/2,sw,sh);ctx.restore();
+    }
+  }
+  // Overlay
+  const ov=ctx.createLinearGradient(0,0,0,H);
+  ov.addColorStop(0,rgba(t.bg,0.75));ov.addColorStop(0.5,rgba(t.bg,0.4));ov.addColorStop(1,rgba(t.bg,0.9));
+  ctx.fillStyle=ov;ctx.fillRect(0,0,W,H);
+  // Lines
+  goldLine(ctx,0,28,W,t.acc);goldLine(ctx,0,H-28,W,t.acc);
+  // Corners
+  corner(ctx,48,48,t.acc);corner(ctx,W-48,48,t.acc,true);corner(ctx,48,H-48,t.acc,false,true);corner(ctx,W-48,H-48,t.acc,true,true);
+  // Text
+  ctx.fillStyle=rgba(t.acc,0.55);ctx.font=`300 ${fl(H*0.017)}px Montserrat,sans-serif`;ctx.textAlign='center';
+  ctx.fillText('✦  WEDDING ALBUM  ✦',W/2,H*0.34);
+  ctx.fillStyle='#FFFFFF';ctx.font=`700 ${fl(H*0.082)}px Playfair Display,serif`;ctx.textAlign='center';
+  wrapText(ctx,p.title||eventName,W/2,H*0.47,W*0.78,fl(H*0.092));
+  // Divider
+  const dy=H*0.56;
+  ctx.strokeStyle=rgba(t.acc,0.4);ctx.lineWidth=0.8;
+  ctx.beginPath();ctx.moveTo(W/2-70,dy);ctx.lineTo(W/2-8,dy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(W/2+8,dy);ctx.lineTo(W/2+70,dy);ctx.stroke();
+  ctx.fillStyle=t.acc;ctx.font='14px serif';ctx.fillText('❖',W/2,dy+5);
+  ctx.fillStyle=rgba(t.acc,0.7);ctx.font=`italic 300 ${fl(H*0.034)}px Cormorant Garamond,serif`;
+  ctx.fillText(p.subtitle||'',W/2,H*0.62);
+  ctx.fillStyle=rgba('#FFFFFF',0.18);ctx.font=`300 ${fl(H*0.019)}px Montserrat,sans-serif`;
+  ctx.fillText('PHOTOGRAPHED BY PHOTOFIND PRO · www.templecity.digital',W/2,H*0.88);
+}
+
+function drawPhoto(ctx,p,W,H){
+  const PAD=fl(W*0.022),HDR=fl(H*0.068),FTR=fl(H*0.056),GAP=fl(W*0.007);
+  ctx.fillStyle=curTheme.bg;ctx.fillRect(0,0,W,H);
+  // Header
+  const hg=ctx.createLinearGradient(0,0,W,0);hg.addColorStop(0,rgba(curTheme.accent,0.12));hg.addColorStop(0.5,rgba(curTheme.accent,0.04));hg.addColorStop(1,rgba(curTheme.accent,0.12));
+  ctx.fillStyle=hg;ctx.fillRect(0,0,W,HDR);
+  goldLine(ctx,0,HDR-1,W,curTheme.accent,0.25);
+  ctx.fillStyle=rgba(curTheme.accent,0.6);ctx.font=`italic 300 ${fl(HDR*0.38)}px Cormorant Garamond,serif`;ctx.textAlign='left';
+  ctx.fillText(p.title||eventName,PAD*2,HDR*0.65);
+  ctx.fillStyle=rgba(curTheme.accent,0.25);ctx.font=`500 ${fl(HDR*0.3)}px Montserrat,sans-serif`;ctx.textAlign='right';
+  ctx.fillText(String(curPage).padStart(2,'0'),W-PAD*2,HDR*0.65);
+  // Photo area
+  const aY=HDR+PAD,aH=H-HDR-FTR-PAD*2,aW=W-PAD*2;
+  const layout=LAYOUTS[p.layout]||LAYOUTS.layout1;
+  layout.slots.forEach((slot,i)=>{
+    const sx=PAD+slot.x*aW+(i>0&&slot.x>0?GAP:0);
+    const sy=aY+slot.y*aH+(slot.y>0?GAP:0);
+    const sw=slot.w*aW-(layout.slots.filter(s=>s.x>0).length>0&&slot.x>0?GAP/2:layout.slots.length>1&&slot.x===0&&layout.slots[1]?.x>0?GAP/2:0);
+    const sh=slot.h*aH-(slot.y<1&&slot.y+slot.h<1?GAP:0);
+    const photo=p.slots[i]?.photo;
+    if(photo){
+      const img=getImg(photo.thumbnailLink);
+      if(img?.complete&&img.naturalWidth){
+        ctx.save();ctx.beginPath();ctx.rect(sx,sy,sw,sh);ctx.clip();
+        const sc=Math.max(sw/img.width,sh/img.height);const iw=img.width*sc,ih=img.height*sc;
+        ctx.drawImage(img,sx+(sw-iw)/2,sy+(sh-ih)/2,iw,ih);ctx.restore();
+      }else{
+        ctx.fillStyle=rgba(curTheme.accent,0.06);ctx.fillRect(sx,sy,sw,sh);
+        img.onload=()=>renderPage();
+        ctx.fillStyle=rgba(curTheme.accent,0.15);ctx.font=`${fl(sh*0.18)}px serif`;ctx.textAlign='center';ctx.fillText('📷',sx+sw/2,sy+sh/2+8);
+      }
+    }else{
+      ctx.fillStyle=rgba(curTheme.accent,0.03);ctx.fillRect(sx,sy,sw,sh);
+      ctx.strokeStyle=rgba(curTheme.accent,0.08);ctx.setLineDash([5,4]);ctx.lineWidth=1;ctx.strokeRect(sx+3,sy+3,sw-6,sh-6);ctx.setLineDash([]);
+      ctx.fillStyle=rgba(curTheme.accent,0.12);ctx.font=`${fl(Math.min(sh,sw)*0.13)}px serif`;ctx.textAlign='center';ctx.fillText('📷',sx+sw/2,sy+sh/2+5);
+      ctx.font=`300 ${fl(Math.min(sh,sw)*0.055)}px Montserrat,sans-serif`;ctx.fillText('Tap photo to add',sx+sw/2,sy+sh*0.6+15);
+    }
+    ctx.strokeStyle=rgba(curTheme.accent,0.1);ctx.lineWidth=0.8;ctx.setLineDash([]);ctx.strokeRect(sx,sy,sw,sh);
+  });
+  // Footer
+  const fY=H-FTR;
+  goldLine(ctx,0,fY+1,W,curTheme.accent,0.15);
+  ctx.fillStyle=rgba(curTheme.accent,0.03);ctx.fillRect(0,fY,W,FTR);
+  ctx.fillStyle=rgba(curTheme.accent,0.45);ctx.font=`italic 300 ${fl(FTR*0.36)}px Cormorant Garamond,serif`;ctx.textAlign='center';
+  ctx.fillText(p.caption||'',W/2,fY+FTR*0.58);
+  ctx.fillStyle=rgba(curTheme.accent,0.15);ctx.font=`300 ${fl(FTR*0.22)}px Montserrat,sans-serif`;
+  ctx.fillText('PhotoFind Pro · www.templecity.digital',W/2,fY+FTR*0.85);
+}
+
+function drawBack(ctx,p,W,H){
+  const t=TMPLS[selTemplate];
+  ctx.fillStyle=t.bg;ctx.fillRect(0,0,W,H);
+  if(p.slots[0]?.photo){const img=getImg(p.slots[0].photo.thumbnailLink);if(img?.complete&&img.naturalWidth){ctx.save();const sc=Math.max(W/img.width,H/img.height);const sw=img.width*sc,sh=img.height*sc;ctx.globalAlpha=0.2;ctx.drawImage(img,(W-sw)/2,(H-sh)/2,sw,sh);ctx.restore();}}
+  const ov=ctx.createLinearGradient(0,0,0,H);ov.addColorStop(0,rgba(t.bg,0.92));ov.addColorStop(1,rgba(t.bg,0.96));ctx.fillStyle=ov;ctx.fillRect(0,0,W,H);
+  goldLine(ctx,0,26,W,t.acc);goldLine(ctx,0,H-26,W,t.acc);
+  ctx.fillStyle=rgba(t.acc,0.75);ctx.font=`900 ${fl(H*0.095)}px Playfair Display,serif`;ctx.textAlign='center';
+  ctx.fillText(p.title||'Thank You',W/2,H*0.44);
+  ctx.fillStyle=rgba(t.acc,0.45);ctx.font=`italic 300 ${fl(H*0.038)}px Cormorant Garamond,serif`;
+  ctx.fillText(p.subtitle||'',W/2,H*0.54);
+  const dy=H*0.62;const lg=ctx.createLinearGradient(W/2-80,dy,W/2+80,dy);lg.addColorStop(0,'transparent');lg.addColorStop(0.5,t.acc);lg.addColorStop(1,'transparent');ctx.strokeStyle=lg;ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(W/2-80,dy);ctx.lineTo(W/2+80,dy);ctx.stroke();
+  ctx.fillStyle=rgba('#FFFFFF',0.2);ctx.font=`300 ${fl(H*0.021)}px Montserrat,sans-serif`;
+  ctx.fillText('PhotoFind Pro · Temple City Digital · www.templecity.digital',W/2,H*0.82);
+}
+
+// Helpers
+const imgCache={};
+function getImg(url){if(!url)return null;if(!imgCache[url]){const i=new Image();i.crossOrigin='anonymous';i.onload=()=>renderPage();i.src=url;imgCache[url]=i;}return imgCache[url];}
+function rgba(hex,a){if(!hex||hex[0]!=='#')return `rgba(200,180,100,${a})`;const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return `rgba(${r},${g},${b},${a})`;}
+function fl(n){return Math.floor(n);}
+function goldLine(ctx,x,y,w,col,a=0.5){const g=ctx.createLinearGradient(x,y,x+w,y);g.addColorStop(0,'transparent');g.addColorStop(0.3,rgba(col,a));g.addColorStop(0.7,rgba(col,a));g.addColorStop(1,'transparent');ctx.strokeStyle=g;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+w,y);ctx.stroke();}
+function corner(ctx,x,y,col,fx=false,fy=false){ctx.save();ctx.translate(x,y);if(fx)ctx.scale(-1,1);if(fy)ctx.scale(1,-1);ctx.strokeStyle=rgba(col,0.28);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-18,0);ctx.lineTo(0,0);ctx.lineTo(0,18);ctx.stroke();ctx.fillStyle=rgba(col,0.35);ctx.font='9px serif';ctx.textAlign='center';ctx.fillText('✦',0,0);ctx.restore();}
+function wrapText(ctx,txt,x,y,maxW,lh){if(!txt)return;const words=txt.split(' ');let line='',cy=y;words.forEach(w=>{const t=line+w+' ';if(ctx.measureText(t).width>maxW&&line){ctx.fillText(line.trim(),x,cy);line=w+' ';cy+=lh;}else line=t;});ctx.fillText(line.trim(),x,cy);}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+window.addEventListener('resize',renderPage);
+
+// Export PDF
+async function exportPDF(){
+  showToast('⏳ Generating PDF...');
+  await new Promise(r=>setTimeout(r,100));
+  const sz=SIZES[selSize];
+  const{jsPDF}=window.jspdf;
+  const isL=sz.w>sz.h;
+  const fmt=selSize.startsWith('a4')?'a4':selSize.startsWith('a3')?'a3':[sz.pw,sz.ph];
+  const ori=isL?'landscape':'portrait';
+  const pdf=new jsPDF({orientation:ori,unit:'mm',format:fmt});
+  const c=document.getElementById('albumCanvas');
+  const saved=curPage;
+  for(let i=0;i<pages.length;i++){
+    curPage=i;renderPage();
+    await new Promise(r=>setTimeout(r,250));
+    const d=c.toDataURL('image/jpeg',0.92);
+    if(i>0)pdf.addPage(fmt,ori);
+    pdf.addImage(d,'JPEG',0,0,sz.pw,sz.ph);
+  }
+  curPage=saved;renderPage();updateNav();
+  pdf.save(`${eventName||'Album'}_PhotoFindPro.pdf`);
+  showToast('✅ PDF downloaded!');
+}
+
+async function exportJPEG(){
+  const c=document.getElementById('albumCanvas');
+  const a=document.createElement('a');
+  a.download=`${eventName||'Album'}_Page${curPage+1}_PhotoFindPro.jpg`;
+  a.href=c.toDataURL('image/jpeg',0.95);a.click();
+  showToast('✅ JPEG saved!');
+}
+
+init();
+</script>
+</body>
+</html>
