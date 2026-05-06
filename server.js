@@ -10,6 +10,11 @@ const {
   RekognitionClient,
   CompareFacesCommand,
   DetectFacesCommand,
+  CreateCollectionCommand,
+  IndexFacesCommand,
+  SearchFacesByImageCommand,
+  DeleteCollectionCommand,
+  ListFacesCommand,
 } = require('@aws-sdk/client-rekognition');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
@@ -94,6 +99,66 @@ const rekognition = new RekognitionClient({
   },
 });
 
+// ── Face Collection (Pre-indexing) ──
+function getCollectionId(eventId) {
+  // AWS collection IDs must be alphanumeric + hyphens, max 255 chars
+  return `photofind-${eventId.replace(/[^a-zA-Z0-9]/g, '-').substring(0, 50)}`;
+}
+
+async function ensureCollection(eventId) {
+  const collectionId = getCollectionId(eventId);
+  try {
+    await rekognition.send(new CreateCollectionCommand({ CollectionId: collectionId }));
+    console.log(`✅ Collection created: ${collectionId}`);
+  } catch(e) {
+    if (e.name === 'ResourceAlreadyExistsException') {
+      console.log(`ℹ️ Collection exists: ${collectionId}`);
+    } else {
+      throw e;
+    }
+  }
+  return collectionId;
+}
+
+async function indexPhotoFaces(photoBuffer, photoName, eventId) {
+  try {
+    const collectionId = getCollectionId(eventId);
+    const resized = await resizeForRekognition(photoBuffer);
+
+    const result = await rekognition.send(new IndexFacesCommand({
+      CollectionId: collectionId,
+      Image: { Bytes: resized },
+      ExternalImageId: photoName.replace(/[^a-zA-Z0-9_.\-:]/g, '_').substring(0, 255),
+      DetectionAttributes: ['DEFAULT'],
+      MaxFaces: 10,
+      QualityFilter: 'AUTO',
+    }));
+
+    const facesIndexed = result.FaceRecords?.length || 0;
+    console.log(`📸 Indexed ${facesIndexed} face(s) from ${photoName}`);
+    return facesIndexed;
+  } catch(e) {
+    console.error(`⚠️ Index failed for ${photoName}:`, e.message);
+    return 0;
+  }
+}
+
+async function searchFacesByImage(selfieBuffer, collectionId, threshold = 70) {
+  try {
+    const resized = await resizeForRekognition(selfieBuffer);
+    const result = await rekognition.send(new SearchFacesByImageCommand({
+      CollectionId: collectionId,
+      Image: { Bytes: resized },
+      MaxFaces: 100,
+      FaceMatchThreshold: threshold,
+    }));
+    return result.FaceMatches || [];
+  } catch(e) {
+    console.error('❌ Search error:', e.message);
+    return [];
+  }
+}
+
 // ── Google Auth ──
 let auth;
 try {
@@ -138,7 +203,7 @@ const PACKAGES = {
     bgm: true,
     groupPhotos: true,
     duplicateDetection: true,
-    bestPhotoAI: true,
+    bestPhotoAI: false,
     multiPhotographer: true,
     printOrder: true,
     whatsappBot: true,
@@ -146,11 +211,34 @@ const PACKAGES = {
     digitalAlbum: false,
     videoDelivery: false,
     virtualExhibition: false,
-    validity: 45
+    albumDesigner: false,
+    validity: '45 days',
+    validityDays: 45,
   },
   advanced: {
     name: 'Advanced',
     price: 500000, // ₹5,000
+    maxPhotos: Infinity,
+    aiEdit: true,
+    reel: true,
+    bgm: true,
+    groupPhotos: true,
+    duplicateDetection: true,
+    bestPhotoAI: false,
+    multiPhotographer: true,
+    printOrder: true,
+    whatsappBot: true,
+    faceSwap: true,
+    digitalAlbum: true,
+    videoDelivery: true,
+    virtualExhibition: true,
+    albumDesigner: false,
+    validity: '90 days',
+    validityDays: 90,
+  },
+  premium: {
+    name: 'Premium',
+    price: 800000, // ₹8,000
     maxPhotos: Infinity,
     aiEdit: true,
     reel: true,
@@ -165,7 +253,9 @@ const PACKAGES = {
     digitalAlbum: true,
     videoDelivery: true,
     virtualExhibition: true,
-    validity: 90
+    albumDesigner: true,  // ← Smart Album Designer
+    validity: '180 days',
+    validityDays: 180,
   },
 };
 
@@ -701,6 +791,7 @@ app.post('/payment/verify', async (req, res) => {
     const albumLink = `${baseUrl}/album.html?event=${eventFolder.id}&type=${eventType}`;
     const videoLink = `${baseUrl}/video.html?event=${eventFolder.id}`;
     const exhibitionLink = `${baseUrl}/exhibition.html?event=${eventFolder.id}`;
+    const albumDesignerLink = pkgConfig.albumDesigner ? `${baseUrl}/albumdesigner.html?event=${eventFolder.id}` : null;
 
     const whatsappMsg =
       `📸 *PhotoFind Pro — ${pkgConfig.name} Plan Ready!*\n\n` +
@@ -722,6 +813,7 @@ app.post('/payment/verify', async (req, res) => {
       `_Upload your final edited video here — family watches online!_\n\n` +
       `*🏛️ Virtual Exhibition:*\n${exhibitionLink}\n` +
       `_Beautiful gallery — guests browse all event photos online!_\n\n` +
+      `${albumDesignerLink ? `*🎨 Smart Album Designer:*\n${albumDesignerLink}\n_AI auto-designs print-ready albums!_\n\n` : ''}` +
       `*━━━ YOUR PLAN INCLUDES ━━━*\n\n` +
       `✅ AI Face Recognition\n` +
       `✅ Solo + Group Photos\n` +
@@ -735,6 +827,8 @@ app.post('/payment/verify', async (req, res) => {
       `${pkgConfig.digitalAlbum ? '✅ Digital Flip Book Album\n' : ''}` +
       `${pkgConfig.videoDelivery ? '✅ Video Delivery Page\n' : ''}` +
       `${pkgConfig.virtualExhibition ? '✅ Virtual Exhibition\n' : ''}` +
+      `${pkgConfig.albumDesigner ? '✅ Smart Album Designer (Print-Ready)\n' : ''}` +
+      `${pkgConfig.bestPhotoAI ? '✅ Best Photo AI Selection\n' : ''}` +
       `\n*Plan:* ${pkgConfig.name} — ${pkgConfig.validity} days validity\n\n` +
       `_Powered by Temple City Digital_\n🌐 www.templecity.digital`;
 
@@ -1001,7 +1095,78 @@ app.get('/events', async (req, res) => {
   }
 });
 
-// ── Get Video for Event ──
+// ── Index All Faces for Event (Pre-indexing) ──
+app.post('/index-faces/:eventId', async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    console.log(`🔍 Starting face indexing for event: ${eventId}`);
+
+    // Ensure collection exists
+    const collectionId = await ensureCollection(eventId);
+
+    // Get all photos from Drive
+    const subfolders = await drive.files.list({
+      q: `'${eventId}' in parents and mimeType='application/vnd.google-apps.folder' and name='original' and trashed=false`,
+      fields: 'files(id)',
+    });
+
+    if (!subfolders.data.files.length) {
+      return res.json({ success: false, error: 'Original folder not found' });
+    }
+
+    const photosRes = await drive.files.list({
+      q: `'${subfolders.data.files[0].id}' in parents and mimeType contains 'image/' and trashed=false`,
+      fields: 'files(id, name)', pageSize: 1000,
+    });
+
+    const photos = photosRes.data.files;
+    console.log(`📸 Indexing ${photos.length} photos...`);
+
+    let indexed = 0, failed = 0;
+
+    // Index in batches of 10
+    const batchSize = 10;
+    for (let i = 0; i < photos.length; i += batchSize) {
+      const batch = photos.slice(i, i + batchSize);
+      await Promise.all(batch.map(async photo => {
+        try {
+          const stream = await drive.files.get(
+            { fileId: photo.id, alt: 'media' },
+            { responseType: 'arraybuffer' }
+          );
+          const buffer = Buffer.from(stream.data);
+          const faces = await indexPhotoFaces(buffer, photo.name, eventId);
+          if (faces > 0) indexed++;
+          else failed++;
+        } catch(e) {
+          failed++;
+        }
+      }));
+      console.log(`Progress: ${Math.min(i + batchSize, photos.length)}/${photos.length}`);
+    }
+
+    console.log(`✅ Indexing complete: ${indexed} indexed, ${failed} failed`);
+    res.json({ success: true, total: photos.length, indexed, failed, collectionId });
+
+  } catch(err) {
+    console.error('❌ Index error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── Check Index Status ──
+app.get('/index-status/:eventId', async (req, res) => {
+  try {
+    const collectionId = getCollectionId(req.params.eventId);
+    const faces = await rekognition.send(new ListFacesCommand({
+      CollectionId: collectionId,
+      MaxResults: 1,
+    }));
+    res.json({ success: true, indexed: true, faceCount: faces.Faces?.length || 0 });
+  } catch(e) {
+    res.json({ success: true, indexed: false, faceCount: 0 });
+  }
+});
 app.get('/video/:eventId', async (req, res) => {
   try {
     const { eventId } = req.params;
@@ -1217,26 +1382,237 @@ app.post('/match/:eventId', upload.single('selfie'), async (req, res) => {
     if (!req.file) return res.status(400).json({ success: false, error: 'No selfie' });
 
     const selfieBuffer = req.file.buffer;
+    const selfieResized = await resizeForRekognition(selfieBuffer);
 
-    // Resize selfie if too large
-    const selfieResizedForDetect = await resizeForRekognition(selfieBuffer);
-
-    // Detect face
+    // Detect face first
     const detectResult = await rekognition.send(new DetectFacesCommand({
-      Image: { Bytes: selfieResizedForDetect }, Attributes: ['DEFAULT'],
+      Image: { Bytes: selfieResized }, Attributes: ['DEFAULT'],
     }));
 
     if (!detectResult.FaceDetails?.length) {
       return res.status(400).json({ success: false, error: 'No face detected. Retake in good lighting.' });
     }
 
-    // Get photos
+    // Get all photos from Drive
     const subfolders = await drive.files.list({
       q: `'${eventId}' in parents and mimeType='application/vnd.google-apps.folder' and name='original' and trashed=false`,
       fields: 'files(id)',
     });
 
-    if (!subfolders.data.files.length) return res.status(404).json({ success: false, error: 'Original folder not found' });
+    if (!subfolders.data.files.length) {
+      return res.status(404).json({ success: false, error: 'Original folder not found' });
+    }
+
+    const photosRes = await drive.files.list({
+      q: `'${subfolders.data.files[0].id}' in parents and mimeType contains 'image/' and trashed=false`,
+      fields: 'files(id, name, mimeType, size)', pageSize: 1000,
+    });
+
+    const allPhotos = photosRes.data.files;
+    console.log(`📸 Total photos: ${allPhotos.length}`);
+
+    // Get event info
+    const eventsRes = await drive.files.list({
+      q: `'${process.env.EVENT_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+      fields: 'files(id, name)',
+    });
+    const eventFile = eventsRes.data.files.find(e => e.id === eventId);
+    const eventType = detectEventType(eventFile?.name || '');
+    const editedFolderId = await getOrCreateFolder(eventId, 'edited');
+
+    // ── CHECK IF PRE-INDEXED ──
+    const collectionId = getCollectionId(eventId);
+    let useIndexed = false;
+
+    try {
+      const listResult = await rekognition.send(new ListFacesCommand({
+        CollectionId: collectionId, MaxResults: 1,
+      }));
+      useIndexed = (listResult.Faces?.length || 0) > 0;
+    } catch(e) {
+      useIndexed = false;
+    }
+
+    let soloMatches = [];
+    let groupMatches = [];
+
+    if (useIndexed) {
+      // ── FAST PATH: Pre-indexed search (1-2 seconds!) ──
+      console.log(`⚡ Using pre-indexed collection: ${collectionId}`);
+
+      // Solo matches (70%)
+      const soloResults = await searchFacesByImage(selfieBuffer, collectionId, 70);
+      console.log(`✅ Found ${soloResults.length} solo matches (indexed)`);
+
+      for (const match of soloResults) {
+        const photoName = match.Face.ExternalImageId?.replace(/_/g, ' ') || '';
+        const photo = allPhotos.find(p =>
+          p.name.replace(/[^a-zA-Z0-9_.\-:]/g, '_').substring(0, 255) === match.Face.ExternalImageId ||
+          p.name === photoName
+        );
+        if (photo) {
+          soloMatches.push({ photo, similarity: match.Similarity });
+        }
+      }
+
+      // Group matches (50%) if enabled
+      if (pkgConfig.groupPhotos) {
+        const groupResults = await searchFacesByImage(selfieBuffer, collectionId, 50);
+        for (const match of groupResults) {
+          if (match.Similarity >= 50 && match.Similarity < 70) {
+            const photo = allPhotos.find(p =>
+              p.name.replace(/[^a-zA-Z0-9_.\-:]/g, '_').substring(0, 255) === match.Face.ExternalImageId
+            );
+            if (photo && !soloMatches.find(m => m.photo.id === photo.id)) {
+              groupMatches.push({ photo, similarity: match.Similarity });
+            }
+          }
+        }
+      }
+
+    } else {
+      // ── SLOW PATH: Original comparison (fallback) ──
+      console.log(`⏳ Collection not indexed yet — using comparison method`);
+      console.log(`💡 Tip: Run /index-faces/${eventId} to speed up future scans!`);
+
+      const batchSize = 10; // Increased from 5 to 10
+
+      for (let i = 0; i < allPhotos.length; i += batchSize) {
+        const batch = allPhotos.slice(i, i + batchSize);
+        await Promise.all(batch.map(async (photo) => {
+          try {
+            const photoStream = await drive.files.get(
+              { fileId: photo.id, alt: 'media' },
+              { responseType: 'arraybuffer' }
+            );
+            const photoBuffer = Buffer.from(photoStream.data);
+            const photoResized = await resizeForRekognition(photoBuffer);
+            const selfieRes = await resizeForRekognition(selfieBuffer);
+
+            const compareResult = await rekognition.send(new CompareFacesCommand({
+              SourceImage: { Bytes: selfieRes },
+              TargetImage: { Bytes: photoResized },
+              SimilarityThreshold: 50,
+            }));
+
+            if (compareResult.FaceMatches?.length > 0) {
+              const similarity = compareResult.FaceMatches[0].Similarity;
+              if (similarity >= 70) {
+                soloMatches.push({ photo, photoBuffer, similarity });
+              } else if (pkgConfig.groupPhotos && similarity >= 50) {
+                groupMatches.push({ photo, photoBuffer, similarity });
+              }
+            }
+          } catch(e) {
+            if (e.name !== 'InvalidParameterException') {
+              console.error(`❌ ${photo.name}:`, e.message);
+            }
+          }
+        }));
+        console.log(`Progress: ${Math.min(i + batchSize, allPhotos.length)}/${allPhotos.length}`);
+      }
+    }
+
+    // ── Duplicate Detection ──
+    function removeDuplicates(matches) {
+      const seen = new Set();
+      return matches.filter(match => {
+        const key = `${match.photo.name.replace(/\d+/g, '').substring(0, 10)}_${Math.round((match.photo.size||0)/50000)}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    const uniqueSolo = removeDuplicates(soloMatches);
+    const uniqueGroup = removeDuplicates(groupMatches);
+    console.log(`✅ After dedup: ${uniqueSolo.length} solo, ${uniqueGroup.length} group`);
+
+    // ── Process Photos ──
+    const matchedPhotos = [];
+    const matchedBuffers = [];
+
+    for (const { photo, photoBuffer, similarity } of uniqueSolo) {
+      let buf = photoBuffer;
+      if (!buf) {
+        // For indexed path — download photo
+        try {
+          const stream = await drive.files.get(
+            { fileId: photo.id, alt: 'media' },
+            { responseType: 'arraybuffer' }
+          );
+          buf = Buffer.from(stream.data);
+        } catch(e) { continue; }
+      }
+
+      let finalPhoto;
+      if (pkgConfig.aiEdit) {
+        const { buffer: editedBuf, edited } = await editPhotoWithCloudinary(buf, eventType);
+        if (edited) {
+          finalPhoto = await uploadBufferToDrive(editedBuf, `edited_${photo.name}`, editedFolderId);
+          matchedBuffers.push(editedBuf);
+        } else {
+          finalPhoto = await makePublicAndGetLinks(photo.id, photo.name);
+          matchedBuffers.push(buf);
+        }
+      } else {
+        finalPhoto = await makePublicAndGetLinks(photo.id, photo.name);
+        matchedBuffers.push(buf);
+      }
+
+      matchedPhotos.push({
+        ...finalPhoto,
+        similarity: typeof similarity === 'number' ? similarity.toFixed(1) : similarity,
+        aiEdited: pkgConfig.aiEdit,
+        type: 'solo',
+      });
+    }
+
+    // Group photos
+    const groupPhotos = [];
+    for (const { photo, photoBuffer, similarity } of uniqueGroup) {
+      const finalPhoto = await makePublicAndGetLinks(photo.id, photo.name);
+      groupPhotos.push({
+        ...finalPhoto,
+        similarity: typeof similarity === 'number' ? similarity.toFixed(1) : similarity,
+        type: 'group',
+      });
+    }
+
+    console.log(`🎉 Done — ${matchedPhotos.length} solo + ${groupPhotos.length} group | Method: ${useIndexed ? '⚡ Indexed' : '⏳ Comparison'}`);
+
+    // ── Reel ──
+    let reelLink = null;
+    if (pkgConfig.reel && matchedBuffers.length >= 3) {
+      try {
+        const bgmUrl = await getBGMForEvent(eventType);
+        const eName = eventFile?.name?.replace(/^\d{4}-\d{2}-\d{2}_/, '').replace(/-/g, ' ').split('__')[0] || 'Your Event';
+        const reelBuffer = await createReel(matchedBuffers, eName, eventType, bgmUrl);
+        const reelFolderId = await getOrCreateFolder(eventId, 'reels');
+        const reelFile = await uploadBufferToDrive(reelBuffer, `reel_${Date.now()}.mp4`, reelFolderId, 'video/mp4');
+        reelLink = reelFile.viewLink;
+      } catch(e) {
+        console.error('⚠️ Reel failed:', e.message);
+      }
+    }
+
+    res.json({
+      success: true,
+      totalScanned: allPhotos.length,
+      matchedCount: matchedPhotos.length,
+      groupCount: groupPhotos.length,
+      photos: matchedPhotos,
+      groupPhotos,
+      aiEdited: pkgConfig.aiEdit,
+      reelLink,
+      reelEligible: pkgConfig.reel && matchedBuffers.length >= 3,
+      package: pkg,
+      packageConfig: pkgConfig,
+      method: useIndexed ? 'indexed' : 'comparison',
+    });
+
+  } catch (err) {
+    console.error('❌ Match error:', err.message);
 
     const photosRes = await drive.files.list({
       q: `'${subfolders.data.files[0].id}' in parents and mimeType contains 'image/' and trashed=false`,

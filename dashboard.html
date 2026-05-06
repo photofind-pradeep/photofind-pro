@@ -498,6 +498,7 @@ function renderEvents() {
         <button class="ev-btn ev-btn-gold" onclick="openQRModal('${event.id}','${name}')">◈ QR Card</button>
         <button class="ev-btn ev-btn-ghost" onclick="goUpload('${event.id}')">↑ Upload</button>
         <button class="ev-btn ev-btn-ghost" onclick="shareFolder('${event.id}','${name}')">🔗 Share</button>
+        <button class="ev-btn" style="background:rgba(100,180,255,0.08);color:#64B4FF;border:1px solid rgba(100,180,255,0.2)" onclick="indexFaces('${event.id}')" id="idx-btn-${event.id}">⚡ Index</button>
         <button class="ev-btn ${isSyncing ? 'ev-btn-rose' : 'ev-btn-green'}" id="sync-btn-${event.id}"
           onclick="${isSyncing ? `stopSync('${event.id}')` : `startSync('${event.id}','${eventDate}')`}">
           ${isSyncing ? '⏹ Stop' : '🔄 Sync'}
@@ -709,6 +710,29 @@ function saveSettings() {
   document.getElementById('cardServerUrl').value = SERVER;
   toast('✅ Settings saved!');
   checkServer();
+}
+
+async function indexFaces(eventId) {
+  const btn = document.getElementById(`idx-btn-${eventId}`);
+  if (btn) {
+    btn.textContent = '⏳ Indexing...';
+    btn.disabled = true;
+  }
+  try {
+    showToast('⚡ Indexing faces — this may take 1-2 minutes for large events...');
+    const res = await fetch(`${SERVER}/index-faces/${eventId}`, { method: 'POST' });
+    const data = await res.json();
+    if (data.success) {
+      showToast(`✅ Indexed ${data.indexed} photos! Face search now instant!`);
+      if (btn) { btn.textContent = '✅ Indexed'; btn.style.color = '#5DD68A'; }
+    } else {
+      showToast('❌ Indexing failed: ' + data.error);
+      if (btn) { btn.textContent = '⚡ Index'; btn.disabled = false; }
+    }
+  } catch(e) {
+    showToast('❌ Error: ' + e.message);
+    if (btn) { btn.textContent = '⚡ Index'; btn.disabled = false; }
+  }
 }
 
 async function startSync(eventId, eventDate) {
