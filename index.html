@@ -898,6 +898,17 @@ function closePrintModal(e) {
   }
 }
 
+function selectSize(el, size, label) {
+  document.querySelectorAll('.size-opt').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedSize = { code: size, label };
+}
+
+function changeQty(delta) {
+  printQty = Math.max(1, Math.min(10, printQty + delta));
+  document.getElementById('qtyDisplay').textContent = printQty;
+}
+
 function openFunZone() {
   const eventId = selectedEvent?.id || '';
   const name = formatEventName(selectedEvent?.name || '');
