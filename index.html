@@ -898,6 +898,43 @@ function closePrintModal(e) {
   }
 }
 
+function submitPrintOrder() {
+  const name = document.getElementById('printName').value.trim();
+  const phone = document.getElementById('printPhone').value.trim();
+  const address = document.getElementById('printAddress').value.trim();
+  const notes = document.getElementById('printNotes')?.value.trim() || '';
+
+  if (!name) { toast('Please enter your name!'); return; }
+  if (!phone || phone.length !== 10) { toast('Enter valid 10-digit number!'); return; }
+  if (!address) { toast('Please enter delivery address!'); return; }
+  if (!selectedSize) { toast('Please select a print size!'); return; }
+  if (!selectedPrintPhoto || selectedPrintPhoto.length === 0) { toast('Please select at least one photo!'); return; }
+
+  const eventName = formatEventName(selectedEvent.name);
+  const studioInfo = selectedEvent.name.split('__');
+  const studioPhone = studioInfo[2] || '';
+
+  const photoLinks = selectedPrintPhoto.map((p, i) =>
+    `Photo ${i+1}: ${p.viewLink}`).join('\n');
+
+  const msg =
+    `🖨️ *New Print Order — PhotoFind Pro*\n\n` +
+    `*Event:* ${eventName}\n\n` +
+    `*📸 Photos Selected:* ${selectedPrintPhoto.length}\n${photoLinks}\n\n` +
+    `*📐 Size:* ${selectedSize.label}\n` +
+    `*🔢 Quantity:* ${printQty} copies each\n\n` +
+    `*👤 Customer Name:* ${name}\n` +
+    `*📞 WhatsApp:* ${phone}\n` +
+    `*📍 Address:* ${address}\n` +
+    `${notes ? `*📝 Notes:* ${notes}\n` : ''}` +
+    `\n_Powered by PhotoFind Pro_\n🌐 www.templecity.digital`;
+
+  const waNumber = studioPhone || '8895195862';
+  window.open(`https://wa.me/91${waNumber}?text=${encodeURIComponent(msg)}`, '_blank');
+  closePrintModal();
+  toast('✅ Order sent to photographer on WhatsApp!');
+}
+
 function selectSize(el, size, label) {
   document.querySelectorAll('.size-opt').forEach(s => s.classList.remove('selected'));
   el.classList.add('selected');
@@ -920,22 +957,37 @@ function openPrintOrder() {
 
   const grid = document.getElementById('printPhotoGrid');
   grid.innerHTML = '';
+
+  // Allow MULTIPLE photo selection
+  const selectedPhotos = new Set();
+
   matchedPhotos.forEach((photo, i) => {
     const div = document.createElement('div');
-    div.style.cssText = 'border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;aspect-ratio:1;transition:all 0.2s';
-    div.innerHTML = `<img src="${photo.thumbnailLink}" style="width:100%;height:100%;object-fit:cover">`;
+    div.style.cssText = 'border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;aspect-ratio:1;transition:all 0.2s;position:relative';
+    div.innerHTML = `
+      <img src="${photo.thumbnailLink}" style="width:100%;height:100%;object-fit:cover">
+      <div style="position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:50%;background:rgba(212,175,114,0.9);display:none;align-items:center;justify-content:center;font-size:10px;color:#000;font-weight:800" class="check-icon">✓</div>`;
+
     div.onclick = () => {
-      document.querySelectorAll('#printPhotoGrid div').forEach(d => d.style.borderColor = 'transparent');
-      div.style.borderColor = '#D4AF72';
-      selectedPrintPhoto = photo;
+      if (selectedPhotos.has(i)) {
+        // Deselect
+        selectedPhotos.delete(i);
+        div.style.borderColor = 'transparent';
+        div.querySelector('.check-icon').style.display = 'none';
+      } else {
+        // Select
+        selectedPhotos.add(i);
+        div.style.borderColor = '#D4AF72';
+        div.querySelector('.check-icon').style.display = 'flex';
+      }
+      // Update selectedPrintPhoto to array
+      selectedPrintPhoto = [...selectedPhotos].map(idx => matchedPhotos[idx]);
     };
-    if (i === 0) {
-      div.style.borderColor = '#D4AF72';
-      selectedPrintPhoto = photo;
-    }
+
     grid.appendChild(div);
   });
 
+  selectedPrintPhoto = [];
   selectedSize = null;
   printQty = 1;
   document.getElementById('qtyDisplay').textContent = '1';
