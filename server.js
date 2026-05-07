@@ -686,10 +686,6 @@ async function createReel(photoBuffers, eventName, eventType, bgmUrl) {
     throw err;
   }
 }
-    fs.rmSync(tmpDir, { recursive: true, force: true });
-    throw err;
-  }
-}
 
 // ════════════════════════════════════════
 //  ROUTES
