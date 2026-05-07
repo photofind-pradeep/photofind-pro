@@ -792,6 +792,7 @@ app.post('/payment/verify', async (req, res) => {
     const videoLink = `${baseUrl}/video.html?event=${eventFolder.id}`;
     const exhibitionLink = `${baseUrl}/exhibition.html?event=${eventFolder.id}`;
     const albumDesignerLink = pkgConfig.albumDesigner ? `${baseUrl}/albumdesigner.html?event=${eventFolder.id}` : null;
+    const inviteCreatorLink = `${baseUrl}/invite-creator.html`;
 
     const whatsappMsg =
       `📸 *PhotoFind Pro — ${pkgConfig.name} Plan Ready!*\n\n` +
@@ -814,6 +815,8 @@ app.post('/payment/verify', async (req, res) => {
       `*🏛️ Virtual Exhibition:*\n${exhibitionLink}\n` +
       `_Beautiful gallery — guests browse all event photos online!_\n\n` +
       `${albumDesignerLink ? `*🎨 Smart Album Designer:*\n${albumDesignerLink}\n_AI auto-designs print-ready albums!_\n\n` : ''}` +
+      `*━━━ BONUS SERVICES ━━━*\n\n` +
+      `*💌 Digital Wedding Invitation:*\n${inviteCreatorLink}\n_Create beautiful animated invites — share on WhatsApp!_\n\n` +
       `*━━━ YOUR PLAN INCLUDES ━━━*\n\n` +
       `✅ AI Face Recognition\n` +
       `✅ Solo + Group Photos\n` +
