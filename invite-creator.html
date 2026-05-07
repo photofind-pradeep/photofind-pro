@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PhotoFind Pro — Digital Invite Creator</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Montserrat:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gold:#E8C87A;--gold2:#C9A84C;--gold3:#A07830;
+  --dark:#0C0A07;--dark2:#1A1208;
+}
+body{font-family:'Montserrat',sans-serif;background:var(--dark);color:white;min-height:100vh}
+
+.header{padding:14px 18px;background:rgba(12,10,7,0.98);border-bottom:0.5px solid rgba(232,200,122,0.12);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{font-family:'Playfair Display',serif;font-size:16px;font-weight:900}
+.logo em{color:var(--gold);font-style:normal}
+.h-badge{background:linear-gradient(135deg,#8B1A4A,#C84A7A);font-size:8px;font-weight:700;color:white;padding:3px 10px;border-radius:8px;letter-spacing:0.1em}
+
+.wrap{max-width:480px;margin:0 auto;padding:20px 16px 80px}
+
+/* Steps */
+.steps{display:flex;align-items:center;gap:0;margin-bottom:24px}
+.step{flex:1;text-align:center;position:relative}
+.step-circle{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:rgba(255,255,255,0.3);margin:0 auto 4px;transition:all 0.3s}
+.step.active .step-circle{background:var(--gold);border-color:var(--gold);color:var(--dark);font-weight:800}
+.step.done .step-circle{background:rgba(93,214,138,0.2);border-color:#5DD68A;color:#5DD68A}
+.step-label{font-size:8px;color:rgba(255,255,255,0.25);letter-spacing:0.1em;text-transform:uppercase}
+.step.active .step-label{color:var(--gold)}
+.step-line{flex:1;height:0.5px;background:rgba(255,255,255,0.08);margin-bottom:14px}
+
+/* Section */
+.sec-title{font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(232,200,122,0.5);font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.sec-title::after{content:'';flex:1;height:0.5px;background:linear-gradient(90deg,rgba(232,200,122,0.2),transparent)}
+
+/* Form */
+.form-group{margin-bottom:14px}
+.form-label{font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:5px;display:block;letter-spacing:0.05em}
+.form-input{width:100%;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:11px 14px;color:white;font-family:'Montserrat',sans-serif;font-size:13px;outline:none;transition:all 0.2s}
+.form-input:focus{border-color:rgba(232,200,122,0.4);background:rgba(232,200,122,0.03)}
+.form-input::placeholder{color:rgba(255,255,255,0.2)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* Template grid */
+.tmpl-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
+.tmpl-card{border-radius:12px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:all 0.2s;aspect-ratio:3/4;position:relative}
+.tmpl-card.selected{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,200,122,0.15)}
+.tmpl-card:active{transform:scale(0.97)}
+.tmpl-inner{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center;position:relative;overflow:hidden}
+.tmpl-name{font-family:'Playfair Display',serif;font-size:13px;font-weight:700;margin-bottom:4px;position:relative;z-index:1}
+.tmpl-style{font-size:9px;letter-spacing:0.15em;text-transform:uppercase;opacity:0.6;position:relative;z-index:1}
+.tmpl-check{position:absolute;top:8px;right:8px;width:20px;height:20px;background:var(--gold);border-radius:50%;display:none;align-items:center;justify-content:center;font-size:10px;color:var(--dark);font-weight:800;z-index:2}
+.tmpl-card.selected .tmpl-check{display:flex}
+
+/* Pricing */
+.price-opts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.price-card{border-radius:12px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative}
+.price-card.selected{border-color:var(--gold);background:rgba(232,200,122,0.06)}
+.price-card:active{transform:scale(0.97)}
+.price-tag{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:var(--gold);line-height:1}
+.price-name{font-size:10px;font-weight:700;color:white;margin:4px 0 2px}
+.price-desc{font-size:8px;color:rgba(255,255,255,0.3);line-height:1.4}
+.price-popular{position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--dark);font-size:7px;font-weight:800;padding:2px 8px;border-radius:6px;letter-spacing:0.1em;white-space:nowrap}
+
+/* Preview card */
+.preview-wrap{border-radius:14px;overflow:hidden;border:0.5px solid rgba(232,200,122,0.15);margin-bottom:16px;background:rgba(26,18,8,0.5)}
+.preview-label{padding:10px 14px;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(232,200,122,0.4);border-bottom:0.5px solid rgba(232,200,122,0.08);display:flex;align-items:center;justify-content:space-between}
+.preview-frame{padding:0}
+
+/* Action btn */
+.action-btn{width:100%;padding:15px;border:none;border-radius:12px;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.05em;transition:all 0.15s;margin-bottom:10px}
+.action-btn:active{transform:scale(0.98)}
+.btn-gold{background:linear-gradient(135deg,var(--gold3),var(--gold));color:var(--dark)}
+.btn-ghost{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5)}
+
+/* Success */
+#successPage{display:none;text-align:center;padding:40px 20px}
+.success-icon{font-size:64px;margin-bottom:16px;animation:pop 0.5s ease}
+@keyframes pop{0%{transform:scale(0)}80%{transform:scale(1.1)}100%{transform:scale(1)}}
+.success-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:white;margin-bottom:8px}
+.success-sub{font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:24px}
+.link-box{background:rgba(255,255,255,0.04);border:0.5px solid rgba(232,200,122,0.2);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer}
+.link-url{flex:1;font-size:11px;color:var(--gold);word-break:break-all;text-align:left}
+.copy-btn{padding:5px 10px;background:rgba(232,200,122,0.1);border:0.5px solid rgba(232,200,122,0.25);border-radius:6px;color:var(--gold);font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap}
+.share-btns{display:flex;gap:8px;margin-top:14px}
+.shr-btn{flex:1;padding:12px;border-radius:10px;border:none;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
+.shr-wa{background:#25D366;color:white}
+.shr-copy{background:rgba(255,255,255,0.06);border:0.5px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6)}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(232,200,122,0.95);color:var(--dark);padding:8px 18px;border-radius:16px;font-size:11px;font-weight:700;z-index:999;pointer-events:none;opacity:0;transition:opacity 0.3s;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* Page steps */
+.page{display:none}
+.page.active{display:block}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="logo">Photo<em>Find</em> Pro</div>
+    <div class="h-badge">💌 INVITE CREATOR</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- Steps indicator -->
+  <div class="steps">
+    <div class="step active" id="step1">
+      <div class="step-circle">1</div>
+      <div class="step-label">Details</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step" id="step2">
+      <div class="step-circle">2</div>
+      <div class="step-label">Template</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step" id="step3">
+      <div class="step-circle">3</div>
+      <div class="step-label">Plan</div>
+    </div>
+    <div class="step-line"></div>
+    <div class="step" id="step4">
+      <div class="step-circle">4</div>
+      <div class="step-label">Share</div>
+    </div>
+  </div>
+
+  <!-- Page 1: Details -->
+  <div class="page active" id="page1">
+    <div class="sec-title">✦ Couple Details</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Bride's Name *</label>
+        <input class="form-input" id="brideName" placeholder="e.g. Priya">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Groom's Name *</label>
+        <input class="form-input" id="groomName" placeholder="e.g. Arjun">
+      </div>
+    </div>
+
+    <div class="sec-title" style="margin-top:8px">✦ Wedding Date & Venue</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Wedding Date *</label>
+        <input class="form-input" id="weddingDate" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Wedding Time *</label>
+        <input class="form-input" id="weddingTime" type="time" value="07:00">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Venue Name *</label>
+      <input class="form-input" id="venueName" placeholder="e.g. Shree Mandap, Bhubaneswar">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Venue Address</label>
+      <input class="form-input" id="venueAddr" placeholder="Full address for Google Maps">
+    </div>
+
+    <div class="sec-title" style="margin-top:8px">✦ Events (Optional)</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Haldi Date</label>
+        <input class="form-input" id="haldiDate" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Haldi Time</label>
+        <input class="form-input" id="haldiTime" type="time" value="10:00">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Mehendi Date</label>
+        <input class="form-input" id="mehendiDate" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mehendi Time</label>
+        <input class="form-input" id="mehendiTime" type="time" value="17:00">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Reception Date</label>
+        <input class="form-input" id="receptionDate" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reception Time</label>
+        <input class="form-input" id="receptionTime" type="time" value="19:00">
+      </div>
+    </div>
+
+    <div class="sec-title" style="margin-top:8px">✦ Family Names (Optional)</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Bride's Father</label>
+        <input class="form-input" id="brideFather" placeholder="Name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Groom's Father</label>
+        <input class="form-input" id="groomFather" placeholder="Name">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Special Message</label>
+      <input class="form-input" id="specialMsg" placeholder="e.g. Together with our families...">
+    </div>
+
+    <button class="action-btn btn-gold" onclick="goToStep2()">Continue → Choose Template</button>
+  </div>
+
+  <!-- Page 2: Template -->
+  <div class="page" id="page2">
+    <div class="sec-title">✦ Choose Your Template</div>
+
+    <div class="tmpl-grid" id="tmplGrid"></div>
+
+    <button class="action-btn btn-gold" onclick="goToStep3()">Continue → Choose Plan</button>
+    <button class="action-btn btn-ghost" onclick="goToStep(1)">← Back</button>
+  </div>
+
+  <!-- Page 3: Pricing -->
+  <div class="page" id="page3">
+    <div class="sec-title">✦ Choose Your Plan</div>
+
+    <div class="price-opts">
+      <div class="price-card" id="plan-basic" onclick="selectPlan('basic')">
+        <div class="price-tag">₹299</div>
+        <div class="price-name">Basic</div>
+        <div class="price-desc">Animated HTML invite + countdown + RSVP</div>
+      </div>
+      <div class="price-card selected" id="plan-premium" onclick="selectPlan('premium')" style="position:relative">
+        <div class="price-popular">POPULAR</div>
+        <div class="price-tag">₹499</div>
+        <div class="price-name">Premium</div>
+        <div class="price-desc">Basic + BGM + guest name + view tracker</div>
+      </div>
+      <div class="price-card" id="plan-elite" onclick="selectPlan('elite')">
+        <div class="price-tag">₹999</div>
+        <div class="price-name">Elite</div>
+        <div class="price-desc">Premium + custom subdomain + video teaser</div>
+      </div>
+    </div>
+
+    <div class="sec-title">✦ Preview</div>
+    <div class="preview-wrap">
+      <div class="preview-label">
+        <span>Live Preview</span>
+        <span style="color:rgba(93,214,138,0.7);font-size:9px">● Live</span>
+      </div>
+      <iframe id="previewFrame" style="width:100%;height:500px;border:none;display:block" scrolling="yes"></iframe>
+    </div>
+
+    <button class="action-btn btn-gold" onclick="generateInvite()">✨ Generate & Get Link</button>
+    <button class="action-btn btn-ghost" onclick="goToStep(2)">← Back</button>
+  </div>
+
+  <!-- Success Page -->
+  <div id="successPage">
+    <div class="success-icon">🎉</div>
+    <div class="success-title">Invite Ready!</div>
+    <div class="success-sub">Your digital wedding invitation is live!</div>
+
+    <div class="link-box" onclick="copyInviteLink()">
+      <div class="link-url" id="inviteUrl">Loading...</div>
+      <div class="copy-btn">Copy</div>
+    </div>
+
+    <div class="share-btns">
+      <button class="shr-btn shr-wa" onclick="shareWA()">💬 Share on WhatsApp</button>
+      <button class="shr-btn shr-copy" onclick="copyInviteLink()">🔗 Copy Link</button>
+    </div>
+
+    <div style="margin-top:20px;padding:14px;background:rgba(255,255,255,0.02);border-radius:10px;border:0.5px solid rgba(255,255,255,0.06)">
+      <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-bottom:8px;letter-spacing:0.1em;text-transform:uppercase">✦ Share this link with guests</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.5);line-height:1.6">
+        Guests open the link on any phone → Beautiful invitation opens instantly → No app needed!
+      </div>
+    </div>
+
+    <button class="action-btn btn-gold" style="margin-top:16px" onclick="window.location.reload()">+ Create Another Invite</button>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SERVER = 'https://api.templecity.digital';
+let selectedTemplate = 'royal-dark';
+let selectedPlan = 'premium';
+let inviteData = {};
+let generatedId = null;
+
+// Templates
+const TEMPLATES = [
+  { id:'royal-dark', name:'Royal Dark', style:'Luxury Gold', bg:'linear-gradient(135deg,#1A0A0A,#2A1A00)', acc:'#E8C87A', icon:'👑' },
+  { id:'floral-pink', name:'Floral Garden', style:'Pink & Green', bg:'linear-gradient(135deg,#1A0818,#0A180A)', acc:'#FFB6C1', icon:'🌸' },
+  { id:'traditional', name:'Traditional', style:'Maroon & Gold', bg:'linear-gradient(135deg,#2A0808,#1A0A00)', acc:'#FFD700', icon:'🕌' },
+  { id:'minimal-white', name:'Modern Minimal', style:'Black & White', bg:'linear-gradient(135deg,#F5F5F5,#E8E8E8)', acc:'#333', icon:'✨', light:true },
+  { id:'night-sky', name:'Night Sky', style:'Deep Blue Stars', bg:'linear-gradient(135deg,#040820,#08082A)', acc:'#89B4FF', icon:'🌙' },
+  { id:'rajasthani', name:'Rajasthani', style:'Vibrant & Festive', bg:'linear-gradient(135deg,#2A0A18,#1A100A)', acc:'#FF8C42', icon:'🌺' },
+  { id:'garden-green', name:'Nature Garden', style:'Organic & Fresh', bg:'linear-gradient(135deg,#081A08,#0A1A10)', acc:'#8ABB8A', icon:'🍃' },
+  { id:'purple-dream', name:'Purple Dream', style:'Lavender & Gold', bg:'linear-gradient(135deg,#0A0818,#180A2A)', acc:'#C8A0FF', icon:'💜' },
+  { id:'pearl-white', name:'Pearl White', style:'Elegant & Clean', bg:'linear-gradient(135deg,#F8F6F0,#EDE8E0)', acc:'#C9A84C', icon:'🤍', light:true },
+  { id:'fiesta-gold', name:'Fiesta Gold', style:'Bold & Festive', bg:'linear-gradient(135deg,#1A0A00,#2A1500)', acc:'#FFD700', icon:'🔥' },
+];
+
+// Build template grid
+function buildTemplates() {
+  const grid = document.getElementById('tmplGrid');
+  grid.innerHTML = '';
+  TEMPLATES.forEach(t => {
+    const div = document.createElement('div');
+    div.className = 'tmpl-card' + (t.id === selectedTemplate ? ' selected' : '');
+    div.id = 'tmpl-' + t.id;
+    div.innerHTML = `
+      <div class="tmpl-inner" style="background:${t.bg}">
+        <div style="font-size:28px;margin-bottom:8px;position:relative;z-index:1">${t.icon}</div>
+        <div class="tmpl-name" style="color:${t.light?'#333':'white'}">${t.name}</div>
+        <div class="tmpl-style" style="color:${t.acc}">${t.style}</div>
+        <!-- Decorative elements -->
+        <div style="position:absolute;top:8px;left:8px;right:8px;height:1px;background:linear-gradient(90deg,transparent,${t.acc}40,transparent)"></div>
+        <div style="position:absolute;bottom:8px;left:8px;right:8px;height:1px;background:linear-gradient(90deg,transparent,${t.acc}40,transparent)"></div>
+      </div>
+      <div class="tmpl-check">✓</div>`;
+    div.onclick = () => {
+      selectedTemplate = t.id;
+      document.querySelectorAll('.tmpl-card').forEach(c => c.classList.remove('selected'));
+      div.classList.add('selected');
+    };
+    grid.appendChild(div);
+  });
+}
+
+function selectPlan(plan) {
+  selectedPlan = plan;
+  ['basic','premium','elite'].forEach(p => {
+    document.getElementById('plan-'+p).classList.toggle('selected', p === plan);
+  });
+}
+
+// Navigation
+function goToStep(n) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page'+n)?.classList.add('active');
+  for(let i=1;i<=4;i++) {
+    const s = document.getElementById('step'+i);
+    s.classList.remove('active','done');
+    if(i < n) s.classList.add('done');
+    else if(i === n) s.classList.add('active');
+  }
+  window.scrollTo(0,0);
+}
+
+function goToStep2() {
+  const bride = document.getElementById('brideName').value.trim();
+  const groom = document.getElementById('groomName').value.trim();
+  const date = document.getElementById('weddingDate').value;
+  const venue = document.getElementById('venueName').value.trim();
+  if(!bride){showToast('Enter bride\'s name!');return;}
+  if(!groom){showToast('Enter groom\'s name!');return;}
+  if(!date){showToast('Enter wedding date!');return;}
+  if(!venue){showToast('Enter venue name!');return;}
+  goToStep(2);
+}
+
+function goToStep3() {
+  if(!selectedTemplate){showToast('Please select a template!');return;}
+  collectData();
+  goToStep(3);
+  updatePreview();
+}
+
+function collectData() {
+  inviteData = {
+    bride: document.getElementById('brideName').value.trim(),
+    groom: document.getElementById('groomName').value.trim(),
+    weddingDate: document.getElementById('weddingDate').value,
+    weddingTime: document.getElementById('weddingTime').value,
+    venue: document.getElementById('venueName').value.trim(),
+    venueAddr: document.getElementById('venueAddr').value.trim(),
+    haldiDate: document.getElementById('haldiDate').value,
+    haldiTime: document.getElementById('haldiTime').value,
+    mehendiDate: document.getElementById('mehendiDate').value,
+    mehendiTime: document.getElementById('mehendiTime').value,
+    receptionDate: document.getElementById('receptionDate').value,
+    receptionTime: document.getElementById('receptionTime').value,
+    brideFather: document.getElementById('brideFather').value.trim(),
+    groomFather: document.getElementById('groomFather').value.trim(),
+    specialMsg: document.getElementById('specialMsg').value.trim(),
+    template: selectedTemplate,
+    plan: selectedPlan,
+  };
+}
+
+function updatePreview() {
+  const frame = document.getElementById('previewFrame');
+  const tmpl = TEMPLATES.find(t => t.id === selectedTemplate);
+  const url = `/invite.html?` + new URLSearchParams({
+    bride: inviteData.bride,
+    groom: inviteData.groom,
+    date: inviteData.weddingDate,
+    time: inviteData.weddingTime,
+    venue: inviteData.venue,
+    venueAddr: inviteData.venueAddr,
+    template: selectedTemplate,
+    preview: '1',
+  }).toString();
+  frame.src = url;
+}
+
+async function generateInvite() {
+  collectData();
+  showToast('⏳ Generating your invite...');
+
+  try {
+    const res = await fetch(`${SERVER}/create-invite`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(inviteData),
+    });
+    const data = await res.json();
+
+    if(data.success) {
+      generatedId = data.inviteId;
+      const inviteUrl = `https://www.templecity.digital/invite.html?id=${data.inviteId}`;
+      document.getElementById('inviteUrl').textContent = inviteUrl;
+      document.getElementById('page3').classList.remove('active');
+      document.getElementById('successPage').style.display = 'block';
+      goToStep(4);
+    } else {
+      // Fallback — generate client side URL
+      const params = new URLSearchParams(inviteData);
+      const inviteUrl = `https://www.templecity.digital/invite.html?${params.toString()}`;
+      document.getElementById('inviteUrl').textContent = inviteUrl;
+      document.getElementById('page3').classList.remove('active');
+      document.getElementById('successPage').style.display = 'block';
+      goToStep(4);
+    }
+  } catch(e) {
+    // Client side fallback
+    const params = new URLSearchParams(inviteData);
+    const inviteUrl = `https://www.templecity.digital/invite.html?${params.toString()}`;
+    document.getElementById('inviteUrl').textContent = inviteUrl;
+    document.getElementById('page3').classList.remove('active');
+    document.getElementById('successPage').style.display = 'block';
+    goToStep(4);
+  }
+}
+
+function copyInviteLink() {
+  const url = document.getElementById('inviteUrl').textContent;
+  navigator.clipboard.writeText(url).then(() => showToast('✅ Link copied!'));
+}
+
+function shareWA() {
+  const url = document.getElementById('inviteUrl').textContent;
+  const bride = inviteData.bride, groom = inviteData.groom;
+  const msg = `💌 *You're Invited!*\n\n*${bride} weds ${groom}*\n\nView our digital wedding invitation:\n${url}\n\n_Created with PhotoFind Pro_`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+buildTemplates();
+// Set default date to tomorrow
+const tomorrow = new Date();
+tomorrow.setDate(tomorrow.getDate() + 30);
+document.getElementById('weddingDate').value = tomorrow.toISOString().split('T')[0];
+</script>
+</body>
+</html>

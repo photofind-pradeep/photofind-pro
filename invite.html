@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta property="og:title" id="ogTitle" content="Wedding Invitation">
+<meta property="og:description" content="You are cordially invited!">
+<title id="pageTitle">Wedding Invitation</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Montserrat:wght@200;300;400;500;600;700&family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Montserrat',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* ── TEMPLATE VARIABLES ── */
+.t-royal-dark{--bg1:#1A0A0A;--bg2:#2A1A00;--bg3:#0A0806;--acc:#E8C87A;--acc2:#C9A84C;--text:white;--sub:rgba(232,200,122,0.7);--border:rgba(232,200,122,0.2);--card:rgba(255,255,255,0.03);--font-head:'Playfair Display';--font-body:'Montserrat'}
+.t-floral-pink{--bg1:#1A0818;--bg2:#180A20;--bg3:#0A0410;--acc:#FFB6C1;--acc2:#E08090;--text:white;--sub:rgba(255,182,193,0.7);--border:rgba(255,182,193,0.2);--card:rgba(255,182,193,0.04);--font-head:'Playfair Display';--font-body:'Montserrat'}
+.t-traditional{--bg1:#2A0808;--bg2:#1A0A00;--bg3:#100404;--acc:#FFD700;--acc2:#DAA520;--text:white;--sub:rgba(255,215,0,0.7);--border:rgba(255,215,0,0.2);--card:rgba(255,215,0,0.04);--font-head:'Playfair Display';--font-body:'Montserrat'}
+.t-minimal-white{--bg1:#FAFAF8;--bg2:#F0EEE8;--bg3:#E8E4DC;--acc:#2A2A2A;--acc2:#555;--text:#1A1A1A;--sub:rgba(0,0,0,0.5);--border:rgba(0,0,0,0.1);--card:rgba(0,0,0,0.03);--font-head:'Cormorant Garamond';--font-body:'Montserrat'}
+.t-night-sky{--bg1:#040820;--bg2:#08082A;--bg3:#020410;--acc:#89B4FF;--acc2:#5A8ADA;--text:white;--sub:rgba(137,180,255,0.7);--border:rgba(137,180,255,0.2);--card:rgba(137,180,255,0.04);--font-head:'Playfair Display';--font-body:'Montserrat'}
+.t-rajasthani{--bg1:#2A0A18;--bg2:#1A100A;--bg3:#100608;--acc:#FF8C42;--acc2:#DA6020;--text:white;--sub:rgba(255,140,66,0.7);--border:rgba(255,140,66,0.2);--card:rgba(255,140,66,0.04);--font-head:'Playfair Display';--font-body:'Montserrat'}
+.t-garden-green{--bg1:#081A08;--bg2:#0A1A10;--bg3:#040C04;--acc:#8ABB8A;--acc2:#5A9A5A;--text:white;--sub:rgba(138,187,138,0.7);--border:rgba(138,187,138,0.2);--card:rgba(138,187,138,0.04);--font-head:'Cormorant Garamond';--font-body:'Montserrat'}
+.t-purple-dream{--bg1:#0A0818;--bg2:#180A2A;--bg3:#060410;--acc:#C8A0FF;--acc2:#9A70DA;--text:white;--sub:rgba(200,160,255,0.7);--border:rgba(200,160,255,0.2);--card:rgba(200,160,255,0.04);--font-head:'Playfair Display';--font-body:'Montserrat'}
+.t-pearl-white{--bg1:#F8F6F0;--bg2:#EDE8E0;--bg3:#E0D8CC;--acc:#C9A84C;--acc2:#A07830;--text:#1A1208;--sub:rgba(26,18,8,0.5);--border:rgba(201,168,76,0.3);--card:rgba(201,168,76,0.05);--font-head:'Cormorant Garamond';--font-body:'Montserrat'}
+.t-fiesta-gold{--bg1:#1A0A00;--bg2:#2A1500;--bg3:#100800;--acc:#FFD700;--acc2:#FFA500;--text:white;--sub:rgba(255,215,0,0.7);--border:rgba(255,215,0,0.2);--card:rgba(255,215,0,0.04);--font-head:'Playfair Display';--font-body:'Montserrat'}
+
+.invite{
+  max-width:420px;margin:0 auto;
+  background:linear-gradient(160deg,var(--bg1),var(--bg2),var(--bg3));
+  min-height:100vh;
+  position:relative;overflow:hidden;
+}
+
+/* Ambient orbs */
+.orb1,.orb2{position:absolute;border-radius:50%;pointer-events:none}
+.orb1{width:300px;height:300px;top:-100px;right:-100px;background:radial-gradient(circle,rgba(var(--orb-rgb),0.06),transparent 70%)}
+.orb2{width:200px;height:200px;bottom:100px;left:-50px;background:radial-gradient(circle,rgba(var(--orb-rgb),0.04),transparent 70%)}
+
+/* Particles */
+.particles{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.p{position:absolute;border-radius:50%;background:var(--acc);opacity:0;animation:pfloat linear infinite}
+@keyframes pfloat{0%{transform:translateY(100vh);opacity:0}10%{opacity:0.4}90%{opacity:0.1}100%{transform:translateY(-50px);opacity:0}}
+
+/* Top line */
+.top-line{height:3px;background:linear-gradient(90deg,transparent,var(--acc),var(--acc2),var(--acc),transparent);animation:shimmer 4s ease infinite;background-size:200% 100%}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+
+/* Hero section */
+.hero{padding:32px 24px 24px;text-align:center;position:relative}
+
+.corner{position:absolute;width:40px;height:40px}
+.corner svg{width:100%;height:100%}
+.c-tl{top:16px;left:16px}
+.c-tr{top:16px;right:16px;transform:scaleX(-1)}
+.c-bl{bottom:0;left:16px;transform:scaleY(-1)}
+.c-br{bottom:0;right:16px;transform:scale(-1)}
+
+.eyebrow{font-size:9px;letter-spacing:0.5em;text-transform:uppercase;color:var(--sub);margin-bottom:16px;opacity:0;animation:fadeUp 0.8s ease 0.2s forwards}
+
+.names-wrap{margin-bottom:6px;opacity:0;animation:fadeUp 0.8s ease 0.4s forwards}
+.bride-n{font-family:var(--font-head),serif;font-size:clamp(32px,10vw,44px);font-weight:900;color:var(--text);display:block;line-height:1}
+.groom-n{font-family:var(--font-head),serif;font-size:clamp(32px,10vw,44px);font-weight:900;color:var(--text);display:block;line-height:1}
+
+.weds-row{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 0;opacity:0;animation:fadeUp 0.8s ease 0.5s forwards}
+.wl{flex:1;height:0.5px;background:linear-gradient(90deg,transparent,var(--border))}
+.wl.r{background:linear-gradient(-90deg,transparent,var(--border))}
+.wd{width:6px;height:6px;background:var(--acc);transform:rotate(45deg)}
+.wt{font-family:'Cormorant Garamond',serif;font-size:14px;font-style:italic;color:var(--sub)}
+
+.date-badge{display:inline-flex;flex-direction:column;align-items:center;background:var(--card);border:0.5px solid var(--border);border-radius:12px;padding:12px 24px;margin:16px auto;opacity:0;animation:fadeUp 0.8s ease 0.7s forwards}
+.d-day{font-family:var(--font-head),serif;font-size:40px;font-weight:900;color:var(--acc);line-height:1}
+.d-month{font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:var(--sub);margin-top:2px}
+.d-year{font-size:10px;color:var(--sub);opacity:0.6;letter-spacing:0.2em}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+/* Countdown */
+.countdown{padding:0 20px 20px;opacity:0;animation:fadeUp 0.8s ease 0.9s forwards}
+.cd-label{font-size:8px;letter-spacing:0.3em;text-transform:uppercase;color:var(--sub);margin-bottom:10px;text-align:center}
+.cd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.cd-box{background:var(--card);border:0.5px solid var(--border);border-radius:8px;padding:10px 4px;text-align:center}
+.cd-num{font-family:var(--font-head),serif;font-size:24px;font-weight:900;color:var(--acc);line-height:1}
+.cd-lbl{font-size:7px;color:var(--sub);letter-spacing:0.1em;text-transform:uppercase;margin-top:2px;opacity:0.7}
+
+/* Sections */
+.section{padding:16px 20px;border-top:0.5px solid var(--border)}
+.sec-hdr{font-size:8px;letter-spacing:0.35em;text-transform:uppercase;color:var(--sub);margin-bottom:12px;display:flex;align-items:center;gap:8px;opacity:0.7}
+.sec-hdr::after{content:'';flex:1;height:0.5px;background:linear-gradient(90deg,var(--border),transparent)}
+
+/* Events */
+.event-item{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start}
+.ev-icon{width:34px;height:34px;background:var(--card);border:0.5px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.ev-info{flex:1}
+.ev-name{font-family:var(--font-head),serif;font-size:14px;font-weight:700;color:var(--text);margin-bottom:1px}
+.ev-time{font-size:10px;color:var(--sub);letter-spacing:0.08em}
+.ev-venue{font-size:10px;color:var(--text);opacity:0.35;margin-top:1px}
+
+/* Venue */
+.venue-card{background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px}
+.v-icon{font-size:22px}
+.v-info{flex:1}
+.v-name{font-family:var(--font-head),serif;font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px}
+.v-addr{font-size:10px;color:var(--text);opacity:0.35;line-height:1.5}
+.v-btn{padding:5px 10px;background:var(--card);border:0.5px solid var(--border);border-radius:6px;color:var(--acc);font-size:9px;font-family:'Montserrat',sans-serif;font-weight:600;cursor:pointer;white-space:nowrap}
+
+/* Family */
+.family-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.family-col-title{font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:var(--sub);margin-bottom:6px;opacity:0.6}
+.family-card{background:var(--card);border:0.5px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:6px}
+.fc-role{font-size:7px;color:var(--sub);letter-spacing:0.1em;text-transform:uppercase;opacity:0.6}
+.fc-name{font-family:var(--font-head),serif;font-size:12px;font-weight:700;color:var(--text);margin-top:1px}
+
+/* Special message */
+.special-msg{background:var(--card);border:0.5px solid var(--border);border-radius:10px;padding:14px;text-align:center}
+.sm-text{font-family:'Cormorant Garamond',serif;font-size:14px;font-style:italic;color:var(--sub);line-height:1.6}
+
+/* Actions */
+.actions{padding:16px 20px 8px}
+.act-btn{width:100%;padding:13px;border:none;border-radius:10px;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:0.08em;margin-bottom:8px;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:6px}
+.act-btn:active{transform:scale(0.98)}
+.btn-rsvp{background:linear-gradient(135deg,var(--acc2),var(--acc));color:#0A0806}
+.btn-save{background:var(--card);border:0.5px solid var(--border);color:var(--text)}
+.btn-share{background:rgba(37,211,102,0.1);border:0.5px solid rgba(37,211,102,0.25);color:rgba(37,211,102,0.8)}
+
+/* Footer */
+.inv-footer{padding:12px 20px 24px;text-align:center;border-top:0.5px solid var(--border)}
+.inv-footer-brand{font-size:8px;color:var(--text);opacity:0.15;letter-spacing:0.2em;text-transform:uppercase}
+
+.bot-line{height:3px;background:linear-gradient(90deg,transparent,var(--acc2),var(--acc),var(--acc2),transparent)}
+
+/* RSVP confirmation */
+.rsvp-confirmed{display:none;background:rgba(93,214,138,0.1);border:0.5px solid rgba(93,214,138,0.3);border-radius:10px;padding:12px;text-align:center;margin-bottom:8px}
+.rsvp-confirmed-text{font-size:13px;color:#5DD68A;font-weight:600}
+
+/* Music pill */
+.music-pill{position:fixed;top:12px;right:12px;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);border:0.5px solid var(--border);border-radius:16px;padding:5px 10px;font-size:9px;color:var(--sub);display:flex;align-items:center;gap:5px;cursor:pointer;z-index:100}
+.music-dot{width:5px;height:5px;border-radius:50%;background:var(--acc);animation:pulse 1.5s ease infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.4)}}
+.music-dot.off{animation:none;background:rgba(255,255,255,0.2)}
+</style>
+</head>
+<body>
+
+<div class="music-pill" id="musicPill" onclick="toggleMusic()">
+  <div class="music-dot" id="musicDot"></div>
+  <span id="musicText">BGM</span>
+</div>
+
+<div class="invite" id="invite">
+  <div class="particles" id="particles"></div>
+  <div class="top-line"></div>
+
+  <!-- Corners -->
+  <div class="corner c-tl">
+    <svg viewBox="0 0 40 40"><path d="M5 35 L5 5 L35 5" fill="none" stroke="var(--acc)" stroke-width="1" opacity="0.3"/><circle cx="5" cy="5" r="2" fill="var(--acc)" opacity="0.4"/></svg>
+  </div>
+  <div class="corner c-tr">
+    <svg viewBox="0 0 40 40"><path d="M5 35 L5 5 L35 5" fill="none" stroke="var(--acc)" stroke-width="1" opacity="0.3"/><circle cx="5" cy="5" r="2" fill="var(--acc)" opacity="0.4"/></svg>
+  </div>
+  <div class="corner c-bl">
+    <svg viewBox="0 0 40 40"><path d="M5 35 L5 5 L35 5" fill="none" stroke="var(--acc)" stroke-width="1" opacity="0.3"/></svg>
+  </div>
+  <div class="corner c-br">
+    <svg viewBox="0 0 40 40"><path d="M5 35 L5 5 L35 5" fill="none" stroke="var(--acc)" stroke-width="1" opacity="0.3"/></svg>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="eyebrow" id="eyebrow">✦ Wedding Invitation ✦</div>
+    <div class="names-wrap">
+      <span class="bride-n" id="brideN">Priya</span>
+      <div class="weds-row">
+        <div class="wl"></div><div class="wd"></div>
+        <span class="wt">weds</span>
+        <div class="wd"></div><div class="wl r"></div>
+      </div>
+      <span class="groom-n" id="groomN">Arjun</span>
+    </div>
+    <div class="date-badge">
+      <span class="d-day" id="dDay">15</span>
+      <span class="d-month" id="dMonth">June</span>
+      <span class="d-year" id="dYear">2026</span>
+    </div>
+  </div>
+
+  <!-- COUNTDOWN -->
+  <div class="countdown">
+    <div class="cd-label">Counting down to the big day</div>
+    <div class="cd-grid">
+      <div class="cd-box"><div class="cd-num" id="cdD">--</div><div class="cd-lbl">Days</div></div>
+      <div class="cd-box"><div class="cd-num" id="cdH">--</div><div class="cd-lbl">Hours</div></div>
+      <div class="cd-box"><div class="cd-num" id="cdM">--</div><div class="cd-lbl">Mins</div></div>
+      <div class="cd-box"><div class="cd-num" id="cdS">--</div><div class="cd-lbl">Secs</div></div>
+    </div>
+  </div>
+
+  <!-- EVENTS -->
+  <div class="section" id="eventsSection">
+    <div class="sec-hdr">✦ Events</div>
+    <div id="eventsList"></div>
+  </div>
+
+  <!-- VENUE -->
+  <div class="section">
+    <div class="sec-hdr">✦ Venue</div>
+    <div class="venue-card">
+      <div class="v-icon">📍</div>
+      <div class="v-info">
+        <div class="v-name" id="venueN">Shree Mandap</div>
+        <div class="v-addr" id="venueA">Bhubaneswar, Odisha</div>
+      </div>
+      <button class="v-btn" id="mapsBtn" onclick="openMaps()">📍 Maps</button>
+    </div>
+  </div>
+
+  <!-- FAMILY -->
+  <div class="section" id="familySection" style="display:none">
+    <div class="sec-hdr">✦ With the Blessings Of</div>
+    <div class="family-grid">
+      <div id="brideFamily"></div>
+      <div id="groomFamily"></div>
+    </div>
+  </div>
+
+  <!-- SPECIAL MESSAGE -->
+  <div class="section" id="msgSection" style="display:none">
+    <div class="special-msg">
+      <div class="sm-text" id="specialMsgEl"></div>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions">
+    <div class="rsvp-confirmed" id="rsvpConfirmed">
+      <div class="rsvp-confirmed-text">✅ Thank you! See you at the celebration! 🎊</div>
+    </div>
+    <button class="act-btn btn-rsvp" onclick="confirmRSVP()">💌 Confirm Attendance (RSVP)</button>
+    <button class="act-btn btn-share" onclick="shareInvite()">💬 Share on WhatsApp</button>
+    <button class="act-btn btn-save" onclick="saveCalendar()">📅 Save to Calendar</button>
+  </div>
+
+  <div class="inv-footer">
+    <div class="inv-footer-brand">Created with PhotoFind Pro · Temple City Digital · www.templecity.digital</div>
+  </div>
+  <div class="bot-line"></div>
+</div>
+
+<audio id="bgmAudio" loop></audio>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const d = {
+  bride: params.get('bride') || 'Priya',
+  groom: params.get('groom') || 'Arjun',
+  date: params.get('date') || '2026-06-15',
+  time: params.get('time') || '07:00',
+  venue: params.get('venue') || 'Shree Mandap, Bhubaneswar',
+  venueAddr: params.get('venueAddr') || 'Bhubaneswar, Odisha',
+  template: params.get('template') || 'royal-dark',
+  haldiDate: params.get('haldiDate'),
+  haldiTime: params.get('haldiTime') || '10:00',
+  mehendiDate: params.get('mehendiDate'),
+  mehendiTime: params.get('mehendiTime') || '17:00',
+  receptionDate: params.get('receptionDate'),
+  receptionTime: params.get('receptionTime') || '19:00',
+  brideFather: params.get('brideFather'),
+  groomFather: params.get('groomFather'),
+  specialMsg: params.get('specialMsg'),
+};
+
+// Apply template
+document.getElementById('invite').className = `invite t-${d.template}`;
+document.title = `${d.bride} weds ${d.groom} — Wedding Invitation`;
+document.getElementById('ogTitle').content = `${d.bride} weds ${d.groom}`;
+
+// Fill data
+document.getElementById('brideN').textContent = d.bride;
+document.getElementById('groomN').textContent = d.groom;
+document.getElementById('venueN').textContent = d.venue;
+document.getElementById('venueA').textContent = d.venueAddr || d.venue;
+
+// Date
+const wDate = new Date(d.date + 'T' + d.time);
+document.getElementById('dDay').textContent = wDate.getDate();
+document.getElementById('dMonth').textContent = wDate.toLocaleString('en-IN',{month:'long'});
+document.getElementById('dYear').textContent = wDate.getFullYear();
+
+// Events
+const events = [];
+if(d.haldiDate) events.push({icon:'💛',name:'Haldi Ceremony',date:d.haldiDate,time:d.haldiTime,venue:d.venue});
+if(d.mehendiDate) events.push({icon:'🌿',name:'Mehendi Evening',date:d.mehendiDate,time:d.mehendiTime,venue:d.venue});
+events.push({icon:'💒',name:'Wedding Ceremony',date:d.date,time:d.time,venue:d.venue});
+if(d.receptionDate) events.push({icon:'🎊',name:'Reception',date:d.receptionDate,time:d.receptionTime,venue:d.venue});
+
+const evList = document.getElementById('eventsList');
+events.forEach(ev => {
+  const evDate = new Date(ev.date);
+  const timeStr = ev.time ? new Date('2000-01-01T'+ev.time).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true}) : '';
+  evList.innerHTML += `<div class="event-item">
+    <div class="ev-icon">${ev.icon}</div>
+    <div class="ev-info">
+      <div class="ev-name">${ev.name}</div>
+      <div class="ev-time">${evDate.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'})}${timeStr?' · '+timeStr:''}</div>
+      <div class="ev-venue">${ev.venue}</div>
+    </div>
+  </div>`;
+});
+
+// Family
+if(d.brideFather || d.groomFather) {
+  document.getElementById('familySection').style.display = 'block';
+  if(d.brideFather) {
+    document.getElementById('brideFamily').innerHTML = `
+      <div class="family-col-title">Bride's Family</div>
+      <div class="family-card"><div class="fc-role">Father</div><div class="fc-name">${d.brideFather}</div></div>`;
+  }
+  if(d.groomFather) {
+    document.getElementById('groomFamily').innerHTML = `
+      <div class="family-col-title">Groom's Family</div>
+      <div class="family-card"><div class="fc-role">Father</div><div class="fc-name">${d.groomFather}</div></div>`;
+  }
+}
+
+// Special message
+if(d.specialMsg) {
+  document.getElementById('msgSection').style.display = 'block';
+  document.getElementById('specialMsgEl').textContent = d.specialMsg;
+}
+
+// Countdown
+function updateCD() {
+  const now = new Date();
+  const diff = wDate - now;
+  if(diff > 0) {
+    document.getElementById('cdD').textContent = Math.floor(diff/86400000);
+    document.getElementById('cdH').textContent = Math.floor((diff%86400000)/3600000);
+    document.getElementById('cdM').textContent = Math.floor((diff%3600000)/60000);
+    document.getElementById('cdS').textContent = Math.floor((diff%60000)/1000);
+  }
+}
+updateCD();
+setInterval(updateCD,1000);
+
+// Particles
+const pc = document.getElementById('particles');
+for(let i=0;i<12;i++){
+  const p=document.createElement('div');
+  p.className='p';
+  p.style.cssText=`left:${Math.random()*100}%;width:${2+Math.random()*3}px;height:${2+Math.random()*3}px;animation-duration:${5+Math.random()*8}s;animation-delay:${Math.random()*8}s`;
+  pc.appendChild(p);
+}
+
+// BGM
+const bgmUrls = {
+  'royal-dark':'https://cdn.pixabay.com/audio/2022/08/04/audio_2dde668d05.mp3',
+  'floral-pink':'https://cdn.pixabay.com/audio/2022/08/04/audio_2dde668d05.mp3',
+  'traditional':'https://cdn.pixabay.com/audio/2022/08/04/audio_2dde668d05.mp3',
+  'night-sky':'https://cdn.pixabay.com/audio/2022/08/04/audio_2dde668d05.mp3',
+};
+let bgmPlaying = false;
+const audio = document.getElementById('bgmAudio');
+audio.src = bgmUrls[d.template] || bgmUrls['royal-dark'];
+audio.volume = 0.2;
+
+function toggleMusic() {
+  if(bgmPlaying) {
+    audio.pause();bgmPlaying=false;
+    document.getElementById('musicDot').classList.add('off');
+    document.getElementById('musicText').textContent='Play BGM';
+  } else {
+    audio.play().then(()=>{
+      bgmPlaying=true;
+      document.getElementById('musicDot').classList.remove('off');
+      document.getElementById('musicText').textContent='BGM';
+    }).catch(()=>{});
+  }
+}
+
+// Try autoplay
+setTimeout(()=>{
+  audio.play().then(()=>{bgmPlaying=true;}).catch(()=>{
+    document.getElementById('musicText').textContent='▶ BGM';
+  });
+},1000);
+
+// Actions
+function confirmRSVP() {
+  document.getElementById('rsvpConfirmed').style.display='block';
+  document.querySelector('.btn-rsvp').style.display='none';
+  // Open WhatsApp
+  const msg = `💌 I confirm my attendance at *${d.bride} & ${d.groom}*'s wedding on ${wDate.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})}! See you there! 🎊`;
+  setTimeout(()=>window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank'),500);
+}
+
+function openMaps() {
+  const addr = d.venueAddr || d.venue;
+  window.open(`https://maps.google.com/?q=${encodeURIComponent(addr)}`,'_blank');
+}
+
+function shareInvite() {
+  const url = window.location.href;
+  const msg = `💌 *You're Invited!*\n\n*${d.bride} weds ${d.groom}*\n\n📅 ${wDate.toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})}\n📍 ${d.venue}\n\nView invitation:\n${url}`;
+  if(navigator.share) navigator.share({title:`${d.bride} weds ${d.groom}`,url});
+  else window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+function saveCalendar() {
+  const start = d.date.replace(/-/g,'') + 'T' + (d.time||'070000').replace(':','') + '00';
+  const end = d.date.replace(/-/g,'') + 'T' + '120000';
+  const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(d.bride+' weds '+d.groom)}&dates=${start}/${end}&details=${encodeURIComponent('Wedding Ceremony')}&location=${encodeURIComponent(d.venue)}`;
+  window.open(url,'_blank');
+}
+</script>
+</body>
+</html>
