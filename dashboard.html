@@ -511,7 +511,7 @@ function renderEvents() {
         <div class="ev-stat"><span class="ev-stat-val">${edited}</span><span class="ev-stat-lbl">Edited</span></div>
       </div>
       <div class="event-actions">
-        <button class="ev-btn ev-btn-gold" onclick="openQRModal('${event.id}','${name}')">◈ QR Card</button>
+        <button class="ev-btn ev-btn-gold" onclick="openQRCard('${event.id}','${name}')">◈ QR Card</button>
         <button class="ev-btn ev-btn-ghost" onclick="goUpload('${event.id}')">↑ Upload</button>
         <button class="ev-btn ev-btn-ghost" onclick="shareFolder('${event.id}','${name}')">🔗 Share</button>
         <button class="ev-btn" style="background:rgba(100,180,255,0.08);color:#64B4FF;border:1px solid rgba(100,180,255,0.2)" onclick="indexFaces('${event.id}')" id="idx-btn-${event.id}">⚡ Index</button>
@@ -671,6 +671,10 @@ function buildQRTemplates() {
     };
     grid.appendChild(div);
   });
+}
+
+function openQRCard(eventId, eventName) {
+  window.open(`/qrcard.html?event=${eventId}&name=${encodeURIComponent(eventName)}`, '_blank');
 }
 
 async function openQRModal(eventId, eventName) {
