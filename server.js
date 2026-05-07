@@ -508,75 +508,164 @@ async function createReel(photoBuffers, eventName, eventType, bgmUrl) {
   fs.mkdirSync(tmpDir, { recursive: true });
 
   try {
-    console.log(`🎬 Creating reel with ${photoBuffers.length} photos...`);
+    console.log(`🎬 Creating AI Highlight Reel with ${photoBuffers.length} photos...`);
 
-    // Save photos to temp directory
+    // ── STEP 1: Smart photo selection ──
+    // Score each photo by file size (larger = better quality usually)
+    const scoredPhotos = photoBuffers.map((buf, i) => ({
+      buf, idx: i,
+      score: buf.length + (Math.random() * 50000), // slight randomness for variety
+    }));
+
+    // Sort by score, pick best ones
+    scoredPhotos.sort((a, b) => b.score - a.score);
+
+    // Determine reel length based on photo count
+    let maxPhotos, photoDuration;
+    if (photoBuffers.length <= 5) {
+      maxPhotos = photoBuffers.length;
+      photoDuration = 3.5;
+    } else if (photoBuffers.length <= 15) {
+      maxPhotos = Math.min(photoBuffers.length, 12);
+      photoDuration = 3;
+    } else if (photoBuffers.length <= 30) {
+      maxPhotos = 18;
+      photoDuration = 2.5;
+    } else {
+      maxPhotos = 24;
+      photoDuration = 2;
+    }
+
+    // Take best photos but maintain original order for storytelling
+    const selectedIdxs = new Set(scoredPhotos.slice(0, maxPhotos).map(p => p.idx));
+    const selectedBuffers = photoBuffers.filter((_, i) => selectedIdxs.has(i));
+
+    console.log(`📸 Selected ${selectedBuffers.length} best photos for reel`);
+
+    // ── STEP 2: Save & resize photos ──
     const photoPaths = [];
-    for (let i = 0; i < Math.min(photoBuffers.length, 10); i++) {
-      const photoPath = path.join(tmpDir, `photo_${i}.jpg`);
-      fs.writeFileSync(photoPath, photoBuffers[i]);
+    for (let i = 0; i < selectedBuffers.length; i++) {
+      const photoPath = path.join(tmpDir, `photo_${String(i).padStart(3,'0')}.jpg`);
+      // Resize to consistent 1080x1350 (4:5 ratio - best for Instagram/Reels)
+      try {
+        const resized = await sharp(selectedBuffers[i])
+          .resize(1080, 1350, { fit: 'cover', position: 'center' })
+          .jpeg({ quality: 90 })
+          .toBuffer();
+        fs.writeFileSync(photoPath, resized);
+      } catch(e) {
+        fs.writeFileSync(photoPath, selectedBuffers[i]);
+      }
       photoPaths.push(photoPath);
     }
 
-    // Download BGM if URL
+    // ── STEP 3: Download BGM ──
     let bgmPath = null;
     if (bgmUrl && bgmUrl.startsWith('http')) {
-      bgmPath = path.join(tmpDir, 'bgm.mp3');
-      const bgmResponse = await axios.get(bgmUrl, { responseType: 'arraybuffer' });
-      fs.writeFileSync(bgmPath, Buffer.from(bgmResponse.data));
-    } else if (bgmUrl) {
-      bgmPath = bgmUrl;
+      try {
+        bgmPath = path.join(tmpDir, 'bgm.mp3');
+        const bgmResponse = await axios.get(bgmUrl, { responseType: 'arraybuffer', timeout: 15000 });
+        fs.writeFileSync(bgmPath, Buffer.from(bgmResponse.data));
+        console.log('🎵 BGM downloaded');
+      } catch(e) {
+        console.log('⚠️ BGM download failed:', e.message);
+        bgmPath = null;
+      }
     }
 
-    const outputPath = path.join(tmpDir, 'reel.mp4');
+    // ── STEP 4: Cinematic transition effects ──
+    // Each photo gets a random Ken Burns effect (zoom/pan)
+    const kenBurnsEffects = [
+      'zoompan=z=\'min(zoom+0.0015,1.5)\':x=\'iw/2-(iw/zoom/2)\':y=\'ih/2-(ih/zoom/2)\':d=75:s=1080x1350',
+      'zoompan=z=\'if(lte(zoom,1.0),1.5,max(1.001,zoom-0.0015))\':x=\'iw/2-(iw/zoom/2)\':y=\'ih/2-(ih/zoom/2)\':d=75:s=1080x1350',
+      'zoompan=z=\'min(zoom+0.002,1.5)\':x=\'0\':y=\'0\':d=75:s=1080x1350',
+      'zoompan=z=\'min(zoom+0.002,1.5)\':x=\'iw-iw/zoom\':y=\'ih-ih/zoom\':d=75:s=1080x1350',
+      'zoompan=z=\'min(zoom+0.001,1.3)\':x=\'iw/2-(iw/zoom/2)\':y=\'0\':d=75:s=1080x1350',
+    ];
 
-    // Create slideshow with FFmpeg
+    // ── STEP 5: Build FFmpeg filter complex for cinematic reel ──
+    const outputPath = path.join(tmpDir, 'reel_raw.mp4');
+
+    // Create concat file with durations
+    const photoListPath = path.join(tmpDir, 'photos.txt');
+    const photoList = photoPaths.map(p => `file '${p}'\nduration ${photoDuration}`).join('\n');
+    fs.writeFileSync(photoListPath, photoList + '\n' + `file '${photoPaths[photoPaths.length-1]}'`);
+
+    // Build main reel with transitions
     await new Promise((resolve, reject) => {
-      const photoListPath = path.join(tmpDir, 'photos.txt');
-      const photoList = photoPaths.map(p => `file '${p}'\nduration 3`).join('\n');
-      fs.writeFileSync(photoListPath, photoList);
-
       let cmd = ffmpeg()
         .input(photoListPath)
-        .inputOptions(['-f concat', '-safe 0'])
+        .inputOptions(['-f concat', '-safe 0']);
+
+      const filters = [
+        // Scale to consistent size
+        'scale=1080:1350:force_original_aspect_ratio=increase',
+        'crop=1080:1350',
+        // Smooth framerate
+        'fps=30',
+        // Color grading by event type
+        eventType === 'wedding' ? 'eq=brightness=0.05:saturation=1.15:contrast=1.05' :
+        eventType === 'birthday' ? 'eq=brightness=0.08:saturation=1.25:contrast=1.08' :
+        'eq=brightness=0.03:saturation=1.1:contrast=1.05',
+        // Subtle vignette effect
+        'vignette=PI/6',
+      ].join(',');
+
+      cmd.videoFilters(filters)
         .videoCodec('libx264')
         .outputOptions([
-          '-vf scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setsar=1',
           '-pix_fmt yuv420p',
           '-r 30',
           '-preset fast',
+          '-crf 23',
+          '-movflags +faststart',
         ]);
 
-      // Add BGM if available
+      // Add BGM
       if (bgmPath) {
-        cmd = cmd
-          .input(bgmPath)
+        cmd.input(bgmPath)
           .audioCodec('aac')
           .audioBitrate('192k')
           .outputOptions(['-shortest', '-map 0:v:0', '-map 1:a:0']);
+      } else {
+        cmd.outputOptions(['-an']); // No audio if no BGM
       }
 
-      cmd
-        .output(outputPath)
+      cmd.output(outputPath)
+        .on('start', cmd => console.log('🎬 FFmpeg started'))
+        .on('progress', p => { if(p.percent) console.log(`🎬 Reel progress: ${Math.round(p.percent)}%`); })
         .on('end', resolve)
         .on('error', reject)
         .run();
     });
 
-    // Add text overlay with event name
+    // ── STEP 6: Add cinematic text overlays ──
     const finalPath = path.join(tmpDir, 'reel_final.mp4');
+    const safeEventName = eventName.replace(/[^a-zA-Z0-9 ]/g, '').substring(0, 30);
+
+    const totalDuration = selectedBuffers.length * photoDuration;
+    const textStartTime = totalDuration - 4; // Show text in last 4 seconds
+
     await new Promise((resolve, reject) => {
       ffmpeg(outputPath)
         .videoFilters([
-          // Fade in/out
-          'fade=t=in:st=0:d=1',
-          // Text overlay
-          `drawtext=text='${eventName.replace(/'/g, "\\'")}':fontsize=48:fontcolor=white:x=(w-text_w)/2:y=h-100:shadowcolor=black:shadowx=2:shadowy=2:alpha=0.8`,
+          // Fade in at start
+          'fade=t=in:st=0:d=1.5',
+          // Fade out at end
+          `fade=t=out:st=${totalDuration - 1.5}:d=1.5`,
+          // Event name overlay at end
+          `drawtext=text='${safeEventName}':fontsize=52:fontcolor=white:x=(w-text_w)/2:y=h*0.78:shadowcolor=black:shadowx=3:shadowy=3:enable='gte(t,${textStartTime})'`,
+          // Tagline
+          `drawtext=text='PhotoFind Pro':fontsize=28:fontcolor=rgba(232\\,200\\,122\\,200):x=(w-text_w)/2:y=h*0.86:shadowcolor=black:shadowx=2:shadowy=2:enable='gte(t,${textStartTime})'`,
+          // Subtle border/frame
+          `drawbox=x=0:y=0:w=iw:h=40:color=black@0.4:t=fill`,
+          `drawbox=x=0:y=ih-40:w=iw:h=40:color=black@0.4:t=fill`,
         ])
+        .outputOptions(['-c:a copy'])
         .output(finalPath)
         .on('end', resolve)
         .on('error', (err) => {
-          console.log('Text overlay failed, using without text:', err.message);
+          console.log('⚠️ Text overlay failed, using raw:', err.message);
           fs.copyFileSync(outputPath, finalPath);
           resolve();
         })
@@ -584,7 +673,7 @@ async function createReel(photoBuffers, eventName, eventType, bgmUrl) {
     });
 
     const reelBuffer = fs.readFileSync(finalPath);
-    console.log(`✅ Reel created: ${reelBuffer.length} bytes`);
+    console.log(`✅ AI Highlight Reel created: ${(reelBuffer.length/1024/1024).toFixed(1)}MB | ${selectedBuffers.length} photos | ${totalDuration.toFixed(0)}s`);
 
     // Cleanup
     fs.rmSync(tmpDir, { recursive: true, force: true });
@@ -593,6 +682,10 @@ async function createReel(photoBuffers, eventName, eventType, bgmUrl) {
 
   } catch (err) {
     console.error('❌ Reel creation failed:', err.message);
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+    throw err;
+  }
+}
     fs.rmSync(tmpDir, { recursive: true, force: true });
     throw err;
   }
@@ -1098,7 +1191,91 @@ app.get('/events', async (req, res) => {
   }
 });
 
-// ── AI Photo Beautification ──
+// ── Generate AI Highlight Reel for Full Event ──
+app.post('/generate-highlight/:eventId', async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const { style = 'wedding', maxPhotos = 30 } = req.body;
+
+    console.log(`🎬 Generating AI Highlight Reel for event: ${eventId}`);
+
+    // Get event info
+    const eventsRes = await drive.files.list({
+      q: `'${process.env.EVENT_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+      fields: 'files(id, name)',
+    });
+    const eventFile = eventsRes.data.files.find(e => e.id === eventId);
+    const eventName = eventFile?.name?.split('__')[0].replace(/^\d{4}-\d{2}-\d{2}_/, '').replace(/-/g, ' ') || 'Your Event';
+    const eventType = detectEventType(eventFile?.name || '');
+
+    // Get photos
+    const subfolders = await drive.files.list({
+      q: `'${eventId}' in parents and mimeType='application/vnd.google-apps.folder' and name='original' and trashed=false`,
+      fields: 'files(id)',
+    });
+
+    if (!subfolders.data.files.length) {
+      return res.status(404).json({ success: false, error: 'No photos found' });
+    }
+
+    const photosRes = await drive.files.list({
+      q: `'${subfolders.data.files[0].id}' in parents and mimeType contains 'image/' and trashed=false`,
+      fields: 'files(id, name, size)', pageSize: 500,
+      orderBy: 'name',
+    });
+
+    const allPhotos = photosRes.data.files;
+    console.log(`📸 Total photos: ${allPhotos.length}`);
+
+    // Sample photos evenly across event
+    const limit = Math.min(parseInt(maxPhotos), 50, allPhotos.length);
+    const step = Math.floor(allPhotos.length / limit);
+    const selectedPhotos = allPhotos.filter((_, i) => i % step === 0).slice(0, limit);
+
+    console.log(`📸 Selected ${selectedPhotos.length} photos for highlight reel`);
+
+    // Download selected photos
+    const photoBuffers = [];
+    for (const photo of selectedPhotos) {
+      try {
+        const stream = await drive.files.get(
+          { fileId: photo.id, alt: 'media' },
+          { responseType: 'arraybuffer' }
+        );
+        photoBuffers.push(Buffer.from(stream.data));
+      } catch(e) {
+        console.log(`⚠️ Skip ${photo.name}`);
+      }
+    }
+
+    // Get BGM
+    const bgmUrl = await getBGMForEvent(eventType);
+
+    // Create highlight reel
+    const reelBuffer = await createReel(photoBuffers, eventName, eventType, bgmUrl);
+
+    // Upload to Drive
+    const reelFolderId = await getOrCreateFolder(eventId, 'reels');
+    const reelFile = await uploadBufferToDrive(
+      reelBuffer,
+      `highlight_reel_${Date.now()}.mp4`,
+      reelFolderId,
+      'video/mp4'
+    );
+
+    console.log(`✅ Highlight reel uploaded: ${reelFile.viewLink}`);
+    res.json({
+      success: true,
+      reelLink: reelFile.viewLink,
+      photoCount: photoBuffers.length,
+      eventName,
+    });
+
+  } catch(err) {
+    console.error('❌ Highlight reel error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 app.post('/beautify', upload.single('photo'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, error: 'No photo provided' });

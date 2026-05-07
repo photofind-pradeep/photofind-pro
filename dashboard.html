@@ -514,6 +514,7 @@ function renderEvents() {
         <button class="ev-btn ev-btn-gold" onclick="openQRCard('${event.id}','${name}')">◈ QR Card</button>
         <button class="ev-btn ev-btn-ghost" onclick="goUpload('${event.id}')">↑ Upload</button>
         <button class="ev-btn ev-btn-ghost" onclick="shareFolder('${event.id}','${name}')">🔗 Share</button>
+        <button class="ev-btn" style="background:rgba(255,107,107,0.08);color:#FF6B6B;border:1px solid rgba(255,107,107,0.2)" onclick="generateHighlightReel('${event.id}','${name}')" id="reel-btn-${event.id}">🎬 Reel</button>
         <button class="ev-btn" style="background:rgba(100,180,255,0.08);color:#64B4FF;border:1px solid rgba(100,180,255,0.2)" onclick="indexFaces('${event.id}')" id="idx-btn-${event.id}">⚡ Index</button>
         <button class="ev-btn ${isSyncing ? 'ev-btn-rose' : 'ev-btn-green'}" id="sync-btn-${event.id}"
           onclick="${isSyncing ? `stopSync('${event.id}')` : `startSync('${event.id}','${eventDate}')`}">
@@ -953,6 +954,35 @@ function saveSettings() {
   document.getElementById('cardServerUrl').value = SERVER;
   toast('✅ Settings saved!');
   checkServer();
+}
+
+async function generateHighlightReel(eventId, eventName) {
+  const btn = document.getElementById(`reel-btn-${eventId}`);
+  if (btn) { btn.textContent = '⏳ Creating...'; btn.disabled = true; }
+
+  showToast('🎬 Creating AI Highlight Reel — this takes 2-5 minutes...');
+
+  try {
+    const res = await fetch(`${SERVER}/generate-highlight/${eventId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ style: 'wedding', maxPhotos: 30 }),
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      showToast(`✅ Highlight Reel ready! ${data.photoCount} photos`);
+      if (btn) { btn.textContent = '✅ Reel'; btn.style.color = '#5DD68A'; }
+      // Open reel
+      window.open(data.reelLink, '_blank');
+    } else {
+      showToast('❌ Reel failed: ' + data.error);
+      if (btn) { btn.textContent = '🎬 Reel'; btn.disabled = false; }
+    }
+  } catch(e) {
+    showToast('❌ Error: ' + e.message);
+    if (btn) { btn.textContent = '🎬 Reel'; btn.disabled = false; }
+  }
 }
 
 async function indexFaces(eventId) {
