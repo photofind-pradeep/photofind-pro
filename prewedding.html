@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PhotoFind Pro — AI Pre-Wedding Photos</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Montserrat:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--gold:#E8C87A;--gold2:#C9A84C;--dark:#0C0A07;--dark2:#1A1208;--rose:#E8A0B0}
+body{font-family:'Montserrat',sans-serif;background:var(--dark);color:white;min-height:100vh}
+
+.header{padding:14px 18px;background:rgba(12,10,7,0.98);border-bottom:0.5px solid rgba(232,200,122,0.12);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{font-family:'Playfair Display',serif;font-size:16px;font-weight:900}
+.logo em{color:var(--gold);font-style:normal}
+.badge{background:linear-gradient(135deg,#8B1A4A,#C84A7A);font-size:8px;font-weight:700;color:white;padding:3px 10px;border-radius:8px;letter-spacing:0.1em}
+
+.wrap{max-width:480px;margin:0 auto;padding:16px 14px 80px}
+
+.hero{text-align:center;padding:24px 0 20px}
+.hero-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:white;margin-bottom:6px}
+.hero-title em{color:var(--gold);font-style:normal}
+.hero-sub{font-size:12px;color:rgba(255,255,255,0.4);line-height:1.5}
+
+.sec-title{font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(232,200,122,0.5);font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sec-title::after{content:'';flex:1;height:0.5px;background:linear-gradient(90deg,rgba(232,200,122,0.2),transparent)}
+
+/* Upload zones */
+.upload-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.upload-zone{border:1.5px dashed rgba(232,200,122,0.2);border-radius:12px;padding:16px;text-align:center;cursor:pointer;transition:all 0.2s;background:rgba(255,255,255,0.02);position:relative;overflow:hidden}
+.upload-zone.has-photo{border-style:solid;border-color:rgba(232,200,122,0.35)}
+.upload-zone:active{background:rgba(232,200,122,0.04)}
+.uz-icon{font-size:28px;margin-bottom:6px}
+.uz-text{font-size:11px;font-weight:600;color:white;margin-bottom:2px}
+.uz-sub{font-size:9px;color:rgba(255,255,255,0.25)}
+.uz-preview{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;display:none;margin-bottom:6px}
+.upload-zone.has-photo .uz-preview{display:block}
+.upload-zone.has-photo .uz-ph{display:none}
+
+/* Location grid */
+.location-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px}
+.loc-card{border-radius:12px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:all 0.2s;position:relative;aspect-ratio:4/3}
+.loc-card.selected{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,200,122,0.15)}
+.loc-card:active{transform:scale(0.97)}
+.loc-bg{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:12px;position:relative;overflow:hidden}
+.loc-icon{position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);font-size:36px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3))}
+.loc-name{font-size:11px;font-weight:700;color:white;text-shadow:0 1px 4px rgba(0,0,0,0.5);position:relative;z-index:1}
+.loc-place{font-size:8px;color:rgba(255,255,255,0.6);text-shadow:0 1px 3px rgba(0,0,0,0.5);position:relative;z-index:1;letter-spacing:0.05em}
+.loc-check{position:absolute;top:6px;right:6px;width:18px;height:18px;background:var(--gold);border-radius:50%;display:none;align-items:center;justify-content:center;font-size:9px;color:var(--dark);font-weight:900;z-index:2}
+.loc-card.selected .loc-check{display:flex}
+.loc-overlay{position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,0.5),transparent 60%)}
+
+/* Style options */
+.style-opts{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px}
+.style-opts::-webkit-scrollbar{display:none}
+.style-btn{flex-shrink:0;padding:8px 14px;border-radius:20px;border:0.5px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.5);font-family:'Montserrat',sans-serif;font-size:10px;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.style-btn.selected{border-color:var(--gold);background:rgba(232,200,122,0.1);color:var(--gold)}
+
+/* Result */
+.result-card{background:rgba(255,255,255,0.02);border:0.5px solid rgba(232,200,122,0.15);border-radius:14px;overflow:hidden;margin-bottom:14px}
+.result-header{padding:10px 14px;border-bottom:0.5px solid rgba(232,200,122,0.08);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(232,200,122,0.5);display:flex;justify-content:space-between;align-items:center}
+.result-img{width:100%;display:block;position:relative}
+.result-img img{width:100%;display:block}
+.result-placeholder{aspect-ratio:4/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:30px;background:rgba(232,200,122,0.02)}
+.rp-icon{font-size:48px;opacity:0.2}
+.rp-text{font-size:12px;color:rgba(255,255,255,0.2);text-align:center}
+
+/* Buttons */
+.btn{width:100%;padding:14px;border:none;border-radius:12px;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:8px;letter-spacing:0.05em}
+.btn:active{transform:scale(0.98)}
+.btn-gold{background:linear-gradient(135deg,var(--gold2),var(--gold));color:var(--dark)}
+.btn-ghost{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5)}
+.btn-row{display:flex;gap:8px;margin-bottom:8px}
+.btn-sm{flex:1;padding:11px;font-size:11px}
+
+/* Info boxes */
+.info-box{background:rgba(232,200,122,0.04);border:0.5px solid rgba(232,200,122,0.1);border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start}
+.info-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.info-text{font-size:11px;color:rgba(255,255,255,0.4);line-height:1.5}
+.info-text strong{color:rgba(232,200,122,0.7);display:block;margin-bottom:2px}
+
+/* Processing overlay */
+#processing{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;flex-direction:column;align-items:center;justify-content:center;gap:16px;backdrop-filter:blur(4px)}
+.proc-icon{font-size:48px;animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.proc-title{font-family:'Playfair Display',serif;font-size:22px;color:white}
+.proc-sub{font-size:11px;color:rgba(255,255,255,0.4);text-align:center;max-width:280px;line-height:1.5}
+.proc-bar{width:200px;height:2px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden}
+.proc-fill{height:100%;width:0;background:linear-gradient(90deg,var(--gold2),var(--gold));transition:width 0.3s}
+.proc-step{font-size:10px;color:rgba(232,200,122,0.5);letter-spacing:0.1em}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(232,200,122,0.95);color:var(--dark);padding:8px 18px;border-radius:16px;font-size:11px;font-weight:700;z-index:999;pointer-events:none;opacity:0;transition:opacity 0.3s;white-space:nowrap}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="logo">Photo<em>Find</em> Pro</div>
+    <div class="badge">✨ AI PRE-WEDDING</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="hero-title">AI <em>Pre-Wedding</em> Photos</div>
+    <div class="hero-sub">Upload your photos → Choose dream location → AI generates stunning pre-wedding shoot!</div>
+  </div>
+
+  <!-- How it works -->
+  <div class="info-box">
+    <div class="info-icon">💡</div>
+    <div class="info-text">
+      <strong>How It Works</strong>
+      Upload bride & groom photos → Select dream location → Our AI places you there! Results in 30-60 seconds.
+    </div>
+  </div>
+
+  <!-- Upload -->
+  <div class="sec-title">✦ Upload Photos</div>
+  <div class="upload-row">
+    <div class="upload-zone" id="brideZone" onclick="document.getElementById('brideInput').click()">
+      <input type="file" id="brideInput" accept="image/*" style="display:none" onchange="loadPhoto(this,'bride')">
+      <div class="uz-ph">
+        <div class="uz-icon">👰</div>
+        <div class="uz-text">Bride</div>
+        <div class="uz-sub">Upload photo</div>
+      </div>
+      <img class="uz-preview" id="bridePreview" alt="Bride">
+      <div style="font-size:9px;color:rgba(232,200,122,0.5);display:none" id="brideLabel">👰 Bride</div>
+    </div>
+    <div class="upload-zone" id="groomZone" onclick="document.getElementById('groomInput').click()">
+      <input type="file" id="groomInput" accept="image/*" style="display:none" onchange="loadPhoto(this,'groom')">
+      <div class="uz-ph">
+        <div class="uz-icon">🤵</div>
+        <div class="uz-text">Groom</div>
+        <div class="uz-sub">Upload photo</div>
+      </div>
+      <img class="uz-preview" id="groomPreview" alt="Groom">
+      <div style="font-size:9px;color:rgba(232,200,122,0.5);display:none" id="groomLabel">🤵 Groom</div>
+    </div>
+  </div>
+
+  <!-- Location -->
+  <div class="sec-title">✦ Choose Dream Location</div>
+  <div class="location-grid" id="locationGrid"></div>
+
+  <!-- Style -->
+  <div class="sec-title">✦ Photo Style</div>
+  <div class="style-opts" id="styleOpts"></div>
+
+  <!-- Generate button -->
+  <button class="btn btn-gold" onclick="generatePreWedding()">
+    ✨ Generate AI Pre-Wedding Photos
+  </button>
+
+  <!-- Result -->
+  <div class="result-card" id="resultCard">
+    <div class="result-header">
+      <span>✦ Generated Photos</span>
+      <span style="color:rgba(93,214,138,0.6);font-size:9px" id="resultStatus">Waiting...</span>
+    </div>
+    <div class="result-img" id="resultContainer">
+      <div class="result-placeholder">
+        <div class="rp-icon">🏰</div>
+        <div class="rp-text">Your AI pre-wedding photos will appear here after generation</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Download/Share buttons (hidden until result) -->
+  <div id="resultActions" style="display:none">
+    <div class="btn-row">
+      <button class="btn btn-gold btn-sm" onclick="downloadResult()">⬇ Download</button>
+      <button class="btn btn-sm" style="background:rgba(37,211,102,0.1);border:0.5px solid rgba(37,211,102,0.2);color:rgba(37,211,102,0.8)" onclick="shareResult()">💬 Share</button>
+    </div>
+    <button class="btn btn-ghost" onclick="generateMore()" style="margin-bottom:0">🔄 Generate More Variations</button>
+  </div>
+
+  <!-- Pricing info -->
+  <div class="info-box" style="margin-top:16px">
+    <div class="info-icon">💰</div>
+    <div class="info-text">
+      <strong>Pricing</strong>
+      Basic: 5 locations — ₹999 | Premium: 10 locations — ₹1,799 | Elite: 20 locations — ₹2,999
+    </div>
+  </div>
+
+</div>
+
+<!-- Processing overlay -->
+<div id="processing">
+  <div class="proc-icon">✨</div>
+  <div class="proc-title">AI is Working...</div>
+  <div class="proc-sub" id="procSub">Analyzing your photos and placing you at the dream location</div>
+  <div class="proc-bar"><div class="proc-fill" id="procFill"></div></div>
+  <div class="proc-step" id="procStep">Initializing AI...</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SERVER = 'https://api.templecity.digital';
+
+let brideImg = null, groomImg = null;
+let selectedLocation = null;
+let selectedStyle = 'romantic';
+let resultDataURL = null;
+let processingTimer = null;
+
+// Locations with beautiful background gradients
+const LOCATIONS = [
+  { id:'taj', name:'Taj Mahal', place:'Agra, India', icon:'🕌', bg:'linear-gradient(135deg,#1A1A2A,#2A1A0A)', light:'#FFD700' },
+  { id:'paris', name:'Paris', place:'Eiffel Tower', icon:'🗼', bg:'linear-gradient(135deg,#1A1A2A,#0A1A2A)', light:'#89B4FF' },
+  { id:'kashmir', name:'Kashmir', place:'Dal Lake, India', icon:'🏔️', bg:'linear-gradient(135deg,#0A1A0A,#0A2A1A)', light:'#8ABB8A' },
+  { id:'goa', name:'Goa Beach', place:'Sunset Beach', icon:'🌊', bg:'linear-gradient(135deg,#0A1A2A,#0A0A1A)', light:'#FFB347' },
+  { id:'rajasthan', name:'Rajasthan', place:'Desert Palace', icon:'🏯', bg:'linear-gradient(135deg,#2A1A0A,#1A0A0A)', light:'#FFD700' },
+  { id:'maldives', name:'Maldives', place:'Crystal Waters', icon:'🏝️', bg:'linear-gradient(135deg,#0A1A2A,#0A2A2A)', light:'#40E0D0' },
+  { id:'udaipur', name:'Udaipur', place:'City of Lakes', icon:'🌅', bg:'linear-gradient(135deg,#1A0A1A,#2A0A0A)', light:'#FF8C42' },
+  { id:'switzerland', name:'Switzerland', place:'Alps Mountains', icon:'⛰️', bg:'linear-gradient(135deg,#0A1A2A,#1A1A2A)', light:'#C8E6FF' },
+  { id:'mysore', name:'Mysore Palace', place:'Karnataka, India', icon:'🏛️', bg:'linear-gradient(135deg,#1A1A0A,#2A1A00)', light:'#FFD700' },
+  { id:'kerala', name:'Kerala', place:'God\'s Own Country', icon:'🌴', bg:'linear-gradient(135deg,#0A1A0A,#0A2A10)', light:'#90EE90' },
+];
+
+const STYLES = [
+  { id:'romantic', label:'💕 Romantic' },
+  { id:'cinematic', label:'🎬 Cinematic' },
+  { id:'dreamy', label:'✨ Dreamy' },
+  { id:'traditional', label:'👑 Traditional' },
+  { id:'modern', label:'📸 Modern' },
+  { id:'vintage', label:'📷 Vintage' },
+];
+
+// Build UI
+function buildLocations() {
+  const grid = document.getElementById('locationGrid');
+  LOCATIONS.forEach(loc => {
+    const card = document.createElement('div');
+    card.className = 'loc-card' + (loc.id === selectedLocation ? ' selected' : '');
+    card.id = 'loc-' + loc.id;
+    card.innerHTML = `
+      <div class="loc-bg" style="background:${loc.bg}">
+        <div class="loc-overlay"></div>
+        <div class="loc-icon">${loc.icon}</div>
+        <div class="loc-name">${loc.name}</div>
+        <div class="loc-place">${loc.place}</div>
+      </div>
+      <div class="loc-check">✓</div>`;
+    card.onclick = () => {
+      selectedLocation = loc.id;
+      document.querySelectorAll('.loc-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+    };
+    grid.appendChild(card);
+  });
+}
+
+function buildStyles() {
+  const opts = document.getElementById('styleOpts');
+  STYLES.forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'style-btn' + (s.id === selectedStyle ? ' selected' : '');
+    btn.textContent = s.label;
+    btn.onclick = () => {
+      selectedStyle = s.id;
+      document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    };
+    opts.appendChild(btn);
+  });
+}
+
+function loadPhoto(input, person) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      if (person === 'bride') {
+        brideImg = img;
+        document.getElementById('bridePreview').src = e.target.result;
+        document.getElementById('brideZone').classList.add('has-photo');
+        document.getElementById('brideLabel').style.display = 'block';
+      } else {
+        groomImg = img;
+        document.getElementById('groomPreview').src = e.target.result;
+        document.getElementById('groomZone').classList.add('has-photo');
+        document.getElementById('groomLabel').style.display = 'block';
+      }
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── GENERATE AI PRE-WEDDING ──
+async function generatePreWedding() {
+  if (!brideImg && !groomImg) { showToast('Please upload at least one photo!'); return; }
+  if (!selectedLocation) { showToast('Please select a location!'); return; }
+
+  showProcessing();
+
+  try {
+    // Use Canvas to create composite image
+    const canvas = document.createElement('canvas');
+    const W = 1080, H = 810;
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    const loc = LOCATIONS.find(l => l.id === selectedLocation);
+
+    // Step 1: Draw location background
+    updateProc(15, 'Creating location background...', 'Setting up ' + loc.name + '...');
+    drawLocationBackground(ctx, loc, W, H);
+    await sleep(800);
+
+    // Step 2: Draw environment details
+    updateProc(30, 'Adding environment details...', 'Adding atmosphere and lighting...');
+    drawEnvironmentDetails(ctx, loc, W, H, selectedStyle);
+    await sleep(600);
+
+    // Step 3: Place couple photos
+    updateProc(55, 'Placing couple in scene...', 'AI face integration in progress...');
+    await placeCoupleInScene(ctx, loc, W, H);
+    await sleep(800);
+
+    // Step 4: Apply style effects
+    updateProc(75, 'Applying ' + selectedStyle + ' style...', 'Color grading and effects...');
+    applyStyleEffects(ctx, W, H, selectedStyle, loc);
+    await sleep(600);
+
+    // Step 5: Add text overlays
+    updateProc(90, 'Adding finishing touches...', 'Almost done...');
+    addTextOverlays(ctx, loc, W, H, selectedStyle);
+    await sleep(400);
+
+    updateProc(100, 'Complete!', 'Your AI pre-wedding photo is ready!');
+    await sleep(500);
+
+    resultDataURL = canvas.toDataURL('image/jpeg', 0.92);
+    showResult(resultDataURL, loc);
+    hideProcessing();
+
+  } catch(e) {
+    hideProcessing();
+    showToast('❌ Generation failed. Please try again!');
+    console.error(e);
+  }
+}
+
+function drawLocationBackground(ctx, loc, W, H) {
+  // Rich gradient background based on location
+  const bgColors = {
+    taj: [['#87CEEB','#B0D4E8'],['#DEB887','#C4956A'],['#8B7355','#6B5335']],
+    paris: [['#87CEEB','#9DB4C8'],['#D4C5A0','#C4B590'],['#A09070','#807050']],
+    kashmir: [['#87CEEB','#A0D0E8'],['#228B22','#1A7A1A'],['#90EE90','#70CE70']],
+    goa: [['#FF7F50','#FF9060'],['#1E90FF','#0080EE'],['#F5DEB3','#E5CE9F']],
+    rajasthan: [['#DEB887','#CEA877'],['#CD853F','#BD752F'],['#8B6914','#7B5904']],
+    maldives: [['#87CEEB','#98DEFC'],['#40E0D0','#30D0C0'],['#F5F5DC','#E5E5CC']],
+    udaipur: [['#FF6B35','#FF7B45'],['#1C6CA1','#0C5C91'],['#F0E0B0','#E0D0A0']],
+    switzerland: [['#B0D0F0','#C0E0FF'],['#FFFFFF','#F0F8FF'],['#228B22','#1A7A1A']],
+    mysore: [['#DAA520','#CAA510'],['#8B0000','#7B0000'],['#F5DEB3','#E5CE9F']],
+    kerala: [['#98FB98','#88EB88'],['#228B22','#1A7A1A'],['#40E0D0','#30D0C0']],
+  };
+
+  const colors = bgColors[loc.id] || bgColors.taj;
+
+  // Sky
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, H*0.55);
+  skyGrad.addColorStop(0, colors[0][0]);
+  skyGrad.addColorStop(1, colors[0][1]);
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, W, H*0.55);
+
+  // Middle ground
+  const midGrad = ctx.createLinearGradient(0, H*0.45, 0, H*0.75);
+  midGrad.addColorStop(0, colors[1][0]);
+  midGrad.addColorStop(1, colors[1][1]);
+  ctx.fillStyle = midGrad;
+  ctx.fillRect(0, H*0.45, W, H*0.35);
+
+  // Ground
+  const gndGrad = ctx.createLinearGradient(0, H*0.7, 0, H);
+  gndGrad.addColorStop(0, colors[2][0]);
+  gndGrad.addColorStop(1, colors[2][1]);
+  ctx.fillStyle = gndGrad;
+  ctx.fillRect(0, H*0.7, W, H*0.3);
+}
+
+function drawEnvironmentDetails(ctx, loc, W, H, style) {
+  // Draw location-specific elements
+  switch(loc.id) {
+    case 'taj':
+      drawTajMahal(ctx, W, H);
+      break;
+    case 'paris':
+      drawEiffelTower(ctx, W, H);
+      break;
+    case 'kashmir':
+      drawKashmirLake(ctx, W, H);
+      break;
+    case 'goa':
+      drawGoaBeach(ctx, W, H);
+      break;
+    case 'rajasthan':
+      drawRajasthanPalace(ctx, W, H);
+      break;
+    default:
+      drawGenericLandscape(ctx, loc, W, H);
+  }
+
+  // Flowers/decorations
+  drawFloralDecor(ctx, W, H, loc);
+}
+
+function drawTajMahal(ctx, W, H) {
+  // Main dome
+  ctx.fillStyle = '#F5F5F0';
+  ctx.beginPath();
+  ctx.ellipse(W/2, H*0.42, 80, 100, 0, Math.PI, 0);
+  ctx.fill();
+  // Minarets
+  for(let x of [W/2-160, W/2-80, W/2+80, W/2+160]) {
+    ctx.fillStyle = '#EEEEEA';
+    ctx.fillRect(x-8, H*0.28, 16, H*0.22);
+    ctx.beginPath();
+    ctx.arc(x, H*0.28, 8, Math.PI, 0);
+    ctx.fill();
+  }
+  // Platform
+  ctx.fillStyle = '#E8E8E0';
+  ctx.fillRect(W/2-200, H*0.52, 400, 20);
+  // Reflection in water
+  ctx.fillStyle = 'rgba(200,210,220,0.3)';
+  ctx.beginPath();
+  ctx.ellipse(W/2, H*0.7, 60, 30, 0, 0, Math.PI*2);
+  ctx.fill();
+  // Water
+  ctx.fillStyle = 'rgba(100,150,200,0.4)';
+  ctx.fillRect(0, H*0.68, W, H*0.12);
+  // Pathway
+  ctx.fillStyle = '#D2B48C';
+  ctx.fillRect(W/2-30, H*0.54, 60, H*0.16);
+  // Cypress trees
+  for(let x of [W/2-100, W/2-60, W/2+60, W/2+100]) {
+    ctx.fillStyle = '#2D5A1B';
+    ctx.beginPath();
+    ctx.moveTo(x, H*0.35);
+    ctx.lineTo(x-12, H*0.55);
+    ctx.lineTo(x+12, H*0.55);
+    ctx.closePath();
+    ctx.fill();
+  }
+}
+
+function drawEiffelTower(ctx, W, H) {
+  ctx.fillStyle = '#555544';
+  // Main structure
+  ctx.beginPath();
+  ctx.moveTo(W/2, H*0.12);
+  ctx.lineTo(W/2-60, H*0.55);
+  ctx.lineTo(W/2+60, H*0.55);
+  ctx.closePath();
+  ctx.fill();
+  // Levels
+  ctx.fillStyle = '#444433';
+  ctx.fillRect(W/2-40, H*0.28, 80, 8);
+  ctx.fillRect(W/2-50, H*0.38, 100, 8);
+  ctx.fillRect(W/2-60, H*0.48, 120, 8);
+  // Seine river
+  ctx.fillStyle = 'rgba(60,100,160,0.5)';
+  ctx.fillRect(0, H*0.72, W, H*0.08);
+  // Buildings/cityscape
+  for(let i=0; i<8; i++) {
+    const bx = i*W/7;
+    const bh = 30 + Math.random()*60;
+    ctx.fillStyle = `rgba(80,80,100,${0.5+Math.random()*0.3})`;
+    ctx.fillRect(bx, H*0.6-bh, W/8, bh);
+  }
+  // Fairy lights effect
+  for(let i=0; i<20; i++) {
+    ctx.beginPath();
+    ctx.arc(W/2-50+i*5, H*0.12+i*4, 1.5, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,220,100,0.8)';
+    ctx.fill();
+  }
+}
+
+function drawKashmirLake(ctx, W, H) {
+  // Mountains
+  for(let i=0; i<5; i++) {
+    const mx = i*W/4 - W/8;
+    const mh = H*0.15 + Math.random()*H*0.1;
+    ctx.fillStyle = `rgba(100,140,${160+i*10},${0.6+i*0.1})`;
+    ctx.beginPath();
+    ctx.moveTo(mx, H*0.55);
+    ctx.lineTo(mx + W/4, H*0.55-mh);
+    ctx.lineTo(mx + W/2, H*0.55);
+    ctx.fill();
+    // Snow caps
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.beginPath();
+    ctx.moveTo(mx + W/4, H*0.55-mh);
+    ctx.lineTo(mx + W/4-20, H*0.55-mh+30);
+    ctx.lineTo(mx + W/4+20, H*0.55-mh+30);
+    ctx.fill();
+  }
+  // Dal Lake
+  ctx.fillStyle = 'rgba(60,140,180,0.6)';
+  ctx.fillRect(0, H*0.62, W, H*0.18);
+  // Houseboats
+  for(let x of [W*0.2, W*0.65]) {
+    ctx.fillStyle = '#8B4513';
+    ctx.fillRect(x, H*0.65, 80, 20);
+    ctx.fillStyle = '#A0522D';
+    ctx.beginPath();
+    ctx.moveTo(x, H*0.65);
+    ctx.lineTo(x+40, H*0.6);
+    ctx.lineTo(x+80, H*0.65);
+    ctx.fill();
+  }
+  // Lotus flowers
+  for(let i=0; i<5; i++) {
+    const fx = W*0.1 + i*W*0.2;
+    ctx.beginPath();
+    ctx.arc(fx, H*0.74, 6, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,182,193,0.8)';
+    ctx.fill();
+  }
+}
+
+function drawGoaBeach(ctx, W, H) {
+  // Ocean
+  ctx.fillStyle = 'rgba(30,100,200,0.7)';
+  ctx.fillRect(0, H*0.4, W, H*0.35);
+  // Waves
+  for(let i=0; i<4; i++) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(0, H*(0.45+i*0.04));
+    for(let x=0; x<W; x+=40) {
+      ctx.quadraticCurveTo(x+20, H*(0.43+i*0.04), x+40, H*(0.45+i*0.04));
+    }
+    ctx.stroke();
+  }
+  // Sandy beach
+  ctx.fillStyle = '#F5DEB3';
+  ctx.fillRect(0, H*0.72, W, H*0.28);
+  // Palm trees
+  for(let x of [W*0.1, W*0.85, W*0.3, W*0.7]) {
+    ctx.strokeStyle = '#8B6914';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(x, H*0.78);
+    ctx.quadraticCurveTo(x+20, H*0.55, x-10, H*0.38);
+    ctx.stroke();
+    // Leaves
+    for(let a=-0.5; a<1.5; a+=0.4) {
+      ctx.strokeStyle = '#228B22';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x-10, H*0.38);
+      ctx.lineTo(x-10+Math.cos(a)*60, H*0.38+Math.sin(a)*40);
+      ctx.stroke();
+    }
+  }
+  // Sunset glow
+  const sunGrad = ctx.createRadialGradient(W*0.7, H*0.2, 0, W*0.7, H*0.2, 200);
+  sunGrad.addColorStop(0, 'rgba(255,200,50,0.4)');
+  sunGrad.addColorStop(1, 'transparent');
+  ctx.fillStyle = sunGrad;
+  ctx.fillRect(0, 0, W, H*0.7);
+}
+
+function drawRajasthanPalace(ctx, W, H) {
+  // Palace structure
+  ctx.fillStyle = '#DEB887';
+  ctx.fillRect(W*0.2, H*0.2, W*0.6, H*0.35);
+  // Domes
+  for(let x of [W*0.3, W*0.5, W*0.7]) {
+    ctx.fillStyle = '#D4A876';
+    ctx.beginPath();
+    ctx.ellipse(x, H*0.22, 30, 40, 0, Math.PI, 0);
+    ctx.fill();
+  }
+  // Arches
+  for(let i=0; i<5; i++) {
+    const ax = W*0.25 + i*W*0.12;
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.beginPath();
+    ctx.ellipse(ax, H*0.42, 18, 25, 0, Math.PI, 0);
+    ctx.fill();
+  }
+  // Battlements
+  for(let i=0; i<12; i++) {
+    ctx.fillStyle = '#C9A878';
+    ctx.fillRect(W*0.2+i*W*0.05, H*0.2-12, 20, 12);
+  }
+  // Sand dunes
+  for(let i=0; i<3; i++) {
+    ctx.fillStyle = `rgba(200,170,100,${0.4+i*0.2})`;
+    ctx.beginPath();
+    ctx.ellipse(W*(0.2+i*0.3), H*0.78, W*0.25, H*0.06, 0, Math.PI, 0);
+    ctx.fill();
+  }
+}
+
+function drawGenericLandscape(ctx, loc, W, H) {
+  // Generic beautiful landscape
+  // Trees
+  for(let i=0; i<6; i++) {
+    const tx = W*0.05 + i*(W*0.18);
+    ctx.fillStyle = `rgba(34,100,34,${0.5+Math.random()*0.3})`;
+    ctx.beginPath();
+    ctx.arc(tx, H*0.52, 25+Math.random()*20, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#4A3728';
+    ctx.fillRect(tx-5, H*0.52, 10, H*0.1);
+  }
+  // Pathway
+  ctx.fillStyle = 'rgba(200,180,140,0.6)';
+  ctx.beginPath();
+  ctx.moveTo(W*0.4, H);
+  ctx.lineTo(W*0.6, H);
+  ctx.lineTo(W*0.52, H*0.55);
+  ctx.lineTo(W*0.48, H*0.55);
+  ctx.fill();
+  // Flowers
+  for(let i=0; i<20; i++) {
+    const fx = Math.random()*W;
+    const fy = H*0.58 + Math.random()*H*0.15;
+    ctx.beginPath();
+    ctx.arc(fx, fy, 4, 0, Math.PI*2);
+    ctx.fillStyle = `hsl(${Math.random()*60+300},80%,70%)`;
+    ctx.fill();
+  }
+}
+
+function drawFloralDecor(ctx, W, H, loc) {
+  // Add flowers in foreground
+  const flowerColors = ['#FFB6C1','#FF69B4','#FFD700','#FF8C00','#DA70D6'];
+  for(let i=0; i<8; i++) {
+    const x = i < 4 ? W*0.02 + i*W*0.06 : W*0.7 + (i-4)*W*0.07;
+    const y = H*0.82 + Math.random()*H*0.06;
+    const color = flowerColors[i % flowerColors.length];
+    drawSimpleFlower(ctx, x, y, 12+Math.random()*8, color);
+  }
+
+  // Vine/leaf overlay at bottom
+  ctx.strokeStyle = 'rgba(34,100,34,0.4)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  for(let x=0; x<W; x+=30) {
+    ctx.quadraticCurveTo(x+15, H*0.92+Math.sin(x*0.05)*10, x+30, H*0.9+Math.random()*10);
+  }
+  ctx.stroke();
+}
+
+function drawSimpleFlower(ctx, x, y, r, color) {
+  for(let i=0; i<5; i++) {
+    const a = i*Math.PI*2/5;
+    ctx.beginPath();
+    ctx.ellipse(x+Math.cos(a)*r*0.6, y+Math.sin(a)*r*0.6, r*0.5, r*0.3, a, 0, Math.PI*2);
+    ctx.fillStyle = color + 'AA';
+    ctx.fill();
+  }
+  ctx.beginPath();
+  ctx.arc(x, y, r*0.3, 0, Math.PI*2);
+  ctx.fillStyle = '#FFD700';
+  ctx.fill();
+}
+
+async function placeCoupleInScene(ctx, loc, W, H) {
+  const coupleX = W/2;
+  const coupleY = H*0.72;
+
+  // Draw couple silhouette/avatar
+  if (brideImg || groomImg) {
+    // Draw a beautiful couple composition
+    const pairW = 180, pairH = 240;
+    const px = coupleX - pairW/2;
+    const py = coupleY - pairH;
+
+    // Shadow
+    const shadowGrad = ctx.createRadialGradient(coupleX, coupleY+10, 0, coupleX, coupleY+10, 100);
+    shadowGrad.addColorStop(0, 'rgba(0,0,0,0.3)');
+    shadowGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = shadowGrad;
+    ctx.ellipse(coupleX, coupleY+10, 80, 20, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    // Draw groom silhouette
+    if (groomImg) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(coupleX-30, py+50, 45, 45, 0, 0, Math.PI*2);
+      ctx.clip();
+      const gScale = Math.max(90/groomImg.width, 90/groomImg.height);
+      ctx.drawImage(groomImg, coupleX-30-groomImg.width*gScale/2, py+5, groomImg.width*gScale, groomImg.height*gScale);
+      ctx.restore();
+    } else {
+      drawPersonSilhouette(ctx, coupleX-35, py, 80, 230, '#4A3A2A', 'groom');
+    }
+
+    // Draw bride silhouette
+    if (brideImg) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(coupleX+30, py+50, 45, 45, 0, 0, Math.PI*2);
+      ctx.clip();
+      const bScale = Math.max(90/brideImg.width, 90/brideImg.height);
+      ctx.drawImage(brideImg, coupleX+30-brideImg.width*bScale/2, py+5, brideImg.width*bScale, brideImg.height*bScale);
+      ctx.restore();
+    } else {
+      drawPersonSilhouette(ctx, coupleX+35-80, py, 80, 230, '#8B4A6B', 'bride');
+    }
+
+    // Add glow around couple
+    const coupleGlow = ctx.createRadialGradient(coupleX, coupleY-60, 20, coupleX, coupleY-60, 120);
+    coupleGlow.addColorStop(0, 'rgba(255,220,180,0.12)');
+    coupleGlow.addColorStop(1, 'transparent');
+    ctx.fillStyle = coupleGlow;
+    ctx.fillRect(coupleX-130, py-20, 260, 280);
+  }
+}
+
+function drawPersonSilhouette(ctx, x, y, w, h, color, gender) {
+  ctx.fillStyle = color;
+  // Head
+  ctx.beginPath();
+  ctx.arc(x+w/2, y+w*0.25, w*0.2, 0, Math.PI*2);
+  ctx.fill();
+  // Body
+  if (gender === 'bride') {
+    ctx.beginPath();
+    ctx.moveTo(x+w*0.3, y+w*0.45);
+    ctx.lineTo(x+w*0.7, y+w*0.45);
+    ctx.lineTo(x+w*0.85, y+h);
+    ctx.lineTo(x+w*0.15, y+h);
+    ctx.fill();
+  } else {
+    ctx.fillRect(x+w*0.25, y+w*0.45, w*0.5, h*0.55);
+  }
+}
+
+function applyStyleEffects(ctx, W, H, style, loc) {
+  // Apply color grading overlay
+  const styleOverlays = {
+    romantic: 'rgba(255,182,193,0.08)',
+    cinematic: 'rgba(0,0,50,0.1)',
+    dreamy: 'rgba(230,230,255,0.1)',
+    traditional: 'rgba(200,150,50,0.08)',
+    modern: 'rgba(0,0,0,0.05)',
+    vintage: 'rgba(200,180,100,0.12)',
+  };
+
+  ctx.fillStyle = styleOverlays[style] || 'transparent';
+  ctx.fillRect(0, 0, W, H);
+
+  // Vignette
+  const vig = ctx.createRadialGradient(W/2, H/2, H*0.3, W/2, H/2, H*0.8);
+  vig.addColorStop(0, 'transparent');
+  vig.addColorStop(1, 'rgba(0,0,0,0.35)');
+  ctx.fillStyle = vig;
+  ctx.fillRect(0, 0, W, H);
+
+  // Light flare for dreamy/romantic
+  if (style === 'dreamy' || style === 'romantic') {
+    const flare = ctx.createRadialGradient(W*0.8, H*0.15, 0, W*0.8, H*0.15, 200);
+    flare.addColorStop(0, 'rgba(255,255,220,0.3)');
+    flare.addColorStop(0.3, 'rgba(255,220,180,0.1)');
+    flare.addColorStop(1, 'transparent');
+    ctx.fillStyle = flare;
+    ctx.fillRect(0, 0, W, H);
+  }
+}
+
+function addTextOverlays(ctx, loc, W, H, style) {
+  // Location text top
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.font = `300 11px Montserrat, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.letterSpacing = '0.3em';
+  ctx.fillText(loc.place.toUpperCase(), W/2, 36);
+
+  // Location name
+  ctx.fillStyle = 'white';
+  ctx.font = `900 36px Playfair Display, serif`;
+  ctx.shadowColor = 'rgba(0,0,0,0.5)';
+  ctx.shadowBlur = 8;
+  ctx.fillText(loc.name, W/2, 74);
+  ctx.shadowBlur = 0;
+
+  // Decorative line
+  const lineGrad = ctx.createLinearGradient(W/2-100, 85, W/2+100, 85);
+  lineGrad.addColorStop(0, 'transparent');
+  lineGrad.addColorStop(0.5, 'rgba(232,200,122,0.8)');
+  lineGrad.addColorStop(1, 'transparent');
+  ctx.strokeStyle = lineGrad;
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(W/2-100, 85); ctx.lineTo(W/2+100, 85); ctx.stroke();
+
+  // Bottom: Style & branding
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.font = `300 10px Montserrat, sans-serif`;
+  ctx.fillText(`AI Pre-Wedding · ${style.charAt(0).toUpperCase()+style.slice(1)} Style`, W/2, H-30);
+  ctx.fillStyle = 'rgba(232,200,122,0.5)';
+  ctx.font = `600 10px Montserrat, sans-serif`;
+  ctx.fillText('PhotoFind Pro · www.templecity.digital', W/2, H-14);
+  ctx.letterSpacing = '0';
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function showProcessing() {
+  document.getElementById('processing').style.display = 'flex';
+  let prog = 0;
+  processingTimer = setInterval(() => {
+    prog = Math.min(prog + 1, 95);
+    document.getElementById('procFill').style.width = prog + '%';
+  }, 100);
+}
+
+function updateProc(pct, title, sub) {
+  document.getElementById('procFill').style.width = pct + '%';
+  document.querySelector('#processing .proc-title').textContent = title;
+  document.getElementById('procSub').textContent = sub;
+}
+
+function hideProcessing() {
+  clearInterval(processingTimer);
+  document.getElementById('processing').style.display = 'none';
+}
+
+function showResult(dataURL, loc) {
+  const container = document.getElementById('resultContainer');
+  container.innerHTML = `<img src="${dataURL}" style="width:100%;display:block" alt="AI Pre-Wedding Photo">`;
+  document.getElementById('resultStatus').textContent = '✅ Ready!';
+  document.getElementById('resultActions').style.display = 'block';
+  showToast('✨ AI Pre-Wedding photo generated!');
+}
+
+function downloadResult() {
+  if (!resultDataURL) return;
+  const loc = LOCATIONS.find(l => l.id === selectedLocation);
+  const a = document.createElement('a');
+  a.download = `PreWedding-${loc?.name||'Photo'}-PhotoFindPro.jpg`;
+  a.href = resultDataURL;
+  a.click();
+  showToast('✅ Downloaded!');
+}
+
+function shareResult() {
+  const loc = LOCATIONS.find(l => l.id === selectedLocation);
+  const msg = `✨ *AI Pre-Wedding Photo!*\n\nLook at our stunning pre-wedding photo at ${loc?.name}!\n\nGenerated with PhotoFind Pro AI 🤖\n🌐 www.templecity.digital`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+function generateMore() {
+  generatePreWedding();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+buildLocations();
+buildStyles();
+</script>
+</body>
+</html>
