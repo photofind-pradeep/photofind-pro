@@ -1098,7 +1098,135 @@ app.get('/events', async (req, res) => {
   }
 });
 
-// ── Index All Faces for Event (Pre-indexing) ──
+// ── AI Photo Beautification ──
+app.post('/beautify', upload.single('photo'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, error: 'No photo provided' });
+
+    const { style = 'wedding', driveFileId } = req.body;
+    let photoBuffer = req.file.buffer;
+
+    console.log(`✨ Beautifying photo... style: ${style}`);
+
+    // Enhanced beautification transforms
+    const styleTransforms = {
+      wedding: [
+        { effect: 'improve:70' },
+        { effect: 'sharpen:60' },
+        { effect: 'saturation:15' },
+        { effect: 'brightness:8' },
+        { effect: 'contrast:10' },
+        { quality: 'auto:best' },
+        { fetch_format: 'jpg' },
+      ],
+      glamour: [
+        { effect: 'improve:80' },
+        { effect: 'sharpen:70' },
+        { effect: 'saturation:25' },
+        { effect: 'brightness:12' },
+        { effect: 'contrast:15' },
+        { effect: 'vibrance:20' },
+        { quality: 'auto:best' },
+        { fetch_format: 'jpg' },
+      ],
+      cinematic: [
+        { effect: 'improve:60' },
+        { effect: 'sharpen:50' },
+        { effect: 'saturation:-10' },
+        { effect: 'contrast:20' },
+        { effect: 'brightness:5' },
+        { color_space: 'srgb' },
+        { quality: 'auto:best' },
+        { fetch_format: 'jpg' },
+      ],
+      vibrant: [
+        { effect: 'improve:75' },
+        { effect: 'vibrance:40' },
+        { effect: 'saturation:30' },
+        { effect: 'sharpen:50' },
+        { quality: 'auto:best' },
+        { fetch_format: 'jpg' },
+      ],
+      soft: [
+        { effect: 'improve:60' },
+        { effect: 'brightness:15' },
+        { effect: 'saturation:10' },
+        { effect: 'contrast:5' },
+        { quality: 'auto:best' },
+        { fetch_format: 'jpg' },
+      ],
+    };
+
+    const transforms = styleTransforms[style] || styleTransforms.wedding;
+
+    // Upload original to Cloudinary
+    const uploadResult = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: 'photofind-beautify', resource_type: 'image' },
+        (err, result) => err ? reject(err) : resolve(result)
+      );
+      stream.end(photoBuffer);
+    });
+
+    // Apply transforms
+    const beautifiedUrl = cloudinary.url(uploadResult.public_id, { transformation: transforms });
+
+    // Get original URL too
+    const originalUrl = cloudinary.url(uploadResult.public_id, { transformation: [{ quality: 'auto', fetch_format: 'jpg' }] });
+
+    // Cleanup after 1 hour
+    setTimeout(() => {
+      cloudinary.uploader.destroy(uploadResult.public_id).catch(() => {});
+    }, 3600000);
+
+    console.log(`✅ Beautification complete!`);
+    res.json({
+      success: true,
+      originalUrl,
+      beautifiedUrl,
+      publicId: uploadResult.public_id,
+    });
+
+  } catch(err) {
+    console.error('❌ Beautify error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── Beautify from Drive URL ──
+app.post('/beautify-url', async (req, res) => {
+  try {
+    const { driveUrl, style = 'wedding' } = req.body;
+    if (!driveUrl) return res.status(400).json({ success: false, error: 'No URL provided' });
+
+    const styleTransforms = {
+      wedding: [{ effect: 'improve:70' },{ effect: 'sharpen:60' },{ effect: 'saturation:15' },{ effect: 'brightness:8' },{ quality: 'auto:best' },{ fetch_format: 'jpg' }],
+      glamour: [{ effect: 'improve:80' },{ effect: 'sharpen:70' },{ effect: 'saturation:25' },{ effect: 'brightness:12' },{ effect: 'vibrance:20' },{ quality: 'auto:best' },{ fetch_format: 'jpg' }],
+      cinematic: [{ effect: 'improve:60' },{ effect: 'saturation:-10' },{ effect: 'contrast:20' },{ quality: 'auto:best' },{ fetch_format: 'jpg' }],
+      vibrant: [{ effect: 'improve:75' },{ effect: 'vibrance:40' },{ effect: 'saturation:30' },{ quality: 'auto:best' },{ fetch_format: 'jpg' }],
+      soft: [{ effect: 'improve:60' },{ effect: 'brightness:15' },{ effect: 'saturation:10' },{ quality: 'auto:best' },{ fetch_format: 'jpg' }],
+    };
+
+    const transforms = styleTransforms[style] || styleTransforms.wedding;
+
+    // Upload from URL to Cloudinary
+    const uploadResult = await cloudinary.uploader.upload(driveUrl, {
+      folder: 'photofind-beautify',
+      resource_type: 'image',
+    });
+
+    const beautifiedUrl = cloudinary.url(uploadResult.public_id, { transformation: transforms });
+    const originalUrl = cloudinary.url(uploadResult.public_id, { transformation: [{ quality: 'auto', fetch_format: 'jpg' }] });
+
+    setTimeout(() => cloudinary.uploader.destroy(uploadResult.public_id).catch(() => {}), 3600000);
+
+    res.json({ success: true, originalUrl, beautifiedUrl, publicId: uploadResult.public_id });
+
+  } catch(err) {
+    console.error('❌ Beautify-URL error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 app.post('/index-faces/:eventId', async (req, res) => {
   try {
     const { eventId } = req.params;

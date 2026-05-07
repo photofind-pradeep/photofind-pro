@@ -135,9 +135,82 @@ body::before{content:'';position:fixed;top:-100px;left:50%;transform:translateX(
 .ph-cell{aspect-ratio:1;position:relative;cursor:pointer;overflow:hidden;background:var(--s2)}
 .ph-cell img{width:100%;height:100%;object-fit:cover;transition:transform 0.3s}
 .ph-cell:hover img{transform:scale(1.08)}
+.beautify-btn{position:absolute;top:4px;right:4px;background:rgba(155,137,212,0.92);border-radius:5px;padding:2px 6px;font-size:9px;color:white;cursor:pointer;font-weight:700;letter-spacing:0.05em;z-index:2;transition:all 0.15s}
+.beautify-btn:active{transform:scale(0.9)}
+.beauty-style-btn{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:8px 4px;text-align:center;cursor:pointer;transition:all 0.15s;color:white}
+.beauty-style-btn.selected{border-color:#9B89D4;background:rgba(155,137,212,0.15);color:#9B89D4}
+.beauty-style-btn:active{transform:scale(0.95)}
 .size-opt{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;cursor:pointer;transition:all 0.2s}
 .size-opt.selected{border-color:var(--gold);background:rgba(212,175,114,0.15);box-shadow:0 0 0 1px var(--gold)}
 .size-opt:hover{border-color:var(--border2)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+// ── BEAUTIFY ──
+let beautyPhotoUrl = '';
+let beautyThumbnailUrl = '';
+let beautyStyle = 'wedding';
+
+function openBeautify(viewLink, thumbnailLink) {
+  beautyPhotoUrl = viewLink;
+  beautyThumbnailUrl = thumbnailLink;
+  document.getElementById('beautyOrigImg').src = thumbnailLink;
+  document.getElementById('beautyResultImg').src = '';
+  document.getElementById('beautyResultImg').style.display = 'none';
+  document.getElementById('beautyPlaceholder').style.display = 'flex';
+  document.getElementById('beautyDownloadBtn').style.display = 'none';
+  document.getElementById('beautyLoading').style.display = 'none';
+  document.getElementById('beautyBtn').textContent = '✨ Beautify Now';
+  document.getElementById('beautyBtn').disabled = false;
+  document.getElementById('beautifyModal').style.display = 'flex';
+}
+
+function selectBeautyStyle(el, style) {
+  beautyStyle = style;
+  document.querySelectorAll('.beauty-style-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+async function runBeautify() {
+  const btn = document.getElementById('beautyBtn');
+  btn.textContent = '⏳ Processing...';
+  btn.disabled = true;
+  document.getElementById('beautyLoading').style.display = 'flex';
+  document.getElementById('beautyPlaceholder').style.display = 'none';
+
+  try {
+    const res = await fetch(`${SERVER}/beautify-url`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ driveUrl: beautyThumbnailUrl, style: beautyStyle }),
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById('beautyResultImg').src = data.beautifiedUrl;
+      document.getElementById('beautyResultImg').style.display = 'block';
+      document.getElementById('beautyLoading').style.display = 'none';
+      document.getElementById('beautyDownloadBtn').href = data.beautifiedUrl;
+      document.getElementById('beautyDownloadBtn').style.display = 'block';
+      btn.textContent = '✅ Done! Try Another Style';
+      btn.disabled = false;
+      toast('✨ Photo beautified!');
+    } else {
+      throw new Error(data.error);
+    }
+  } catch(e) {
+    document.getElementById('beautyLoading').style.display = 'none';
+    document.getElementById('beautyPlaceholder').style.display = 'flex';
+    btn.textContent = '✨ Beautify Now';
+    btn.disabled = false;
+    toast('❌ Beautify failed. Try again!');
+  }
+}
+
+function closeBeautifyModal(e) {
+  if (!e || e.target === document.getElementById('beautifyModal')) {
+    document.getElementById('beautifyModal').style.display = 'none';
+  }
+}
 .ph-ov{position:absolute;inset:0;background:rgba(8,6,8,0);transition:background 0.2s;display:flex;align-items:center;justify-content:center}
 .ph-cell:hover .ph-ov{background:rgba(8,6,8,0.4)}
 .ph-open{opacity:0;font-size:20px;transition:opacity 0.2s}
@@ -449,6 +522,76 @@ body::before{content:'';position:fixed;top:-100px;left:50%;transform:translateX(
   </div>
 </div>
 
+<!-- BEAUTIFY MODAL -->
+<div class="modal-overlay" id="beautifyModal" onclick="closeBeautifyModal(event)" style="display:none">
+  <div class="modal" style="max-height:92vh;overflow-y:auto">
+    <div style="text-align:center;margin-bottom:14px">
+      <div style="font-size:32px;margin-bottom:6px">✨</div>
+      <div class="modal-title">AI Photo Beautification</div>
+      <div class="modal-sub">Enhance your photo with AI magic!</div>
+    </div>
+
+    <!-- Style selector -->
+    <div style="font-size:10px;color:var(--gold);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:10px;font-weight:700">✦ Choose Style</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:16px" id="beautyStyles">
+      <div class="beauty-style-btn selected" onclick="selectBeautyStyle(this,'wedding')" data-style="wedding">
+        <div style="font-size:16px">💒</div>
+        <div style="font-size:8px;margin-top:2px">Wedding</div>
+      </div>
+      <div class="beauty-style-btn" onclick="selectBeautyStyle(this,'glamour')" data-style="glamour">
+        <div style="font-size:16px">💫</div>
+        <div style="font-size:8px;margin-top:2px">Glamour</div>
+      </div>
+      <div class="beauty-style-btn" onclick="selectBeautyStyle(this,'cinematic')" data-style="cinematic">
+        <div style="font-size:16px">🎬</div>
+        <div style="font-size:8px;margin-top:2px">Cinematic</div>
+      </div>
+      <div class="beauty-style-btn" onclick="selectBeautyStyle(this,'vibrant')" data-style="vibrant">
+        <div style="font-size:16px">🌈</div>
+        <div style="font-size:8px;margin-top:2px">Vibrant</div>
+      </div>
+      <div class="beauty-style-btn" onclick="selectBeautyStyle(this,'soft')" data-style="soft">
+        <div style="font-size:16px">🌸</div>
+        <div style="font-size:8px;margin-top:2px">Soft</div>
+      </div>
+    </div>
+
+    <!-- Before/After comparison -->
+    <div style="font-size:10px;color:var(--gold);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:8px;font-weight:700">✦ Before / After</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+      <div>
+        <div style="font-size:9px;color:var(--muted2);text-align:center;margin-bottom:4px;letter-spacing:0.1em">ORIGINAL</div>
+        <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;border:0.5px solid var(--border)">
+          <img id="beautyOrigImg" src="" style="width:100%;height:100%;object-fit:cover">
+        </div>
+      </div>
+      <div>
+        <div style="font-size:9px;color:var(--gold);text-align:center;margin-bottom:4px;letter-spacing:0.1em">✨ BEAUTIFIED</div>
+        <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;border:0.5px solid rgba(155,137,212,0.4);position:relative">
+          <img id="beautyResultImg" src="" style="width:100%;height:100%;object-fit:cover;display:none">
+          <div id="beautyPlaceholder" style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(155,137,212,0.08)">
+            <div style="font-size:24px;opacity:0.4">✨</div>
+            <div style="font-size:10px;color:var(--muted2)">Click Beautify</div>
+          </div>
+          <div id="beautyLoading" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;flex-direction:column;gap:8px">
+            <div style="width:28px;height:28px;border:2px solid rgba(155,137,212,0.3);border-top-color:#9B89D4;border-radius:50%;animation:spin 1s linear infinite"></div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.5)">AI Processing...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <button onclick="runBeautify()" id="beautyBtn" style="width:100%;padding:13px;background:linear-gradient(135deg,#6B4DA4,#9B89D4);border:none;border-radius:10px;color:white;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px;letter-spacing:0.05em">
+      ✨ Beautify Now
+    </button>
+    <div style="display:flex;gap:8px">
+      <a id="beautyDownloadBtn" href="#" target="_blank" style="flex:1;padding:11px;background:rgba(232,200,122,0.1);border:0.5px solid rgba(232,200,122,0.25);border-radius:9px;color:var(--gold);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;text-align:center;text-decoration:none;display:none">⬇ Download</a>
+      <button onclick="closeBeautifyModal()" style="flex:1;padding:11px;background:var(--s2);border:0.5px solid var(--border2);border-radius:9px;color:var(--muted2);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toastEl"></div>
 
 <script>
@@ -679,7 +822,8 @@ function showResults(data) {
         cell.innerHTML = `
           <img src="${photo.thumbnailLink}" alt="${photo.name}" loading="lazy" onerror="this.style.display='none'">
           <div class="ph-ov"><span class="ph-open">🔍</span></div>
-          ${photo.aiEdited ? '<div style="position:absolute;bottom:2px;right:2px;background:rgba(212,175,114,0.9);border-radius:4px;padding:1px 4px;font-size:8px;color:#000">AI✨</div>' : ''}`;
+          ${photo.aiEdited ? '<div style="position:absolute;bottom:2px;right:2px;background:rgba(212,175,114,0.9);border-radius:4px;padding:1px 4px;font-size:8px;color:#000">AI✨</div>' : ''}
+          <div class="beautify-btn" onclick="event.stopPropagation();openBeautify('${photo.viewLink}','${photo.thumbnailLink}')">✨</div>`;
         cell.onclick = () => window.open(photo.viewLink, '_blank');
         grid.appendChild(cell);
       });
