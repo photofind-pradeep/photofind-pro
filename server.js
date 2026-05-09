@@ -1272,6 +1272,60 @@ app.post('/generate-highlight/:eventId', async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+// ── Wedding Website Routes ──
+const weddingWebsites = {};
+const rsvpData = {};
+
+app.post('/create-wedding-website', async (req, res) => {
+  try {
+    const data = req.body;
+    if (!data.bride || !data.groom) return res.status(400).json({ success: false, error: 'Missing required fields' });
+    const siteId = `${data.bride.toLowerCase().replace(/[^a-z0-9]/g,'-')}-${data.groom.toLowerCase().replace(/[^a-z0-9]/g,'-')}-${Date.now().toString(36)}`;
+    weddingWebsites[siteId] = { ...data, createdAt: new Date().toISOString(), siteId };
+    rsvpData[siteId] = [];
+    console.log(`💒 Wedding website created: ${siteId}`);
+    res.json({ success: true, siteId, url: `https://www.templecity.digital/wedding-website.html?id=${siteId}` });
+  } catch(err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/wedding-website/:siteId', (req, res) => {
+  const data = weddingWebsites[req.params.siteId];
+  if (!data) return res.status(404).json({ success: false, error: 'Website not found' });
+  res.json({ success: true, data });
+});
+
+app.post('/submit-rsvp', async (req, res) => {
+  try {
+    const { siteId, name, phone, attending, persons, meal, message } = req.body;
+    if (!rsvpData[siteId]) rsvpData[siteId] = [];
+    rsvpData[siteId].push({ name, phone, attending, persons: parseInt(persons)||1, meal, message, submittedAt: new Date().toISOString() });
+    console.log(`💌 RSVP for ${siteId}: ${name} — ${attending} (${persons} persons)`);
+    res.json({ success: true });
+  } catch(err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/rsvp-stats/:siteId', (req, res) => {
+  try {
+    const rsvps = rsvpData[req.params.siteId] || [];
+    const attending = rsvps.filter(r => r.attending === 'yes');
+    const persons = attending.reduce((sum, r) => sum + (parseInt(r.persons)||1), 0);
+    const veg = attending.filter(r => r.meal === 'veg').length;
+    const nonveg = attending.filter(r => r.meal === 'nonveg').length;
+    res.json({ success: true, total: attending.length, persons, veg, nonveg, all: rsvps });
+  } catch(err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.get('/rsvp-list/:siteId', (req, res) => {
+  const rsvps = rsvpData[req.params.siteId] || [];
+  res.json({ success: true, rsvps, total: rsvps.length });
+});
+
 app.post('/beautify', upload.single('photo'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, error: 'No photo provided' });

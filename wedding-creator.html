@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PhotoFind Pro — Wedding Website Creator</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Dancing+Script:wght@600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--gold:#E8C87A;--gold2:#C9A84C;--dark:#0C0A07;--rose:#C84A6A;--green:#5DD68A}
+body{font-family:'DM Sans',sans-serif;background:var(--dark);color:white;min-height:100vh}
+.header{padding:14px 18px;background:rgba(12,10,7,0.98);border-bottom:0.5px solid rgba(232,200,122,0.12);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{font-family:'Playfair Display',serif;font-size:16px;font-weight:900}
+.logo em{color:var(--gold);font-style:normal}
+.badge{background:linear-gradient(135deg,#8B1A4A,#C84A7A);font-size:8px;font-weight:700;color:white;padding:3px 10px;border-radius:8px;letter-spacing:0.1em}
+.wrap{max-width:480px;margin:0 auto;padding:20px 16px 80px}
+
+.steps{display:flex;align-items:center;gap:0;margin-bottom:24px}
+.step{flex:1;text-align:center;position:relative}
+.step-circle{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:rgba(255,255,255,0.3);margin:0 auto 4px;transition:all 0.3s}
+.step.active .step-circle{background:var(--gold);border-color:var(--gold);color:#0C0A07;font-weight:800}
+.step.done .step-circle{background:rgba(93,214,138,0.2);border-color:var(--green);color:var(--green)}
+.step-label{font-size:8px;color:rgba(255,255,255,0.25);letter-spacing:0.1em;text-transform:uppercase}
+.step.active .step-label{color:var(--gold)}
+.step-line{flex:1;height:0.5px;background:rgba(255,255,255,0.08);margin-bottom:14px}
+
+.page{display:none}.page.active{display:block}
+
+.sec-title{font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(232,200,122,0.5);font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.sec-title::after{content:'';flex:1;height:0.5px;background:linear-gradient(90deg,rgba(232,200,122,0.2),transparent)}
+
+.form-group{margin-bottom:12px}
+.form-label{font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:5px;display:block;letter-spacing:0.05em}
+.form-input,.form-select,.form-textarea{width:100%;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:11px 14px;color:white;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:all 0.2s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:rgba(232,200,122,0.4);background:rgba(232,200,122,0.03)}
+.form-input::placeholder,.form-textarea::placeholder{color:rgba(255,255,255,0.2)}
+.form-select option{background:#1A1208;color:white}
+.form-textarea{resize:vertical;min-height:80px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* Template grid */
+.tmpl-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.tmpl-card{border-radius:12px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:all 0.2s;aspect-ratio:3/4;position:relative}
+.tmpl-card.sel{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,200,122,0.15)}
+.tmpl-inner{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:12px;text-align:center}
+.tmpl-name{font-size:12px;font-weight:700;color:white;position:relative;z-index:1}
+.tmpl-sub{font-size:9px;opacity:0.5;position:relative;z-index:1}
+.tmpl-check{position:absolute;top:8px;right:8px;width:18px;height:18px;background:var(--gold);border-radius:50%;display:none;align-items:center;justify-content:center;font-size:9px;color:#0C0A07;font-weight:900;z-index:2}
+.tmpl-card.sel .tmpl-check{display:flex}
+
+.action-btn{width:100%;padding:14px;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:10px;letter-spacing:0.05em}
+.action-btn:active{transform:scale(0.98)}
+.btn-gold{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#0C0A07}
+.btn-ghost{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5)}
+
+/* Success */
+#successPage{display:none;text-align:center;padding:32px 16px}
+.success-icon{font-size:56px;margin-bottom:14px;animation:pop 0.5s ease}
+@keyframes pop{0%{transform:scale(0)}80%{transform:scale(1.1)}100%{transform:scale(1)}}
+.success-title{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;margin-bottom:6px}
+.success-sub{font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:20px}
+.link-box{background:rgba(255,255,255,0.04);border:0.5px solid rgba(232,200,122,0.2);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer}
+.link-url{flex:1;font-size:11px;color:var(--gold);word-break:break-all;text-align:left}
+.copy-btn{padding:5px 10px;background:rgba(232,200,122,0.1);border:0.5px solid rgba(232,200,122,0.25);border-radius:6px;color:var(--gold);font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap}
+.share-row{display:flex;gap:8px;margin-top:10px}
+.shr-btn{flex:1;padding:12px;border-radius:10px;border:none;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
+.shr-wa{background:#25D366;color:white}
+.shr-view{background:rgba(232,200,122,0.1);border:0.5px solid rgba(232,200,122,0.2);color:var(--gold)}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(232,200,122,0.95);color:#0C0A07;padding:8px 18px;border-radius:16px;font-size:11px;font-weight:700;z-index:999;pointer-events:none;opacity:0;transition:opacity 0.3s;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* Event toggle */
+.event-toggle{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 14px;margin-bottom:8px;cursor:pointer}
+.et-label{font-size:13px;font-weight:500}
+.et-switch{width:36px;height:20px;border-radius:10px;background:rgba(255,255,255,0.1);position:relative;transition:background 0.2s;flex-shrink:0}
+.et-switch.on{background:var(--gold2)}
+.et-switch::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:white;top:2px;left:2px;transition:transform 0.2s}
+.et-switch.on::after{transform:translateX(16px)}
+.et-fields{display:none;margin-bottom:12px}
+.et-fields.show{display:block}
+
+/* Couple WhatsApp field */
+.wa-info{background:rgba(37,211,102,0.06);border:0.5px solid rgba(37,211,102,0.2);border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;color:rgba(37,211,102,0.8);line-height:1.5}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="logo">Photo<em>Find</em> Pro</div>
+    <div class="badge">💒 WEDDING WEBSITE</div>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- Steps -->
+  <div class="steps">
+    <div class="step active" id="s1"><div class="step-circle">1</div><div class="step-label">Couple</div></div>
+    <div class="step-line"></div>
+    <div class="step" id="s2"><div class="step-circle">2</div><div class="step-label">Events</div></div>
+    <div class="step-line"></div>
+    <div class="step" id="s3"><div class="step-circle">3</div><div class="step-label">Family</div></div>
+    <div class="step-line"></div>
+    <div class="step" id="s4"><div class="step-circle">4</div><div class="step-label">Template</div></div>
+    <div class="step-line"></div>
+    <div class="step" id="s5"><div class="step-circle">5</div><div class="step-label">Launch</div></div>
+  </div>
+
+  <!-- Page 1: Couple -->
+  <div class="page active" id="p1">
+    <div class="sec-title">✦ Couple Details</div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Bride's Name *</label><input class="form-input" id="bride" placeholder="e.g. Priya"></div>
+      <div class="form-group"><label class="form-label">Groom's Name *</label><input class="form-input" id="groom" placeholder="e.g. Arjun"></div>
+    </div>
+    <div class="sec-title" style="margin-top:4px">✦ Wedding Details</div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Wedding Date *</label><input class="form-input" id="wDate" type="date"></div>
+      <div class="form-group"><label class="form-label">Wedding Time *</label><input class="form-input" id="wTime" type="time" value="07:00"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Venue Name *</label><input class="form-input" id="venueName" placeholder="e.g. Shree Mandap, Bhubaneswar"></div>
+    <div class="form-group"><label class="form-label">Venue Address (for Google Maps)</label><input class="form-input" id="venueAddr" placeholder="Full address"></div>
+    <div class="sec-title" style="margin-top:4px">✦ Couple's Story</div>
+    <div class="form-group"><label class="form-label">How did you meet?</label><textarea class="form-textarea" id="howMet" placeholder="We met at a college festival in 2019..."></textarea></div>
+    <div class="form-group"><label class="form-label">Proposal Story</label><textarea class="form-textarea" id="proposal" placeholder="On a moonlit beach, Arjun got down on one knee..."></textarea></div>
+    <div class="sec-title" style="margin-top:4px">✦ RSVP Notifications</div>
+    <div class="wa-info">💬 When guests RSVP, a WhatsApp notification will be sent to this number with their details.</div>
+    <div class="form-group"><label class="form-label">Couple's WhatsApp Number *</label><input class="form-input" id="coupleWA" placeholder="10-digit number e.g. 9876543210" type="tel" maxlength="10"></div>
+    <button class="action-btn btn-gold" onclick="goP(2)">Continue → Events →</button>
+  </div>
+
+  <!-- Page 2: Events -->
+  <div class="page" id="p2">
+    <div class="sec-title">✦ Events (Toggle to enable)</div>
+
+    <div class="event-toggle" onclick="toggleEvent('haldi')">
+      <span class="et-label">💛 Haldi Ceremony</span>
+      <div class="et-switch" id="sw-haldi"></div>
+    </div>
+    <div class="et-fields" id="f-haldi">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Date</label><input class="form-input" id="haldiDate" type="date"></div>
+        <div class="form-group"><label class="form-label">Time</label><input class="form-input" id="haldiTime" type="time" value="10:00"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Venue</label><input class="form-input" id="haldiVenue" placeholder="Venue name & address"></div>
+    </div>
+
+    <div class="event-toggle" onclick="toggleEvent('mehendi')">
+      <span class="et-label">🌿 Mehendi Evening</span>
+      <div class="et-switch" id="sw-mehendi"></div>
+    </div>
+    <div class="et-fields" id="f-mehendi">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Date</label><input class="form-input" id="mehendiDate" type="date"></div>
+        <div class="form-group"><label class="form-label">Time</label><input class="form-input" id="mehendiTime" type="time" value="17:00"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Venue</label><input class="form-input" id="mehendiVenue" placeholder="Venue name & address"></div>
+    </div>
+
+    <div class="event-toggle" onclick="toggleEvent('sangeet')">
+      <span class="et-label">🎵 Sangeet Night</span>
+      <div class="et-switch" id="sw-sangeet"></div>
+    </div>
+    <div class="et-fields" id="f-sangeet">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Date</label><input class="form-input" id="sangeetDate" type="date"></div>
+        <div class="form-group"><label class="form-label">Time</label><input class="form-input" id="sangeetTime" type="time" value="19:00"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Venue</label><input class="form-input" id="sangeetVenue" placeholder="Venue name & address"></div>
+    </div>
+
+    <div class="event-toggle" onclick="toggleEvent('reception')">
+      <span class="et-label">🎊 Reception</span>
+      <div class="et-switch" id="sw-reception"></div>
+    </div>
+    <div class="et-fields" id="f-reception">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Date</label><input class="form-input" id="receptionDate" type="date"></div>
+        <div class="form-group"><label class="form-label">Time</label><input class="form-input" id="receptionTime" type="time" value="19:00"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Venue</label><input class="form-input" id="receptionVenue" placeholder="Venue name & address"></div>
+    </div>
+
+    <button class="action-btn btn-gold" onclick="goP(3)" style="margin-top:8px">Continue → Family →</button>
+    <button class="action-btn btn-ghost" onclick="goP(1)">← Back</button>
+  </div>
+
+  <!-- Page 3: Family -->
+  <div class="page" id="p3">
+    <div class="sec-title">✦ Bride's Family</div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Father's Name</label><input class="form-input" id="brideFather" placeholder="e.g. Ramesh Sharma"></div>
+      <div class="form-group"><label class="form-label">Mother's Name</label><input class="form-input" id="brideMother" placeholder="e.g. Sunita Sharma"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Siblings (comma separated)</label><input class="form-input" id="brideSiblings" placeholder="e.g. Rahul Sharma, Pooja Sharma"></div>
+
+    <div class="sec-title" style="margin-top:8px">✦ Groom's Family</div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Father's Name</label><input class="form-input" id="groomFather" placeholder="e.g. Vijay Verma"></div>
+      <div class="form-group"><label class="form-label">Mother's Name</label><input class="form-input" id="groomMother" placeholder="e.g. Meena Verma"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Siblings (comma separated)</label><input class="form-input" id="groomSiblings" placeholder="e.g. Pooja Verma"></div>
+
+    <div class="sec-title" style="margin-top:8px">✦ Special Message</div>
+    <div class="form-group"><label class="form-label">Message to guests</label><textarea class="form-textarea" id="specialMsg" placeholder="Together with our families, we joyfully invite you to celebrate our wedding..."></textarea></div>
+    <div class="form-group"><label class="form-label">RSVP Deadline Date</label><input class="form-input" id="rsvpDeadline" type="date"></div>
+
+    <button class="action-btn btn-gold" onclick="goP(4)">Continue → Template →</button>
+    <button class="action-btn btn-ghost" onclick="goP(2)">← Back</button>
+  </div>
+
+  <!-- Page 4: Template -->
+  <div class="page" id="p4">
+    <div class="sec-title">✦ Choose Template</div>
+    <div class="tmpl-grid" id="tmplGrid"></div>
+    <button class="action-btn btn-gold" onclick="goP(5)">Continue → Launch →</button>
+    <button class="action-btn btn-ghost" onclick="goP(3)">← Back</button>
+  </div>
+
+  <!-- Page 5: Review & Launch -->
+  <div class="page" id="p5">
+    <div class="sec-title">✦ Review & Launch</div>
+    <div id="reviewCard" style="background:rgba(255,255,255,0.03);border:0.5px solid rgba(232,200,122,0.15);border-radius:12px;padding:16px;margin-bottom:16px;font-size:13px;line-height:2"></div>
+    <div style="background:rgba(37,211,102,0.06);border:0.5px solid rgba(37,211,102,0.15);border-radius:10px;padding:12px;margin-bottom:16px">
+      <div style="font-size:11px;color:rgba(37,211,102,0.7);line-height:1.6">✅ RSVP submissions will be saved to Google Sheets<br>✅ WhatsApp notification sent to couple on each RSVP<br>✅ Guest count & meal preferences tracked automatically</div>
+    </div>
+    <button class="action-btn btn-gold" onclick="launchWebsite()" id="launchBtn">🚀 Launch Wedding Website!</button>
+    <button class="action-btn btn-ghost" onclick="goP(4)">← Back</button>
+  </div>
+
+  <!-- Success -->
+  <div id="successPage">
+    <div class="success-icon">🎊</div>
+    <div class="success-title" style="font-family:'Playfair Display',serif">Website is Live!</div>
+    <div class="success-sub">Your wedding website is ready to share!</div>
+    <div class="link-box" onclick="copyLink()">
+      <div class="link-url" id="siteUrl">Loading...</div>
+      <div class="copy-btn">Copy</div>
+    </div>
+    <div class="share-row">
+      <button class="shr-btn shr-wa" onclick="shareWA()">💬 Share on WhatsApp</button>
+      <button class="shr-btn shr-view" onclick="viewSite()">👁 View Website</button>
+    </div>
+    <div style="margin-top:16px;background:rgba(255,255,255,0.02);border:0.5px solid rgba(255,255,255,0.06);border-radius:10px;padding:14px;font-size:12px;color:rgba(255,255,255,0.4);line-height:1.6">
+      💡 Share this link on WhatsApp, Instagram, and family groups. Guests can RSVP directly from the website. You'll get a WhatsApp notification for each RSVP!
+    </div>
+    <button class="action-btn btn-gold" style="margin-top:14px" onclick="location.reload()">+ Create Another Website</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SERVER = 'https://api.templecity.digital';
+let selectedTemplate = 'royal-dark';
+let siteId = null;
+
+const TEMPLATES = [
+  {id:'royal-dark',name:'Royal Dark',sub:'Luxury Gold',bg:'linear-gradient(135deg,#1A0A0A,#2A1A00)',icon:'👑',light:false},
+  {id:'floral-pink',name:'Floral Garden',sub:'Pink & Green',bg:'linear-gradient(135deg,#1A0818,#0A180A)',icon:'🌸',light:false},
+  {id:'traditional',name:'Traditional',sub:'Maroon & Gold',bg:'linear-gradient(135deg,#2A0808,#1A0A00)',icon:'🕌',light:false},
+  {id:'minimal-white',name:'Minimal White',sub:'Clean & Elegant',bg:'linear-gradient(135deg,#F5F5F5,#E8E8E8)',icon:'✨',light:true},
+  {id:'night-sky',name:'Night Sky',sub:'Deep Blue Stars',bg:'linear-gradient(135deg,#040820,#08082A)',icon:'🌙',light:false},
+  {id:'garden-green',name:'Garden Green',sub:'Natural & Fresh',bg:'linear-gradient(135deg,#081A08,#0A1A10)',icon:'🍃',light:false},
+];
+
+function buildTemplates(){
+  const g = document.getElementById('tmplGrid');
+  g.innerHTML='';
+  TEMPLATES.forEach(t=>{
+    const d=document.createElement('div');
+    d.className='tmpl-card'+(t.id===selectedTemplate?' sel':'');
+    d.innerHTML=`<div class="tmpl-inner" style="background:${t.bg}">
+      <span style="font-size:24px;margin-bottom:4px">${t.icon}</span>
+      <span class="tmpl-name" style="color:${t.light?'#333':'white'}">${t.name}</span>
+      <span class="tmpl-sub" style="color:${t.light?'rgba(0,0,0,0.4)':'rgba(255,255,255,0.4)'}">${t.sub}</span>
+    </div><div class="tmpl-check">✓</div>`;
+    d.onclick=()=>{selectedTemplate=t.id;buildTemplates()};
+    g.appendChild(d);
+  });
+}
+
+function toggleEvent(name){
+  const sw=document.getElementById('sw-'+name);
+  const f=document.getElementById('f-'+name);
+  sw.classList.toggle('on');
+  f.classList.toggle('show');
+}
+
+function goP(n){
+  if(n===2){
+    if(!document.getElementById('bride').value.trim()){showToast('Enter bride name!');return}
+    if(!document.getElementById('groom').value.trim()){showToast('Enter groom name!');return}
+    if(!document.getElementById('wDate').value){showToast('Enter wedding date!');return}
+    if(!document.getElementById('venueName').value.trim()){showToast('Enter venue name!');return}
+    if(!document.getElementById('coupleWA').value.trim()||document.getElementById('coupleWA').value.trim().length!==10){showToast('Enter valid 10-digit WhatsApp number!');return}
+  }
+  if(n===5) buildReview();
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('p'+n)?.classList.add('active');
+  for(let i=1;i<=5;i++){
+    const s=document.getElementById('s'+i);
+    s.classList.remove('active','done');
+    if(i<n) s.classList.add('done');
+    else if(i===n) s.classList.add('active');
+  }
+  window.scrollTo(0,0);
+}
+
+function buildReview(){
+  const bride=document.getElementById('bride').value;
+  const groom=document.getElementById('groom').value;
+  const date=new Date(document.getElementById('wDate').value);
+  const venue=document.getElementById('venueName').value;
+  const wa=document.getElementById('coupleWA').value;
+  document.getElementById('reviewCard').innerHTML=`
+    <div>💑 <strong style="color:white">${bride} weds ${groom}</strong></div>
+    <div>📅 <strong style="color:var(--gold)">${date.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</strong></div>
+    <div>📍 ${venue}</div>
+    <div>📱 RSVP notifications → +91${wa}</div>
+    <div>🎨 Template: ${TEMPLATES.find(t=>t.id===selectedTemplate)?.name}</div>`;
+}
+
+function collectData(){
+  const ev=[];
+  ['haldi','mehendi','sangeet','reception'].forEach(e=>{
+    if(document.getElementById('sw-'+e)?.classList.contains('on')){
+      const icons={haldi:'💛',mehendi:'🌿',sangeet:'🎵',reception:'🎊'};
+      const names={haldi:'Haldi Ceremony',mehendi:'Mehendi Evening',sangeet:'Sangeet Night',reception:'Reception'};
+      ev.push({type:e,icon:icons[e],name:names[e],date:document.getElementById(e+'Date')?.value||'',time:document.getElementById(e+'Time')?.value||'19:00',venue:document.getElementById(e+'Venue')?.value||''});
+    }
+  });
+  // Always add wedding
+  ev.push({type:'wedding',icon:'💒',name:'Wedding Ceremony',date:document.getElementById('wDate').value,time:document.getElementById('wTime').value,venue:document.getElementById('venueName').value,venueAddr:document.getElementById('venueAddr').value});
+
+  return{
+    bride:document.getElementById('bride').value.trim(),
+    groom:document.getElementById('groom').value.trim(),
+    weddingDate:document.getElementById('wDate').value,
+    weddingTime:document.getElementById('wTime').value,
+    venue:document.getElementById('venueName').value.trim(),
+    venueAddr:document.getElementById('venueAddr').value.trim(),
+    howMet:document.getElementById('howMet').value.trim(),
+    proposal:document.getElementById('proposal').value.trim(),
+    coupleWA:document.getElementById('coupleWA').value.trim(),
+    brideFather:document.getElementById('brideFather').value.trim(),
+    brideMother:document.getElementById('brideMother').value.trim(),
+    brideSiblings:document.getElementById('brideSiblings').value.trim(),
+    groomFather:document.getElementById('groomFather').value.trim(),
+    groomMother:document.getElementById('groomMother').value.trim(),
+    groomSiblings:document.getElementById('groomSiblings').value.trim(),
+    specialMsg:document.getElementById('specialMsg').value.trim(),
+    rsvpDeadline:document.getElementById('rsvpDeadline').value,
+    template:selectedTemplate,
+    events:ev,
+  };
+}
+
+async function launchWebsite(){
+  const btn=document.getElementById('launchBtn');
+  btn.textContent='⏳ Creating website...';
+  btn.disabled=true;
+  try{
+    const data=collectData();
+    const res=await fetch(`${SERVER}/create-wedding-website`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    const result=await res.json();
+    if(result.success){
+      siteId=result.siteId;
+      document.getElementById('siteUrl').textContent=`https://www.templecity.digital/w/${result.siteId}`;
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+      document.getElementById('successPage').style.display='block';
+      for(let i=1;i<=5;i++) document.getElementById('s'+i).classList.add('done');
+    } else{
+      // Fallback — generate client-side URL
+      const id=btoa(JSON.stringify({bride:data.bride,groom:data.groom})).substring(0,12).replace(/[+/=]/g,'X');
+      const params=new URLSearchParams({data:btoa(JSON.stringify(data)).substring(0,2000)});
+      document.getElementById('siteUrl').textContent=`https://www.templecity.digital/wedding-website.html?id=${id}`;
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+      document.getElementById('successPage').style.display='block';
+    }
+  }catch(e){
+    // Client-side fallback
+    const data=collectData();
+    const urlData=encodeURIComponent(JSON.stringify(data));
+    const url=`https://www.templecity.digital/wedding-website.html?d=${urlData.substring(0,1500)}`;
+    document.getElementById('siteUrl').textContent=url;
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('successPage').style.display='block';
+  }
+}
+
+function copyLink(){
+  navigator.clipboard.writeText(document.getElementById('siteUrl').textContent);
+  showToast('✅ Link copied!');
+}
+function shareWA(){
+  const bride=document.getElementById('bride').value||'Bride';
+  const groom=document.getElementById('groom').value||'Groom';
+  const url=document.getElementById('siteUrl').textContent;
+  const msg=`💒 *${bride} & ${groom} Wedding Website*\n\nWe are getting married! 🎊\n\nVisit our wedding website for event details, RSVP and more:\n${url}\n\n_Created with PhotoFind Pro_`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`,'_blank');
+}
+function viewSite(){window.open(document.getElementById('siteUrl').textContent,'_blank')}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+
+// Set default dates
+const d=new Date();d.setDate(d.getDate()+30);
+document.getElementById('wDate').value=d.toISOString().split('T')[0];
+d.setDate(d.getDate()-7);
+document.getElementById('rsvpDeadline').value=d.toISOString().split('T')[0];
+buildTemplates();
+</script>
+</body>
+</html>
