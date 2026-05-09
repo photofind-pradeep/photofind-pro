@@ -860,11 +860,12 @@ function demo() {
 function render() {
   const d = wData;
 
-  // Template
-  document.body.className = 't-' + (d.template||'royal-dark');
+  // Template — check URL param first, then data
+  const urlTemplate = params.get('template');
+  document.body.className = 't-' + (urlTemplate || d.template || 'royal-dark');
 
   // Night sky stars
-  if(d.template === 'night-sky') {
+  if((urlTemplate || d.template) === 'night-sky') {
     const sc = document.getElementById('stars');
     for(let i=0;i<80;i++){
       const s=document.createElement('div');s.className='star';
