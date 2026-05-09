@@ -1664,14 +1664,40 @@ app.post('/upload-photo', upload.single('photo'), async (req, res) => {
   try {
     const { eventId } = req.body;
     if (!req.file || !eventId) return res.status(400).json({ success: false, error: 'Missing data' });
+
     const folderId = await getOrCreateFolder(eventId, 'original');
+
+    // Check for duplicate filename
+    const existing = await drive.files.list({
+      q: `'${folderId}' in parents and name='${req.file.originalname}' and trashed=false`,
+      fields: 'files(id)',
+    });
+
+    if (existing.data.files.length > 0) {
+      return res.json({ success: true, skipped: true, fileName: req.file.originalname, reason: 'duplicate' });
+    }
+
     const uploaded = await drive.files.create({
       requestBody: { name: req.file.originalname, mimeType: req.file.mimetype, parents: [folderId] },
       media: { mimeType: req.file.mimetype, body: Readable.from(req.file.buffer) },
-      fields: 'id, name',
+      fields: 'id, name, size',
     });
-    res.json({ success: true, fileId: uploaded.data.id, fileName: uploaded.data.name });
+
+    // Get updated count
+    const countRes = await drive.files.list({
+      q: `'${folderId}' in parents and mimeType contains 'image/' and trashed=false`,
+      fields: 'files(id)',
+      pageSize: 1000,
+    });
+
+    res.json({
+      success: true,
+      fileId: uploaded.data.id,
+      fileName: uploaded.data.name,
+      totalCount: countRes.data.files.length,
+    });
   } catch (err) {
+    console.error('❌ Upload error:', err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });

@@ -648,12 +648,24 @@ async function startUpload() {
       const data = await res.json();
 
       if (data.success) {
-        document.getElementById(`bar-${i}`).style.width = '100%';
-        document.getElementById(`bar-${i}`).style.background = 'var(--green)';
-        document.getElementById(`status-${i}`).textContent = 'Done ✓';
-        document.getElementById(`status-${i}`).className = 'prog-status done';
-        uploaded++;
-        sessionUploaded++;
+        if (data.skipped) {
+          document.getElementById(`bar-${i}`).style.width = '100%';
+          document.getElementById(`bar-${i}`).style.background = 'var(--gold)';
+          document.getElementById(`status-${i}`).textContent = 'Skipped (duplicate)';
+          document.getElementById(`status-${i}`).className = 'prog-status';
+        } else {
+          document.getElementById(`bar-${i}`).style.width = '100%';
+          document.getElementById(`bar-${i}`).style.background = 'var(--green)';
+          document.getElementById(`status-${i}`).textContent = 'Done ✓';
+          document.getElementById(`status-${i}`).className = 'prog-status done';
+          uploaded++;
+          sessionUploaded++;
+        }
+        // Update total count in event card
+        if (data.totalCount) {
+          document.getElementById('totalCount').textContent = data.totalCount;
+          document.getElementById('sessionCount').textContent = sessionUploaded;
+        }
       } else {
         throw new Error(data.error);
       }
