@@ -309,26 +309,52 @@ body::before{
 
     <!-- Instructions -->
     <div class="steps-card" id="stepsCard" style="display:none">
-      <div class="steps-title">✦ How to Upload</div>
+      <div class="steps-title">📸 Photographer Upload Guide</div>
+
+      <div style="background:rgba(232,192,122,0.06);border:0.5px solid rgba(232,192,122,0.2);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:rgba(232,192,122,0.8);line-height:1.6">
+        ⚡ <strong style="color:#E8C07A">Tip:</strong> After uploading, go to your Dashboard and click <strong style="color:#E8C07A">⚡ Index</strong> to enable instant face matching for guests!
+      </div>
+
       <div class="step">
         <div class="step-num">1</div>
         <div class="step-text">
-          <strong>Select Photos</strong>
-          <span>Click the upload area or drag & drop your photos</span>
+          <strong>Select All Event Photos</strong>
+          <span>Tap the upload area below → Select all photos from your gallery or camera roll at once. You can upload 100s of photos in one go!</span>
         </div>
       </div>
       <div class="step">
         <div class="step-num">2</div>
         <div class="step-text">
-          <strong>Upload</strong>
-          <span>Photos upload directly to Google Drive event folder</span>
+          <strong>Wait for Upload</strong>
+          <span>Keep this page open while photos upload to Google Drive. Each photo shows ✅ when done. Do NOT close the browser!</span>
         </div>
       </div>
       <div class="step">
         <div class="step-num">3</div>
         <div class="step-text">
-          <strong>Done!</strong>
-          <span>Guests can instantly find their photos by scanning QR code</span>
+          <strong>Index Faces (Important!)</strong>
+          <span>Go to Dashboard → Click ⚡ Index button on this event. This makes guest face search instant (1-2 seconds instead of 30 seconds!)</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-text">
+          <strong>Share QR with Guests</strong>
+          <span>From Dashboard → Click ◈ QR Card → Download beautiful QR poster → Place at venue or share on WhatsApp!</span>
+        </div>
+      </div>
+
+      <div style="background:rgba(93,214,138,0.05);border:0.5px solid rgba(93,214,138,0.2);border-radius:10px;padding:12px 14px;margin-top:14px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:rgba(93,214,138,0.6);margin-bottom:8px">✦ Supported Formats</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <span style="background:rgba(93,214,138,0.08);border:0.5px solid rgba(93,214,138,0.2);border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;color:rgba(93,214,138,0.7)">JPG</span>
+          <span style="background:rgba(93,214,138,0.08);border:0.5px solid rgba(93,214,138,0.2);border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;color:rgba(93,214,138,0.7)">JPEG</span>
+          <span style="background:rgba(93,214,138,0.08);border:0.5px solid rgba(93,214,138,0.2);border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;color:rgba(93,214,138,0.7)">PNG</span>
+          <span style="background:rgba(93,214,138,0.08);border:0.5px solid rgba(93,214,138,0.2);border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;color:rgba(93,214,138,0.7)">HEIC</span>
+          <span style="background:rgba(93,214,138,0.08);border:0.5px solid rgba(93,214,138,0.2);border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;color:rgba(93,214,138,0.7)">RAW</span>
+          <span style="background:rgba(93,214,138,0.08);border:0.5px solid rgba(93,214,138,0.2);border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;color:rgba(93,214,138,0.7)">CR2</span>
+          <span style="background:rgba(93,214,138,0.08);border:0.5px solid rgba(93,214,138,0.2);border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;color:rgba(93,214,138,0.7)">NEF</span>
+          <span style="background:rgba(93,214,138,0.08);border:0.5px solid rgba(93,214,138,0.2);border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;color:rgba(93,214,138,0.7)">ARW</span>
         </div>
       </div>
     </div>
@@ -337,18 +363,15 @@ body::before{
     <div class="upload-zone" id="uploadZone" style="display:none">
       <input type="file" id="fileInput" multiple accept="image/*,.jpg,.jpeg,.png,.heic,.raw,.cr2,.nef,.arw">
       <span class="upload-icon">📸</span>
-      <div class="upload-title">Drop Photos Here</div>
+      <div class="upload-title">Tap to Select Photos</div>
       <div class="upload-sub">
-        or click to browse your files<br>
-        Upload multiple photos at once
+        Select all event photos at once<br>
+        <strong style="color:var(--gold)">100s of photos supported!</strong>
       </div>
-      <div class="upload-formats">
-        <span class="fmt-badge">JPG</span>
-        <span class="fmt-badge">PNG</span>
-        <span class="fmt-badge">HEIC</span>
-        <span class="fmt-badge">RAW</span>
-        <span class="fmt-badge">CR2</span>
-        <span class="fmt-badge">NEF</span>
+      <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+        <span style="background:rgba(232,192,122,0.08);border:0.5px solid rgba(232,192,122,0.2);border-radius:20px;padding:4px 12px;font-size:10px;color:rgba(232,192,122,0.6);font-weight:600">📁 From Gallery</span>
+        <span style="background:rgba(232,192,122,0.08);border:0.5px solid rgba(232,192,122,0.2);border-radius:20px;padding:4px 12px;font-size:10px;color:rgba(232,192,122,0.6);font-weight:600">💾 From Memory Card</span>
+        <span style="background:rgba(232,192,122,0.08);border:0.5px solid rgba(232,192,122,0.2);border-radius:20px;padding:4px 12px;font-size:10px;color:rgba(232,192,122,0.6);font-weight:600">☁️ Direct to Drive</span>
       </div>
     </div>
 
@@ -386,7 +409,40 @@ body::before{
     <div class="success-card" id="successCard">
       <span class="success-icon">🎉</span>
       <div class="success-title" id="successTitle">Photos Uploaded!</div>
-      <div class="success-sub" id="successSub">All photos are now in Google Drive and ready for guests to find!</div>
+      <div class="success-sub" id="successSub">All photos are now in Google Drive and ready for guests!</div>
+
+      <!-- Next Steps -->
+      <div style="margin-top:16px;text-align:left;display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:rgba(93,214,138,0.5);margin-bottom:4px">✦ What to do next</div>
+
+        <div style="background:rgba(232,192,122,0.06);border:0.5px solid rgba(232,192,122,0.2);border-radius:10px;padding:12px;display:flex;align-items:flex-start;gap:10px">
+          <span style="font-size:20px">⚡</span>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:white;margin-bottom:2px">Index Faces (Most Important!)</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);line-height:1.5">Go to Dashboard → Click ⚡ Index on this event. Makes guest search 10x faster!</div>
+          </div>
+        </div>
+
+        <div style="background:rgba(93,214,138,0.04);border:0.5px solid rgba(93,214,138,0.15);border-radius:10px;padding:12px;display:flex;align-items:flex-start;gap:10px">
+          <span style="font-size:20px">◈</span>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:white;margin-bottom:2px">Download QR Card</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);line-height:1.5">Dashboard → ◈ QR Card → Download beautiful poster → Place at venue!</div>
+          </div>
+        </div>
+
+        <div style="background:rgba(137,180,255,0.04);border:0.5px solid rgba(137,180,255,0.15);border-radius:10px;padding:12px;display:flex;align-items:flex-start;gap:10px">
+          <span style="font-size:20px">📤</span>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:white;margin-bottom:2px">Upload More Photos</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);line-height:1.5">You can upload more photos anytime — just tap the button below!</div>
+          </div>
+        </div>
+      </div>
+
+      <button onclick="resetUpload()" style="width:100%;margin-top:14px;padding:13px;background:rgba(232,192,122,0.1);border:0.5px solid rgba(232,192,122,0.25);border-radius:10px;color:var(--gold);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer">
+        📸 Upload More Photos
+      </button>
     </div>
 
   </div>
@@ -396,6 +452,17 @@ body::before{
 <div class="toast" id="toastEl"></div>
 
 <script>
+function resetUpload() {
+  document.getElementById('successCard').style.display = 'none';
+  document.getElementById('uploadZone').style.display = 'block';
+  document.getElementById('stepsCard').style.display = 'block';
+  selectedFiles = [];
+  sessionUploaded = 0;
+  document.getElementById('fileInput').value = '';
+  document.getElementById('selectedFiles').style.display = 'none';
+  document.getElementById('filePreview').innerHTML = '';
+}
+
 const SERVER = 'https://api.templecity.digital';
 let eventId = null;
 let eventData = null;
