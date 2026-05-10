@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>My Inquiries — PhotoFind Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--gold:#E8C87A;--gold2:#C9A84C;--dark:#0C0A07;--dark2:#1A1208;--green:#5DD68A;--rose:#E07A8F;--border:rgba(232,200,122,0.12);--muted:rgba(255,255,255,0.4)}
+body{font-family:'DM Sans',sans-serif;background:var(--dark);color:white;min-height:100vh}
+
+.header{padding:14px 18px;background:rgba(12,10,7,0.98);border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{font-family:'Playfair Display',serif;font-size:16px;font-weight:900}
+.logo em{color:var(--gold);font-style:normal}
+.header-right{display:flex;align-items:center;gap:10px}
+.ph-name-badge{font-size:11px;color:var(--muted);background:rgba(255,255,255,0.04);border:0.5px solid var(--border);border-radius:20px;padding:4px 12px}
+
+.wrap{max-width:500px;margin:0 auto;padding:16px 14px 80px}
+
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
+.stat-box{background:rgba(255,255,255,0.03);border:0.5px solid var(--border);border-radius:10px;padding:12px;text-align:center}
+.stat-num{font-family:'Playfair Display',serif;font-size:24px;font-weight:900;line-height:1}
+.stat-lbl{font-size:9px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-top:2px}
+.stat-box.gold .stat-num{color:var(--gold)}
+.stat-box.green .stat-num{color:var(--green)}
+.stat-box.rose .stat-num{color:var(--rose)}
+
+/* Tabs */
+.tabs{display:flex;gap:0;background:rgba(255,255,255,0.03);border:0.5px solid var(--border);border-radius:10px;padding:3px;margin-bottom:16px}
+.tab{flex:1;padding:8px;text-align:center;font-size:11px;font-weight:600;color:var(--muted);border-radius:7px;cursor:pointer;transition:all 0.2s}
+.tab.active{background:var(--gold);color:#0C0A07}
+
+/* Inquiry cards */
+.inq-card{background:rgba(255,255,255,0.03);border:0.5px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden;transition:border-color 0.2s}
+.inq-card.new{border-color:rgba(232,200,122,0.3)}
+.inq-card.booked{border-color:rgba(93,214,138,0.3)}
+.inq-card-header{padding:14px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.inq-couple{display:flex;align-items:center;gap:10px}
+.inq-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#8B1A4A,#C84A7A);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:white;flex-shrink:0}
+.inq-couple-name{font-size:14px;font-weight:600;color:white;margin-bottom:2px}
+.inq-couple-meta{font-size:10px;color:var(--muted);line-height:1.4}
+.inq-status{padding:3px 10px;border-radius:20px;font-size:9px;font-weight:700;letter-spacing:0.1em;flex-shrink:0}
+.status-new{background:rgba(232,200,122,0.1);color:var(--gold);border:0.5px solid rgba(232,200,122,0.25)}
+.status-replied{background:rgba(100,160,255,0.1);color:#64A0FF;border:0.5px solid rgba(100,160,255,0.25)}
+.status-booked{background:rgba(93,214,138,0.1);color:var(--green);border:0.5px solid rgba(93,214,138,0.25)}
+
+/* Messages */
+.inq-messages{padding:0 14px 10px;display:none}
+.inq-messages.open{display:block}
+.msg-bubble{margin-bottom:8px;display:flex;gap:8px}
+.msg-bubble.from-couple{flex-direction:row}
+.msg-bubble.from-me{flex-direction:row-reverse}
+.msg-content{max-width:80%;background:rgba(255,255,255,0.05);border-radius:10px;padding:8px 12px}
+.msg-bubble.from-me .msg-content{background:rgba(232,200,122,0.08);border:0.5px solid rgba(232,200,122,0.15)}
+.msg-name{font-size:9px;color:var(--muted);margin-bottom:3px;letter-spacing:0.05em}
+.msg-text{font-size:12px;color:rgba(255,255,255,0.8);line-height:1.5}
+.msg-time{font-size:8px;color:var(--muted);margin-top:3px;opacity:0.6}
+
+/* Reply box */
+.reply-box{padding:0 14px 14px}
+.reply-input{width:100%;background:rgba(255,255,255,0.04);border:0.5px solid var(--border);border-radius:8px;padding:10px 12px;color:white;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;resize:none;min-height:60px;margin-bottom:8px}
+.reply-input::placeholder{color:var(--muted)}
+.reply-actions{display:flex;gap:8px}
+.reply-btn{flex:1;padding:9px;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s}
+.reply-btn:active{transform:scale(0.97)}
+.btn-reply{background:var(--gold);color:#0C0A07}
+.btn-book{background:rgba(93,214,138,0.12);border:0.5px solid rgba(93,214,138,0.3);color:var(--green)}
+
+/* Booking modal */
+.book-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(8px);z-index:600;display:none;align-items:flex-end;justify-content:center}
+.book-overlay.open{display:flex}
+.book-modal{background:var(--dark2);border:0.5px solid rgba(93,214,138,0.2);border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:460px}
+.book-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-bottom:4px;color:white}
+.book-sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.5}
+.book-input{width:100%;background:rgba(255,255,255,0.04);border:0.5px solid var(--border);border-radius:8px;padding:10px 12px;color:white;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;margin-bottom:10px}
+.book-input::placeholder{color:var(--muted)}
+.commission-preview{background:rgba(93,214,138,0.06);border:0.5px solid rgba(93,214,138,0.2);border-radius:8px;padding:12px;margin-bottom:14px;font-size:12px;color:var(--muted);line-height:1.8}
+.commission-preview strong{color:var(--green)}
+.book-submit{width:100%;padding:13px;background:linear-gradient(135deg,#1A6A2A,var(--green));color:#0C0A07;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s}
+.book-cancel{width:100%;padding:11px;background:rgba(255,255,255,0.04);border:0.5px solid var(--border);color:var(--muted);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;margin-top:8px}
+
+/* Empty state */
+.empty-state{text-align:center;padding:48px 20px;color:var(--muted)}
+.empty-icon{font-size:48px;opacity:0.3;margin-bottom:12px}
+
+/* Login prompt */
+#loginPrompt{text-align:center;padding:40px 20px}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(232,200,122,0.95);color:#0C0A07;padding:8px 18px;border-radius:16px;font-size:11px;font-weight:700;z-index:999;pointer-events:none;opacity:0;transition:opacity 0.3s;white-space:nowrap}
+.toast.show{opacity:1}
+
+.spin{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:20px auto}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">Photo<em>Find</em> Pro</div>
+  <div class="header-right">
+    <div class="ph-name-badge" id="phNameBadge">Loading...</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- Login Prompt -->
+  <div id="loginPrompt" style="display:none">
+    <div style="font-size:40px;margin-bottom:14px">📸</div>
+    <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin-bottom:6px">Photographer Inbox</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5">Enter your registered phone number to view your inquiries</div>
+    <input id="loginPhone" style="width:100%;background:rgba(255,255,255,0.04);border:0.5px solid var(--border);border-radius:10px;padding:12px 14px;color:white;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;margin-bottom:10px;text-align:center;letter-spacing:0.1em" placeholder="Your WhatsApp Number" type="tel" maxlength="10">
+    <button onclick="loginPhotographer()" style="width:100%;padding:13px;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#0C0A07;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Access My Inbox →</button>
+  </div>
+
+  <!-- Main inbox -->
+  <div id="mainInbox" style="display:none">
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-box gold">
+        <div class="stat-num" id="statNew">0</div>
+        <div class="stat-lbl">New</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="statTotal" style="color:white">0</div>
+        <div class="stat-lbl">Total</div>
+      </div>
+      <div class="stat-box green">
+        <div class="stat-num" id="statBooked">0</div>
+        <div class="stat-lbl">Booked</div>
+      </div>
+    </div>
+
+    <!-- Commission earned -->
+    <div style="background:rgba(93,214,138,0.04);border:0.5px solid rgba(93,214,138,0.15);border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(93,214,138,0.5);margin-bottom:3px">Platform Commission Due</div>
+        <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--green)" id="commissionDue">₹0</div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);text-align:right;line-height:1.5">5% of confirmed<br>bookings via platform</div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab(this,'all')">All</div>
+      <div class="tab" onclick="switchTab(this,'new')">🔔 New</div>
+      <div class="tab" onclick="switchTab(this,'replied')">💬 Replied</div>
+      <div class="tab" onclick="switchTab(this,'booked')">✅ Booked</div>
+    </div>
+
+    <!-- Loading -->
+    <div id="inboxLoading"><div class="spin"></div></div>
+
+    <!-- Inquiries list -->
+    <div id="inquiriesList"></div>
+
+  </div>
+</div>
+
+<!-- Booking Modal -->
+<div class="book-overlay" id="bookModal">
+  <div class="book-modal">
+    <div class="book-title">✅ Mark as Booked</div>
+    <div class="book-sub">Confirm this booking to track your commission. Platform charges 5% of booking amount.</div>
+    <input class="book-input" id="bookAmount" placeholder="Total booking amount (₹) *" type="number" oninput="updateCommissionPreview()">
+    <input class="book-input" id="bookDate" placeholder="Event date" type="date">
+    <div class="commission-preview" id="commissionPreview">
+      Enter booking amount to see commission calculation
+    </div>
+    <button class="book-submit" onclick="confirmBooking()">✅ Confirm Booking</button>
+    <button class="book-cancel" onclick="closeBookModal()">Cancel</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SERVER = 'https://api.templecity.digital';
+const params = new URLSearchParams(window.location.search);
+let photographerId = params.get('ph') || localStorage.getItem('ph_id');
+let photographerName = localStorage.getItem('ph_name') || 'Photographer';
+let allInquiries = [];
+let currentTab = 'all';
+let bookingInquiryId = null;
+
+// ── INIT ──
+async function init() {
+  if (!photographerId) {
+    document.getElementById('loginPrompt').style.display = 'block';
+    return;
+  }
+  document.getElementById('mainInbox').style.display = 'block';
+  document.getElementById('phNameBadge').textContent = photographerName;
+  await loadInquiries();
+}
+
+async function loginPhotographer() {
+  const phone = document.getElementById('loginPhone').value.trim();
+  if(!phone || phone.length !== 10) { showToast('Enter valid 10-digit number!'); return; }
+
+  // Try to find photographer by phone
+  try {
+    const res = await fetch(`${SERVER}/photographer-by-phone/${phone}`);
+    const data = await res.json();
+    if(data.success) {
+      photographerId = data.photographer.id;
+      photographerName = data.photographer.name;
+    } else {
+      // Use phone as ID (fallback)
+      photographerId = 'ph_' + phone;
+      photographerName = 'Photographer';
+    }
+  } catch(e) {
+    photographerId = 'ph_' + phone;
+  }
+
+  localStorage.setItem('ph_id', photographerId);
+  localStorage.setItem('ph_name', photographerName);
+  document.getElementById('loginPrompt').style.display = 'none';
+  document.getElementById('mainInbox').style.display = 'block';
+  document.getElementById('phNameBadge').textContent = photographerName;
+  await loadInquiries();
+}
+
+async function loadInquiries() {
+  try {
+    const res = await fetch(`${SERVER}/inquiries/${photographerId}`);
+    const data = await res.json();
+    allInquiries = data.inquiries || [];
+    updateStats();
+    renderInquiries(currentTab);
+  } catch(e) {
+    allInquiries = [];
+    renderInquiries(currentTab);
+  }
+  document.getElementById('inboxLoading').style.display = 'none';
+}
+
+function updateStats() {
+  const newCount = allInquiries.filter(i => i.status === 'new').length;
+  const bookedCount = allInquiries.filter(i => i.status === 'booked').length;
+  const commission = allInquiries
+    .filter(i => i.commission && i.commission.status === 'pending')
+    .reduce((sum, i) => sum + (i.commission.amount || 0), 0);
+
+  document.getElementById('statNew').textContent = newCount;
+  document.getElementById('statTotal').textContent = allInquiries.length;
+  document.getElementById('statBooked').textContent = bookedCount;
+  document.getElementById('commissionDue').textContent = '₹' + commission.toLocaleString('en-IN');
+}
+
+function renderInquiries(tab) {
+  const list = document.getElementById('inquiriesList');
+  let filtered = allInquiries;
+  if(tab !== 'all') filtered = allInquiries.filter(i => i.status === tab);
+
+  if(filtered.length === 0) {
+    list.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">📭</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px">No ${tab === 'all' ? '' : tab} inquiries yet</div>
+      <div style="font-size:12px">Share your listing to get more inquiries!</div>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(inq => `
+    <div class="inq-card ${inq.status}" id="card-${inq.id}">
+      <div class="inq-card-header" onclick="toggleMessages('${inq.id}')">
+        <div class="inq-couple">
+          <div class="inq-avatar">${inq.coupleName?.charAt(0)||'?'}</div>
+          <div>
+            <div class="inq-couple-name">${inq.coupleName}</div>
+            <div class="inq-couple-meta">
+              📅 ${inq.eventDate || 'Date TBD'} · ${inq.eventType || 'Wedding'}<br>
+              💰 ${inq.budget || 'Budget TBD'} · 📱 +91${inq.couplePhone}
+            </div>
+          </div>
+        </div>
+        <span class="inq-status status-${inq.status}">${
+          inq.status === 'new' ? '🔔 New' :
+          inq.status === 'replied' ? '💬 Replied' :
+          inq.status === 'booked' ? '✅ Booked' : inq.status
+        }</span>
+      </div>
+
+      <div class="inq-messages" id="msg-${inq.id}">
+        ${inq.messages.map(msg => `
+          <div class="msg-bubble from-${msg.from === 'photographer' ? 'me' : 'couple'}">
+            <div class="msg-content">
+              <div class="msg-name">${msg.name}</div>
+              <div class="msg-text">${msg.text}</div>
+              <div class="msg-time">${new Date(msg.timestamp).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+            </div>
+          </div>
+        `).join('')}
+
+        ${inq.status !== 'booked' ? `
+        <div class="reply-box">
+          <textarea class="reply-input" id="reply-${inq.id}" placeholder="Write your reply..."></textarea>
+          <div class="reply-actions">
+            <button class="reply-btn btn-reply" onclick="sendReply('${inq.id}')">💬 Send Reply</button>
+            <button class="reply-btn btn-book" onclick="openBookModal('${inq.id}','${inq.coupleName}')">✅ Mark Booked</button>
+          </div>
+        </div>` : `
+        <div style="padding:10px 14px;background:rgba(93,214,138,0.06);border-top:0.5px solid rgba(93,214,138,0.15)">
+          <div style="font-size:11px;color:var(--green);font-weight:600">✅ Booking Confirmed!</div>
+          ${inq.commission ? `<div style="font-size:10px;color:var(--muted);margin-top:2px">Commission due: ₹${inq.commission.amount.toLocaleString('en-IN')} · Status: ${inq.commission.status}</div>` : ''}
+        </div>`}
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleMessages(id) {
+  const msgEl = document.getElementById('msg-' + id);
+  msgEl.classList.toggle('open');
+}
+
+async function sendReply(inquiryId) {
+  const text = document.getElementById('reply-' + inquiryId).value.trim();
+  if(!text) { showToast('Write a reply first!'); return; }
+
+  try {
+    await fetch(`${SERVER}/reply-inquiry`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        photographerId,
+        inquiryId,
+        replyText: text,
+        photographerName,
+      }),
+    });
+    showToast('✅ Reply sent!');
+    await loadInquiries();
+    document.getElementById('msg-' + inquiryId).classList.add('open');
+  } catch(e) {
+    showToast('❌ Failed to send reply');
+  }
+}
+
+// ── BOOKING SYSTEM ──
+function openBookModal(inquiryId, coupleName) {
+  bookingInquiryId = inquiryId;
+  document.getElementById('bookAmount').value = '';
+  document.getElementById('bookDate').value = '';
+  document.getElementById('commissionPreview').innerHTML = 'Enter booking amount to see commission calculation';
+  document.getElementById('bookModal').classList.add('open');
+}
+
+function closeBookModal() {
+  document.getElementById('bookModal').classList.remove('open');
+  bookingInquiryId = null;
+}
+
+function updateCommissionPreview() {
+  const amount = parseInt(document.getElementById('bookAmount').value) || 0;
+  if(amount > 0) {
+    const commission = Math.round(amount * 0.05);
+    document.getElementById('commissionPreview').innerHTML = `
+      Booking Amount: ₹${amount.toLocaleString('en-IN')}<br>
+      Platform Commission (5%): <strong>₹${commission.toLocaleString('en-IN')}</strong><br>
+      <span style="font-size:10px;opacity:0.7">Due within 7 days of confirmation</span>`;
+  }
+}
+
+async function confirmBooking() {
+  const amount = parseInt(document.getElementById('bookAmount').value);
+  const date = document.getElementById('bookDate').value;
+  if(!amount || amount < 1) { showToast('Enter valid booking amount!'); return; }
+
+  const inq = allInquiries.find(i => i.id === bookingInquiryId);
+
+  try {
+    const res = await fetch(`${SERVER}/mark-booked`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        photographerId,
+        inquiryId: bookingInquiryId,
+        bookingAmount: amount,
+        eventDate: date || inq?.eventDate,
+        coupleName: inq?.coupleName,
+        photographerName,
+        photographerPhone: localStorage.getItem('ph_phone'),
+      }),
+    });
+    const data = await res.json();
+    if(data.success) {
+      closeBookModal();
+      showToast(`✅ Booked! Commission ₹${data.commission} due`);
+      await loadInquiries();
+    }
+  } catch(e) {
+    showToast('❌ Error confirming booking');
+  }
+}
+
+function switchTab(el, tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderInquiries(tab);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Close booking modal on overlay click
+document.getElementById('bookModal').addEventListener('click', function(e) {
+  if(e.target === this) closeBookModal();
+});
+
+init();
+</script>
+</body>
+</html>

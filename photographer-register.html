@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>List Your Studio — PhotoFind Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--gold:#E8C87A;--gold2:#C9A84C;--dark:#0C0A07;--green:#5DD68A;--rose:#E07A8F}
+body{font-family:'DM Sans',sans-serif;background:var(--dark);color:white;min-height:100vh}
+
+.header{padding:14px 18px;background:rgba(12,10,7,0.98);border-bottom:0.5px solid rgba(232,200,122,0.12);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{font-family:'Playfair Display',serif;font-size:16px;font-weight:900}
+.logo em{color:var(--gold);font-style:normal}
+.badge{background:linear-gradient(135deg,#1A4A2A,#2A6A3A);font-size:8px;font-weight:700;color:#5DD68A;padding:3px 10px;border-radius:8px;letter-spacing:0.1em;border:0.5px solid rgba(93,214,138,0.3)}
+
+.wrap{max-width:520px;margin:0 auto;padding:20px 16px 80px}
+
+/* Progress */
+.progress-bar{height:3px;background:rgba(255,255,255,0.06);border-radius:2px;margin-bottom:20px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--gold2),var(--gold));border-radius:2px;transition:width 0.4s ease}
+
+.steps{display:flex;align-items:center;gap:0;margin-bottom:24px}
+.step{flex:1;text-align:center}
+.step-circle{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:rgba(255,255,255,0.3);margin:0 auto 3px;transition:all 0.3s}
+.step.active .step-circle{background:var(--gold);border-color:var(--gold);color:#0C0A07;font-weight:800}
+.step.done .step-circle{background:rgba(93,214,138,0.2);border-color:var(--green);color:var(--green)}
+.step-label{font-size:7px;color:rgba(255,255,255,0.2);letter-spacing:0.08em;text-transform:uppercase}
+.step.active .step-label{color:var(--gold)}
+.step-line{flex:1;height:0.5px;background:rgba(255,255,255,0.08);margin-bottom:12px}
+
+.page{display:none}.page.active{display:block}
+
+.sec-title{font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(232,200,122,0.5);font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sec-title::after{content:'';flex:1;height:0.5px;background:linear-gradient(90deg,rgba(232,200,122,0.2),transparent)}
+
+.form-group{margin-bottom:12px}
+.form-label{font-size:10px;color:rgba(255,255,255,0.4);margin-bottom:5px;display:block;letter-spacing:0.05em}
+.form-input,.form-select,.form-textarea{width:100%;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:11px 14px;color:white;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:all 0.2s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:rgba(232,200,122,0.4);background:rgba(232,200,122,0.03)}
+.form-input::placeholder,.form-textarea::placeholder{color:rgba(255,255,255,0.2)}
+.form-select option{background:#1A1208;color:white}
+.form-textarea{resize:vertical;min-height:80px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* Specialty checkboxes */
+.specialty-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
+.spec-check{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.08);border-radius:8px;padding:9px 12px;cursor:pointer;transition:all 0.15s}
+.spec-check.selected{border-color:rgba(232,200,122,0.3);background:rgba(232,200,122,0.06)}
+.spec-check input{display:none}
+.spec-icon{font-size:14px}
+.spec-name{font-size:12px;font-weight:500;color:rgba(255,255,255,0.6)}
+.spec-check.selected .spec-name{color:var(--gold)}
+
+/* Price range */
+.price-opts{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:14px}
+.price-opt{border-radius:10px;border:0.5px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);padding:12px;text-align:center;cursor:pointer;transition:all 0.2s}
+.price-opt.selected{border-color:var(--gold);background:rgba(232,200,122,0.08)}
+.price-opt-amount{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--gold)}
+.price-opt-label{font-size:9px;color:rgba(255,255,255,0.35);margin-top:2px;letter-spacing:0.05em}
+
+/* Benefits box */
+.benefits-box{background:rgba(93,214,138,0.04);border:0.5px solid rgba(93,214,138,0.15);border-radius:12px;padding:14px;margin-bottom:16px}
+.benefits-title{font-size:10px;font-weight:700;color:rgba(93,214,138,0.7);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:10px}
+.benefit{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:12px;color:rgba(255,255,255,0.5);line-height:1.4}
+.benefit::before{content:'✓';color:var(--green);flex-shrink:0;font-weight:700;margin-top:1px}
+
+/* Action buttons */
+.action-btn{width:100%;padding:14px;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:10px;letter-spacing:0.05em}
+.action-btn:active{transform:scale(0.98)}
+.btn-gold{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#0C0A07}
+.btn-ghost{background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5)}
+
+/* Success */
+#successPage{display:none;text-align:center;padding:32px 16px}
+.success-icon{font-size:56px;margin-bottom:14px;animation:pop 0.5s ease}
+@keyframes pop{0%{transform:scale(0)}80%{transform:scale(1.1)}100%{transform:scale(1)}}
+.success-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:900;margin-bottom:6px}
+.success-sub{font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:20px;line-height:1.5}
+.next-steps{text-align:left;background:rgba(255,255,255,0.02);border:0.5px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px;margin-bottom:16px}
+.ns-title{font-size:10px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:rgba(232,200,122,0.5);margin-bottom:10px}
+.ns-step{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;font-size:12px;color:rgba(255,255,255,0.4);line-height:1.5}
+.ns-num{width:20px;height:20px;border-radius:50%;background:rgba(232,200,122,0.1);border:0.5px solid rgba(232,200,122,0.2);display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--gold);flex-shrink:0;font-weight:700}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(232,200,122,0.95);color:#0C0A07;padding:8px 18px;border-radius:16px;font-size:11px;font-weight:700;z-index:999;pointer-events:none;opacity:0;transition:opacity 0.3s;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* Info box */
+.info-box{background:rgba(232,200,122,0.04);border:0.5px solid rgba(232,200,122,0.12);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:11px;color:rgba(232,200,122,0.7);line-height:1.6;display:flex;gap:8px}
+.info-icon{font-size:16px;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="logo">Photo<em>Find</em> Pro</div>
+    <div class="badge">📸 LIST YOUR STUDIO</div>
+  </div>
+  <a href="photographers.html" style="font-size:11px;color:rgba(255,255,255,0.3);text-decoration:none">← Back to Listings</a>
+</div>
+
+<div class="wrap">
+
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:20%"></div></div>
+
+  <!-- Steps -->
+  <div class="steps">
+    <div class="step active" id="s1"><div class="step-circle">1</div><div class="step-label">Studio</div></div>
+    <div class="step-line"></div>
+    <div class="step" id="s2"><div class="step-circle">2</div><div class="step-label">Services</div></div>
+    <div class="step-line"></div>
+    <div class="step" id="s3"><div class="step-circle">3</div><div class="step-label">Pricing</div></div>
+    <div class="step-line"></div>
+    <div class="step" id="s4"><div class="step-circle">4</div><div class="step-label">About</div></div>
+    <div class="step-line"></div>
+    <div class="step" id="s5"><div class="step-circle">5</div><div class="step-label">Submit</div></div>
+  </div>
+
+  <!-- Page 1: Studio Details -->
+  <div class="page active" id="p1">
+    <div class="benefits-box">
+      <div class="benefits-title">✦ Why List on PhotoFind Pro?</div>
+      <div class="benefit">Get direct WhatsApp leads from couples planning their wedding</div>
+      <div class="benefit">Free AI photo delivery for your events (worth ₹3,000+)</div>
+      <div class="benefit">Portfolio showcase to thousands of Odisha couples</div>
+      <div class="benefit">100% free to list — no commission on bookings!</div>
+    </div>
+
+    <div class="sec-title">✦ Studio Information</div>
+    <div class="form-group"><label class="form-label">Your Full Name *</label><input class="form-input" id="pName" placeholder="e.g. Rajesh Mohanty"></div>
+    <div class="form-group"><label class="form-label">Studio / Business Name *</label><input class="form-input" id="pStudio" placeholder="e.g. Rajesh Photography Studio"></div>
+    <div class="form-group"><label class="form-label">WhatsApp Number * (Clients will contact you here)</label><input class="form-input" id="pPhone" placeholder="10-digit number" type="tel" maxlength="10"></div>
+    <div class="form-group"><label class="form-label">Email Address *</label><input class="form-input" id="pEmail" placeholder="your@email.com" type="email"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">City *</label>
+        <select class="form-select" id="pCity">
+          <option value="">Select City</option>
+          <option>Bhubaneswar</option><option>Cuttack</option><option>Puri</option>
+          <option>Rourkela</option><option>Sambalpur</option><option>Berhampur</option>
+          <option>Balasore</option><option>Brahmapur</option><option>Baripada</option>
+          <option>Bhawanipatna</option><option>Other</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Years of Experience *</label>
+        <select class="form-select" id="pExp">
+          <option value="">Select</option>
+          <option value="1">1 year</option><option value="2">2 years</option>
+          <option value="3">3 years</option><option value="5">5 years</option>
+          <option value="7">7 years</option><option value="10">10+ years</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Instagram Profile URL (optional)</label><input class="form-input" id="pInsta" placeholder="https://instagram.com/yourstudio"></div>
+
+    <button class="action-btn btn-gold" onclick="goP(2)">Continue → Services →</button>
+  </div>
+
+  <!-- Page 2: Specialties -->
+  <div class="page" id="p2">
+    <div class="sec-title">✦ What Do You Shoot?</div>
+    <div class="info-box"><div class="info-icon">💡</div>Select all services you offer. This helps couples find you!</div>
+
+    <div class="specialty-grid" id="specialtyGrid">
+      <div class="spec-check" onclick="toggleSpec(this,'Wedding')"><span class="spec-icon">💒</span><span class="spec-name">Wedding</span></div>
+      <div class="spec-check" onclick="toggleSpec(this,'Pre-Wedding')"><span class="spec-icon">💑</span><span class="spec-name">Pre-Wedding</span></div>
+      <div class="spec-check" onclick="toggleSpec(this,'Reception')"><span class="spec-icon">🎊</span><span class="spec-name">Reception</span></div>
+      <div class="spec-check" onclick="toggleSpec(this,'Birthday')"><span class="spec-icon">🎂</span><span class="spec-name">Birthday</span></div>
+      <div class="spec-check" onclick="toggleSpec(this,'Naming Ceremony')"><span class="spec-icon">👶</span><span class="spec-name">Naming Ceremony</span></div>
+      <div class="spec-check" onclick="toggleSpec(this,'Maternity')"><span class="spec-icon">🤱</span><span class="spec-name">Maternity</span></div>
+      <div class="spec-check" onclick="toggleSpec(this,'Corporate')"><span class="spec-icon">💼</span><span class="spec-name">Corporate</span></div>
+      <div class="spec-check" onclick="toggleSpec(this,'Fashion')"><span class="spec-icon">👗</span><span class="spec-name">Fashion</span></div>
+      <div class="spec-check" onclick="toggleSpec(this,'Product')"><span class="spec-icon">📦</span><span class="spec-name">Product</span></div>
+      <div class="spec-check" onclick="toggleSpec(this,'Videography')"><span class="spec-icon">🎬</span><span class="spec-name">Videography</span></div>
+      <div class="spec-check" onclick="toggleSpec(this,'Drone')"><span class="spec-icon">🚁</span><span class="spec-name">Drone</span></div>
+      <div class="spec-check" onclick="toggleSpec(this,'Album Design')"><span class="spec-icon">📖</span><span class="spec-name">Album Design</span></div>
+    </div>
+
+    <div class="sec-title">✦ Coverage Area</div>
+    <div class="info-box"><div class="info-icon">📍</div>Which districts/cities do you travel to for shoots?</div>
+    <div class="form-group"><input class="form-input" id="pCoverage" placeholder="e.g. Bhubaneswar, Cuttack, Puri, Khordha..."></div>
+
+    <button class="action-btn btn-gold" onclick="goP(3)">Continue → Pricing →</button>
+    <button class="action-btn btn-ghost" onclick="goP(1)">← Back</button>
+  </div>
+
+  <!-- Page 3: Pricing -->
+  <div class="page" id="p3">
+    <div class="sec-title">✦ Your Pricing</div>
+    <div class="info-box"><div class="info-icon">💰</div>This helps couples filter by budget. You can negotiate directly with clients.</div>
+
+    <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:10px">Starting price for a wedding package:</div>
+    <div class="price-opts">
+      <div class="price-opt" onclick="selectPrice(this,10000)"><div class="price-opt-amount">₹10,000</div><div class="price-opt-label">Budget</div></div>
+      <div class="price-opt" onclick="selectPrice(this,15000)"><div class="price-opt-amount">₹15,000</div><div class="price-opt-label">Affordable</div></div>
+      <div class="price-opt" onclick="selectPrice(this,25000)"><div class="price-opt-amount">₹25,000</div><div class="price-opt-label">Standard</div></div>
+      <div class="price-opt" onclick="selectPrice(this,40000)"><div class="price-opt-amount">₹40,000</div><div class="price-opt-label">Premium</div></div>
+      <div class="price-opt" onclick="selectPrice(this,60000)"><div class="price-opt-amount">₹60,000</div><div class="price-opt-label">Professional</div></div>
+      <div class="price-opt" onclick="selectPrice(this,100000)"><div class="price-opt-amount">₹1,00,000+</div><div class="price-opt-label">Luxury</div></div>
+    </div>
+
+    <div class="form-group"><label class="form-label">Or enter custom starting price:</label><input class="form-input" id="pCustomPrice" placeholder="e.g. 35000" type="number" oninput="customPrice(this.value)"></div>
+
+    <div class="sec-title">✦ Package Details</div>
+    <div class="form-group"><label class="form-label">What's included in your basic package?</label>
+      <textarea class="form-textarea" id="pPackage" placeholder="e.g. 8 hours coverage, 500+ edited photos, 1 photographer, same day previews, online gallery, drone shots..."></textarea>
+    </div>
+
+    <button class="action-btn btn-gold" onclick="goP(4)">Continue → About →</button>
+    <button class="action-btn btn-ghost" onclick="goP(2)">← Back</button>
+  </div>
+
+  <!-- Page 4: About -->
+  <div class="page" id="p4">
+    <div class="sec-title">✦ Tell Your Story</div>
+    <div class="form-group"><label class="form-label">Bio / About You *</label>
+      <textarea class="form-textarea" id="pBio" placeholder="Tell couples about your photography style, experience, what makes you unique..." style="min-height:100px"></textarea>
+    </div>
+
+    <div class="sec-title">✦ Portfolio Links</div>
+    <div class="form-group"><label class="form-label">Google Drive / Portfolio Link</label><input class="form-input" id="pPortfolio" placeholder="https://drive.google.com/..."></div>
+    <div class="form-group"><label class="form-label">Wedding Wire / JustDial / Google Business Link</label><input class="form-input" id="pGoogleBiz" placeholder="Your business listing URL"></div>
+    <div class="form-group"><label class="form-label">YouTube Channel (optional)</label><input class="form-input" id="pYoutube" placeholder="https://youtube.com/@yourstudio"></div>
+
+    <div class="sec-title">✦ Awards & Recognition</div>
+    <div class="form-group"><label class="form-label">Any awards or certifications? (optional)</label>
+      <textarea class="form-textarea" id="pAwards" placeholder="e.g. Best Wedding Photographer Odisha 2024, Canvera Top Photographer..." style="min-height:60px"></textarea>
+    </div>
+
+    <button class="action-btn btn-gold" onclick="goP(5)">Continue → Review →</button>
+    <button class="action-btn btn-ghost" onclick="goP(3)">← Back</button>
+  </div>
+
+  <!-- Page 5: Review & Submit -->
+  <div class="page" id="p5">
+    <div class="sec-title">✦ Review & Submit</div>
+
+    <div id="reviewCard" style="background:rgba(255,255,255,0.02);border:0.5px solid rgba(232,200,122,0.12);border-radius:12px;padding:16px;margin-bottom:14px;font-size:12px;color:rgba(255,255,255,0.5);line-height:2"></div>
+
+    <div class="info-box"><div class="info-icon">⚡</div>Your listing will go live within 24 hours after our team reviews it. We'll WhatsApp you once approved!</div>
+
+    <div style="background:rgba(255,255,255,0.02);border:0.5px solid rgba(255,255,255,0.06);border-radius:10px;padding:12px;margin-bottom:14px">
+      <div style="display:flex;align-items:flex-start;gap:8px;font-size:11px;color:rgba(255,255,255,0.4);line-height:1.6">
+        <input type="checkbox" id="agreeTerms" style="margin-top:3px;flex-shrink:0">
+        <label for="agreeTerms">I agree to the PhotoFind Pro listing terms. My information is accurate and I give permission to display it on the platform.</label>
+      </div>
+    </div>
+
+    <button class="action-btn btn-gold" onclick="submitRegistration()" id="submitBtn">🚀 Submit My Listing!</button>
+    <button class="action-btn btn-ghost" onclick="goP(4)">← Back</button>
+  </div>
+
+  <!-- Success -->
+  <div id="successPage">
+    <div class="success-icon">🎉</div>
+    <div class="success-title">You're Listed!</div>
+    <div class="success-sub">Your studio has been submitted successfully. Our team will review and approve your listing within 24 hours.</div>
+
+    <div class="next-steps">
+      <div class="ns-title">✦ What Happens Next</div>
+      <div class="ns-step"><div class="ns-num">1</div>Our team reviews your listing within 24 hours</div>
+      <div class="ns-step"><div class="ns-num">2</div>You get a WhatsApp confirmation when approved</div>
+      <div class="ns-step"><div class="ns-num">3</div>Your studio goes live on Find My Photographer page</div>
+      <div class="ns-step"><div class="ns-num">4</div>Couples start connecting with you directly on WhatsApp!</div>
+    </div>
+
+    <button class="action-btn btn-gold" onclick="window.location.href='photographers.html'">👁 View Photographer Listings</button>
+    <button class="action-btn btn-ghost" onclick="window.location.href='https://www.templecity.digital/booking.html'">📸 Book PhotoFind Pro for Events</button>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SERVER = 'https://api.templecity.digital';
+let selectedSpecialties = [];
+let selectedPrice = 0;
+
+function toggleSpec(el, name) {
+  el.classList.toggle('selected');
+  if(el.classList.contains('selected')) {
+    if(!selectedSpecialties.includes(name)) selectedSpecialties.push(name);
+  } else {
+    selectedSpecialties = selectedSpecialties.filter(s => s !== name);
+  }
+}
+
+function selectPrice(el, price) {
+  selectedPrice = price;
+  document.querySelectorAll('.price-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('pCustomPrice').value = '';
+}
+
+function customPrice(val) {
+  selectedPrice = parseInt(val) || 0;
+  document.querySelectorAll('.price-opt').forEach(o => o.classList.remove('selected'));
+}
+
+function goP(n) {
+  // Validations
+  if(n === 2) {
+    if(!document.getElementById('pName').value.trim()){showToast('Enter your name!');return}
+    if(!document.getElementById('pStudio').value.trim()){showToast('Enter studio name!');return}
+    const ph = document.getElementById('pPhone').value.trim();
+    if(!ph||ph.length!==10){showToast('Enter valid 10-digit WhatsApp number!');return}
+    if(!document.getElementById('pEmail').value.trim()){showToast('Enter email address!');return}
+    if(!document.getElementById('pCity').value){showToast('Select your city!');return}
+    if(!document.getElementById('pExp').value){showToast('Select years of experience!');return}
+  }
+  if(n === 3 && selectedSpecialties.length === 0){showToast('Select at least one specialty!');return}
+  if(n === 4 && selectedPrice === 0){showToast('Select or enter your starting price!');return}
+  if(n === 5) buildReview();
+
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('p'+n)?.classList.add('active');
+  for(let i=1;i<=5;i++){
+    const s=document.getElementById('s'+i);
+    s.classList.remove('active','done');
+    if(i<n) s.classList.add('done');
+    else if(i===n) s.classList.add('active');
+  }
+  document.getElementById('progressFill').style.width = (n/5*100)+'%';
+  window.scrollTo(0,0);
+}
+
+function buildReview() {
+  const fields = [
+    {label:'📸 Name', val:document.getElementById('pName').value},
+    {label:'🏪 Studio', val:document.getElementById('pStudio').value},
+    {label:'📱 WhatsApp', val:'+91'+document.getElementById('pPhone').value},
+    {label:'📍 City', val:document.getElementById('pCity').value},
+    {label:'⏳ Experience', val:document.getElementById('pExp').value+' years'},
+    {label:'🎯 Specialties', val:selectedSpecialties.join(', ')},
+    {label:'💰 Starting Price', val:'₹'+selectedPrice.toLocaleString('en-IN')},
+  ];
+  document.getElementById('reviewCard').innerHTML = fields.map(f=>
+    `<div><strong style="color:rgba(255,255,255,0.7)">${f.label}:</strong> ${f.val}</div>`
+  ).join('');
+}
+
+async function submitRegistration() {
+  if(!document.getElementById('agreeTerms').checked){showToast('Please agree to terms!');return}
+
+  const btn = document.getElementById('submitBtn');
+  btn.textContent = '⏳ Submitting...';
+  btn.disabled = true;
+
+  const data = {
+    name: document.getElementById('pName').value.trim(),
+    studio: document.getElementById('pStudio').value.trim(),
+    phone: document.getElementById('pPhone').value.trim(),
+    email: document.getElementById('pEmail').value.trim(),
+    city: document.getElementById('pCity').value,
+    experience: document.getElementById('pExp').value,
+    instagram: document.getElementById('pInsta').value.trim(),
+    specialties: selectedSpecialties,
+    coverage: document.getElementById('pCoverage').value.trim(),
+    startingPrice: selectedPrice,
+    packageDetails: document.getElementById('pPackage').value.trim(),
+    bio: document.getElementById('pBio').value.trim(),
+    portfolio: document.getElementById('pPortfolio').value.trim(),
+    googleBiz: document.getElementById('pGoogleBiz').value.trim(),
+    youtube: document.getElementById('pYoutube').value.trim(),
+    awards: document.getElementById('pAwards').value.trim(),
+    whatsapp: document.getElementById('pPhone').value.trim(),
+    status: 'pending',
+    submittedAt: new Date().toISOString(),
+  };
+
+  try {
+    const res = await fetch(`${SERVER}/register-photographer`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if(result.success) {
+      showSuccess(data);
+    } else {
+      // Fallback - send via WhatsApp
+      sendViaWhatsApp(data);
+    }
+  } catch(e) {
+    sendViaWhatsApp(data);
+  }
+}
+
+function sendViaWhatsApp(data) {
+  // Notify admin via WhatsApp
+  const msg = `📸 *New Photographer Registration — PhotoFind Pro*\n\n*Name:* ${data.name}\n*Studio:* ${data.studio}\n*Phone:* +91${data.phone}\n*City:* ${data.city}\n*Experience:* ${data.experience} years\n*Specialties:* ${data.specialties.join(', ')}\n*Starting Price:* ₹${data.startingPrice.toLocaleString('en-IN')}\n\n_Please review and approve listing_`;
+  window.open(`https://wa.me/918895195862?text=${encodeURIComponent(msg)}`,'_blank');
+  showSuccess(data);
+}
+
+function showSuccess(data) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('successPage').style.display = 'block';
+  for(let i=1;i<=5;i++) document.getElementById('s'+i).classList.add('done');
+  document.getElementById('progressFill').style.width = '100%';
+  window.scrollTo(0,0);
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+</script>
+</body>
+</html>

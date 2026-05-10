@@ -1272,7 +1272,241 @@ app.post('/generate-highlight/:eventId', async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
-// ── Wedding Website Routes ──
+function buildInquiryMessage(data) {
+  const { coupleName, couplePhone, budget, services, eventDays, message } = data;
+  let msg = `📸 Booking Request from ${coupleName}\n📱 +91${couplePhone}\n💰 Budget: ${budget || 'TBD'}\n\n`;
+  if(services?.length > 0) msg += `🎯 Services: ${services.map(s=>s.icon+' '+s.name).join(', ')}\n\n`;
+  if(eventDays?.length > 0) {
+    msg += `📅 Event Schedule:\n`;
+    eventDays.forEach((day, i) => {
+      const date = day.date ? new Date(day.date+'T12:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'}) : 'TBD';
+      msg += `Day ${i+1} (${date}): ${(day.services||[]).map(s=>s.icon+' '+s.name).join(', ')}${day.venue?' @ '+day.venue:''}\n`;
+    });
+  }
+  if(message) msg += `\n💬 ${message}`;
+  return msg;
+}
+
+// ── Photographer Inquiry & Commission System ──
+const inquiries = {}; // { photographerId: [inquiries] }
+const bookings = [];  // confirmed bookings
+
+// Send inquiry to photographer
+app.post('/send-inquiry', async (req, res) => {
+  try {
+    const { photographerId, photographerPhone, photographerName,
+            coupleName, couplePhone, eventDate, budget, eventType, message } = req.body;
+
+    if (!photographerId || !coupleName || !couplePhone) {
+      return res.status(400).json({ success: false, error: 'Missing required fields' });
+    }
+
+    const inquiryId = `inq_${Date.now()}_${Math.random().toString(36).substr(2,6)}`;
+    const inquiry = {
+      id: inquiryId,
+      photographerId,
+      photographerName,
+      coupleName,
+      couplePhone,
+      eventDate,
+      budget,
+      eventType,
+      services: req.body.services || [],
+      eventDays: req.body.eventDays || [],
+      message,
+      status: 'new',
+      messages: [
+        {
+          from: 'couple',
+          name: coupleName,
+          text: buildInquiryMessage(req.body),
+          timestamp: new Date().toISOString(),
+        }
+      ],
+      createdAt: new Date().toISOString(),
+      commission: null,
+    };
+
+    if (!inquiries[photographerId]) inquiries[photographerId] = [];
+    inquiries[photographerId].push(inquiry);
+
+    console.log(`💬 New inquiry: ${coupleName} → ${photographerName}`);
+
+    // Send WhatsApp notification to photographer
+    if (photographerPhone) {
+      const waMsg = `🔔 *New Inquiry — PhotoFind Pro*\n\n` +
+        `👰 *From:* ${coupleName}\n` +
+        `📱 *Phone:* +91${couplePhone}\n` +
+        `📅 *Event Date:* ${eventDate || 'Not specified'}\n` +
+        `🎯 *Event Type:* ${eventType || 'Wedding'}\n` +
+        `💰 *Budget:* ${budget || 'Not specified'}\n\n` +
+        `💬 *Message:* ${message}\n\n` +
+        `📲 Reply on PhotoFind Pro:\n` +
+        `https://www.templecity.digital/photographer-inbox.html?ph=${photographerId}\n\n` +
+        `_Track all inquiries & mark bookings on your dashboard_`;
+
+      console.log(`📱 WhatsApp to ${photographerPhone}: ${waMsg.substring(0,50)}...`);
+    }
+
+    res.json({ success: true, inquiryId, message: 'Inquiry sent successfully!' });
+  } catch(err) {
+    console.error('❌ Inquiry error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Get inquiries for a photographer
+app.get('/inquiries/:photographerId', (req, res) => {
+  const phInquiries = inquiries[req.params.photographerId] || [];
+  res.json({ success: true, inquiries: phInquiries, total: phInquiries.length });
+});
+
+// Reply to an inquiry
+app.post('/reply-inquiry', (req, res) => {
+  try {
+    const { photographerId, inquiryId, replyText, photographerName } = req.body;
+    const phInquiries = inquiries[photographerId] || [];
+    const inquiry = phInquiries.find(i => i.id === inquiryId);
+
+    if (!inquiry) return res.status(404).json({ success: false, error: 'Inquiry not found' });
+
+    inquiry.messages.push({
+      from: 'photographer',
+      name: photographerName || 'Photographer',
+      text: replyText,
+      timestamp: new Date().toISOString(),
+    });
+    inquiry.status = 'replied';
+
+    console.log(`💬 Reply sent: ${photographerName} → ${inquiry.coupleName}`);
+    res.json({ success: true, message: 'Reply sent!' });
+  } catch(err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Mark as booked + calculate commission
+app.post('/mark-booked', async (req, res) => {
+  try {
+    const { photographerId, inquiryId, bookingAmount, eventDate, coupleName, photographerName, photographerPhone } = req.body;
+    const phInquiries = inquiries[photographerId] || [];
+    const inquiry = phInquiries.find(i => i.id === inquiryId);
+
+    if (!inquiry) return res.status(404).json({ success: false, error: 'Inquiry not found' });
+
+    const commissionRate = 0.05; // 5%
+    const commissionAmount = Math.round(bookingAmount * commissionRate);
+
+    inquiry.status = 'booked';
+    inquiry.commission = {
+      bookingAmount: parseInt(bookingAmount),
+      rate: commissionRate,
+      amount: commissionAmount,
+      status: 'pending', // pending, paid
+      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
+    };
+
+    const booking = {
+      id: `bk_${Date.now()}`,
+      photographerId,
+      photographerName,
+      photographerPhone,
+      inquiryId,
+      coupleName: inquiry.coupleName,
+      couplePhone: inquiry.couplePhone,
+      eventDate,
+      bookingAmount: parseInt(bookingAmount),
+      commissionAmount,
+      commissionStatus: 'pending',
+      bookedAt: new Date().toISOString(),
+    };
+    bookings.push(booking);
+
+    console.log(`✅ Booking confirmed! ${coupleName} × ${photographerName} — Commission: ₹${commissionAmount}`);
+
+    // Send commission invoice via WhatsApp to photographer
+    if (photographerPhone) {
+      const invoiceMsg = `✅ *Booking Confirmed — PhotoFind Pro*\n\n` +
+        `💑 *Couple:* ${inquiry.coupleName}\n` +
+        `📅 *Event Date:* ${eventDate}\n` +
+        `💰 *Booking Amount:* ₹${parseInt(bookingAmount).toLocaleString('en-IN')}\n\n` +
+        `📊 *Platform Commission (5%):*\n` +
+        `₹${commissionAmount.toLocaleString('en-IN')}\n\n` +
+        `⏳ *Due within 7 days*\n\n` +
+        `Pay commission:\nhttps://www.templecity.digital/booking.html\n\n` +
+        `_Thank you for using PhotoFind Pro!_`;
+
+      console.log(`💬 Commission invoice sent to ${photographerPhone}`);
+    }
+
+    res.json({
+      success: true,
+      booking,
+      commission: commissionAmount,
+      message: `Booking confirmed! Commission of ₹${commissionAmount} due within 7 days.`
+    });
+  } catch(err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Get all bookings (admin)
+app.get('/bookings', (req, res) => {
+  const totalCommission = bookings.reduce((sum, b) => sum + b.commissionAmount, 0);
+  const paidCommission = bookings.filter(b => b.commissionStatus === 'paid').reduce((sum, b) => sum + b.commissionAmount, 0);
+  res.json({ success: true, bookings, total: bookings.length, totalCommission, paidCommission });
+});
+
+// Get booking stats for dashboard
+app.get('/commission-stats', (req, res) => {
+  const stats = {
+    totalBookings: bookings.length,
+    pendingCommission: bookings.filter(b => b.commissionStatus === 'pending').reduce((sum, b) => sum + b.commissionAmount, 0),
+    paidCommission: bookings.filter(b => b.commissionStatus === 'paid').reduce((sum, b) => sum + b.commissionAmount, 0),
+    totalCommission: bookings.reduce((sum, b) => sum + b.commissionAmount, 0),
+  };
+  res.json({ success: true, stats });
+});
+const photographers = [];
+
+app.post('/register-photographer', async (req, res) => {
+  try {
+    const data = req.body;
+    if(!data.name || !data.phone) return res.status(400).json({success:false,error:'Missing fields'});
+    const id = `ph_${Date.now()}_${Math.random().toString(36).substr(2,6)}`;
+    const photographer = {...data, id, status:'pending', createdAt:new Date().toISOString()};
+    photographers.push(photographer);
+    console.log(`📸 New photographer registered: ${data.name} — ${data.city}`);
+    // Notify admin via WhatsApp
+    const msg = `📸 New Photographer Registration!\n\nName: ${data.name}\nStudio: ${data.studio}\nCity: ${data.city}\nPhone: +91${data.phone}\nSpecialties: ${(data.specialties||[]).join(', ')}\nPrice: ₹${data.startingPrice}`;
+    console.log('WhatsApp notification:', msg);
+    res.json({success:true, id, message:'Registration submitted successfully!'});
+  } catch(err) {
+    res.status(500).json({success:false, error:err.message});
+  }
+});
+
+app.get('/photographers', (req, res) => {
+  const approved = photographers.filter(p => p.status === 'approved');
+  res.json({success:true, photographers:approved, total:approved.length});
+});
+
+app.get('/photographers/all', (req, res) => {
+  res.json({success:true, photographers, total:photographers.length});
+});
+
+app.get('/photographer-by-phone/:phone', (req, res) => {
+  const ph = photographers.find(p => p.phone === req.params.phone || p.whatsapp === req.params.phone);
+  if(!ph) return res.status(404).json({success:false, error:'Not found'});
+  res.json({success:true, photographer:{id:ph.id, name:ph.name, city:ph.city}});
+});
+
+app.post('/approve-photographer/:id', (req, res) => {
+  const ph = photographers.find(p => p.id === req.params.id);
+  if(!ph) return res.status(404).json({success:false, error:'Not found'});
+  ph.status = 'approved';
+  res.json({success:true, message:'Photographer approved!'});
+});
 const weddingWebsites = {};
 const rsvpData = {};
 
