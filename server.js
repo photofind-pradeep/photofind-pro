@@ -1235,9 +1235,8 @@ app.post('/generate-highlight/:eventId', async (req, res) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           resource_type: 'video',
-          folder: `photofind-reels/${eventId}`,
-          public_id: `highlight_reel_${Date.now()}`,
-          overwrite: true,
+          folder: 'photofind-reels',
+          tags: [eventId],
         },
         (error, result) => {
           if (error) reject(error);
