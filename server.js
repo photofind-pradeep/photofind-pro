@@ -1467,6 +1467,71 @@ app.get('/commission-stats', (req, res) => {
   };
   res.json({ success: true, stats });
 });
+// ── Seedance 2.0 Video Generation ──
+const Replicate = require('replicate');
+const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN });
+
+const VIDEO_PROMPTS = {
+  wedding: 'Cinematic Indian wedding mandap, golden pillars with marigold garlands, sacred fire in center, rose petals falling slowly, warm golden light, oil lamps glowing, soft bokeh, ethereal atmosphere, slow motion, ultra detailed',
+  floral: 'Beautiful Indian wedding decoration, pink and white roses, jasmine flower strings hanging, fairy lights twinkling, golden drapes, soft pink light, rose petals floating, dreamy romantic, slow gentle motion, cinematic',
+  royal: 'Majestic Indian royal palace interior, gold ornate pillars, crystal chandeliers glowing, red and gold silk curtains swaying, marble floor reflection, candles flickering, royal wedding ambiance, cinematic wide shot, warm regal light',
+  traditional: 'Traditional Odia wedding ceremony, tulsi plant with oil diyas, conch shell, alpana patterns on floor, banana leaves decoration, marigold strings, red and gold color scheme, sacred atmosphere, warm candlelight, slow cinematic motion',
+  night: 'Outdoor Indian wedding at night, thousands of fairy lights on trees, starry sky above, marigold arch glowing golden, candles everywhere, fireflies floating, magical ethereal atmosphere, cinematic slow motion',
+  rajasthani: 'Rajasthani desert wedding at golden sunset, sand dunes, ornate haveli, marigold decorations, traditional rangoli glowing, oil diyas, warm orange sky, gentle breeze moving fabric, cinematic drone shot, slow motion',
+};
+
+app.post('/generate-video-invite', async (req, res) => {
+  try {
+    const { prompt, style = 'wedding', duration = 8, aspectRatio = '9:16' } = req.body;
+    const finalPrompt = prompt || VIDEO_PROMPTS[style] || VIDEO_PROMPTS.wedding;
+    console.log(`🎬 Generating Seedance 2.0 video — style: ${style}`);
+
+    const output = await replicate.run('bytedance/seedance-2.0', {
+      input: {
+        prompt: finalPrompt,
+        duration: parseInt(duration),
+        aspect_ratio: aspectRatio,
+        resolution: '720p',
+      }
+    });
+
+    console.log(`✅ Video ready: ${output}`);
+    res.json({ success: true, videoUrl: output, style, prompt: finalPrompt });
+  } catch(err) {
+    console.error('❌ Seedance error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Quick GET test — open in browser directly!
+app.get('/test-seedance', async (req, res) => {
+  try {
+    const style = req.query.style || 'wedding';
+    const finalPrompt = VIDEO_PROMPTS[style] || VIDEO_PROMPTS.wedding;
+    console.log(`🎬 TEST — Seedance 2.0 — style: ${style}`);
+
+    const output = await replicate.run('bytedance/seedance-2.0', {
+      input: {
+        prompt: finalPrompt,
+        duration: 5,
+        aspect_ratio: '9:16',
+        resolution: '480p',
+      }
+    });
+
+    res.json({
+      success: true,
+      videoUrl: output,
+      style,
+      prompt: finalPrompt,
+      message: '🎬 Seedance 2.0 working perfectly!'
+    });
+  } catch(err) {
+    console.error('❌ Test error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // ── Photographer Portfolio Management ──
 const portfolios = {};
 
