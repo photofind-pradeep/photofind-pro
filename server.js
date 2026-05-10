@@ -1518,7 +1518,9 @@ app.get('/test-seedance', async (req, res) => {
     const finalPrompt = VIDEO_PROMPTS[style] || VIDEO_PROMPTS.wedding;
     console.log(`🎬 TEST — Seedance 2.0 — style: ${style}`);
 
-    const output = await replicate.run('bytedance/seedance-2.0', {
+    // Use predictions API for async model
+    const prediction = await replicate.predictions.create({
+      model: 'bytedance/seedance-2.0',
       input: {
         prompt: finalPrompt,
         duration: 5,
@@ -1527,24 +1529,39 @@ app.get('/test-seedance', async (req, res) => {
       }
     });
 
-    console.log(`✅ Raw output:`, JSON.stringify(output));
+    console.log(`📋 Prediction created: ${prediction.id} — status: ${prediction.status}`);
 
-    // Handle different output formats
+    // Poll until complete
+    let result = prediction;
+    let attempts = 0;
+    while(result.status !== 'succeeded' && result.status !== 'failed' && attempts < 60) {
+      await new Promise(r => setTimeout(r, 5000)); // wait 5 seconds
+      result = await replicate.predictions.get(prediction.id);
+      attempts++;
+      console.log(`⏳ Attempt ${attempts} — status: ${result.status}`);
+    }
+
+    console.log(`✅ Final result:`, JSON.stringify(result.output));
+
+    if(result.status === 'failed') {
+      return res.status(500).json({success:false, error: result.error || 'Generation failed'});
+    }
+
+    // Extract video URL
     let videoUrl = null;
-    if(typeof output === 'string') videoUrl = output;
-    else if(Array.isArray(output)) videoUrl = output[0];
-    else if(output?.url) videoUrl = output.url;
-    else if(output?.video) videoUrl = output.video;
-    else if(output?.output) videoUrl = output.output;
-    else videoUrl = JSON.stringify(output);
+    if(typeof result.output === 'string') videoUrl = result.output;
+    else if(Array.isArray(result.output)) videoUrl = result.output[0];
+    else if(result.output?.video) videoUrl = result.output.video;
+    else if(result.output?.url) videoUrl = result.output.url;
+    else videoUrl = JSON.stringify(result.output);
 
     res.json({
       success: true,
       videoUrl,
-      rawOutput: output,
+      predictionId: prediction.id,
       style,
       prompt: finalPrompt,
-      message: '🎬 Seedance 2.0 working perfectly!'
+      message: '🎬 Seedance 2.0 video ready!'
     });
   } catch(err) {
     console.error('❌ Test error:', err.message);
