@@ -1527,9 +1527,21 @@ app.get('/test-seedance', async (req, res) => {
       }
     });
 
+    console.log(`✅ Raw output:`, JSON.stringify(output));
+
+    // Handle different output formats
+    let videoUrl = null;
+    if(typeof output === 'string') videoUrl = output;
+    else if(Array.isArray(output)) videoUrl = output[0];
+    else if(output?.url) videoUrl = output.url;
+    else if(output?.video) videoUrl = output.video;
+    else if(output?.output) videoUrl = output.output;
+    else videoUrl = JSON.stringify(output);
+
     res.json({
       success: true,
-      videoUrl: output,
+      videoUrl,
+      rawOutput: output,
       style,
       prompt: finalPrompt,
       message: '🎬 Seedance 2.0 working perfectly!'
