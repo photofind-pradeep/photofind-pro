@@ -1229,19 +1229,30 @@ app.post('/generate-highlight/:eventId', async (req, res) => {
     // Create highlight reel
     const reelBuffer = await createReel(photoBuffers, eventName, eventType, bgmUrl);
 
-    // Upload to Drive
-    const reelFolderId = await getOrCreateFolder(eventId, 'reels');
-    const reelFile = await uploadBufferToDrive(
-      reelBuffer,
-      `highlight_reel_${Date.now()}.mp4`,
-      reelFolderId,
-      'video/mp4'
-    );
+    // Upload to Cloudinary (works with service account!)
+    console.log('☁️ Uploading reel to Cloudinary...');
+    const cloudinaryResult = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'video',
+          folder: `photofind-reels/${eventId}`,
+          public_id: `highlight_reel_${Date.now()}`,
+          overwrite: true,
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      uploadStream.end(reelBuffer);
+    });
 
-    console.log(`✅ Highlight reel uploaded: ${reelFile.viewLink}`);
+    const reelLink = cloudinaryResult.secure_url;
+    console.log(`✅ Highlight reel uploaded to Cloudinary: ${reelLink}`);
+
     res.json({
       success: true,
-      reelLink: reelFile.viewLink,
+      reelLink,
       photoCount: photoBuffers.length,
       eventName,
     });
