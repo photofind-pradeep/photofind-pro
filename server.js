@@ -1468,8 +1468,14 @@ app.get('/commission-stats', (req, res) => {
   res.json({ success: true, stats });
 });
 // ── Seedance 2.0 Video Generation ──
-const Replicate = require('replicate');
-const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN });
+let replicate = null;
+try {
+  const Replicate = require('replicate');
+  replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN });
+  console.log('✅ Replicate initialized');
+} catch(e) {
+  console.log('⚠️ Replicate not available:', e.message);
+}
 
 const VIDEO_PROMPTS = {
   wedding: 'Cinematic Indian wedding mandap, golden pillars with marigold garlands, sacred fire in center, rose petals falling slowly, warm golden light, oil lamps glowing, soft bokeh, ethereal atmosphere, slow motion, ultra detailed',
@@ -1482,6 +1488,7 @@ const VIDEO_PROMPTS = {
 
 app.post('/generate-video-invite', async (req, res) => {
   try {
+    if(!replicate) return res.status(500).json({success:false, error:'Replicate not configured'});
     const { prompt, style = 'wedding', duration = 8, aspectRatio = '9:16' } = req.body;
     const finalPrompt = prompt || VIDEO_PROMPTS[style] || VIDEO_PROMPTS.wedding;
     console.log(`🎬 Generating Seedance 2.0 video — style: ${style}`);
@@ -1506,6 +1513,7 @@ app.post('/generate-video-invite', async (req, res) => {
 // Quick GET test — open in browser directly!
 app.get('/test-seedance', async (req, res) => {
   try {
+    if(!replicate) return res.status(500).json({success:false, error:'Replicate not configured'});
     const style = req.query.style || 'wedding';
     const finalPrompt = VIDEO_PROMPTS[style] || VIDEO_PROMPTS.wedding;
     console.log(`🎬 TEST — Seedance 2.0 — style: ${style}`);
