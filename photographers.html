@@ -327,6 +327,10 @@ footer{padding:32px 5%;border-top:0.5px solid var(--border);display:flex;align-i
       <option value="Birthday">Birthday</option>
       <option value="Corporate">Corporate</option>
       <option value="Maternity">Maternity</option>
+      <option value="Candid Photography">Candid Photography</option>
+      <option value="Traditional Photography">Traditional Photography</option>
+      <option value="Baby Shower Shoot">Baby Shower Shoot</option>
+      <option value="Instagram Reels">Instagram Reels</option>
     </select>
     <button class="filter-tag active" onclick="filterByTag(this,'all')">All</button>
     <button class="filter-tag" onclick="filterByTag(this,'featured')">⭐ Featured</button>
@@ -465,6 +469,10 @@ footer{padding:32px 5%;border-top:0.5px solid var(--border);display:flex;align-i
           <div class="svc-btn" onclick="toggleService(this,'🎓','College Function')"><span class="svc-icon">🎓</span><span class="svc-name">College Function</span><span class="svc-check"></span></div>
           <div class="svc-btn" onclick="toggleService(this,'🎂','Birthday Party')"><span class="svc-icon">🎂</span><span class="svc-name">Birthday Party</span><span class="svc-check"></span></div>
           <div class="svc-btn" onclick="toggleService(this,'🙏','Engagement')"><span class="svc-icon">🙏</span><span class="svc-name">Engagement</span><span class="svc-check"></span></div>
+          <div class="svc-btn" onclick="toggleService(this,'📸','Candid Photography')"><span class="svc-icon">📸</span><span class="svc-name">Candid Photography</span><span class="svc-check"></span></div>
+          <div class="svc-btn" onclick="toggleService(this,'🎎','Traditional Photography')"><span class="svc-icon">🎎</span><span class="svc-name">Traditional Photography</span><span class="svc-check"></span></div>
+          <div class="svc-btn" onclick="toggleService(this,'🍼','Baby Shower Shoot')"><span class="svc-icon">🍼</span><span class="svc-name">Baby Shower Shoot</span><span class="svc-check"></span></div>
+          <div class="svc-btn" onclick="toggleService(this,'🎬','Instagram Reels')"><span class="svc-icon">🎬</span><span class="svc-name">Instagram Reels</span><span class="svc-check"></span></div>
         </div>
         <div id="servicesWarning" style="display:none;font-size:11px;color:rgba(224,122,143,0.8);margin-top:-4px">⚠️ Please select at least one service!</div>
       </div>
@@ -743,6 +751,8 @@ const ALL_SERVICES = {
   '🌅': 'Post-Wedding', '👨‍👩‍👧': 'Family Function',
   '💼': 'Corporate Event', '🎓': 'College Function',
   '🎂': 'Birthday Party', '🙏': 'Engagement',
+  '📸': 'Candid Photography', '🎎': 'Traditional Photography',
+  '🍼': 'Baby Shower Shoot', '🎬': 'Instagram Reels',
 };
 
 function openInquiry(id, name, city, phone) {
