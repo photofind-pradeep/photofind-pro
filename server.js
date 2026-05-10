@@ -1523,9 +1523,9 @@ app.get('/test-seedance', async (req, res) => {
       model: 'bytedance/seedance-2.0',
       input: {
         prompt: finalPrompt,
-        duration: 5,
+        duration: 10,
         aspect_ratio: '9:16',
-        resolution: '480p',
+        resolution: '720p',
       }
     });
 
