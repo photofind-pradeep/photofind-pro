@@ -462,42 +462,17 @@ async function editPhotoWithCloudinary(imageBuffer, eventType = 'wedding') {
 //  AUTO BGM SELECTION
 // ════════════════════════════════════════
 async function getBGMForEvent(eventType) {
-  // BGM tracks per event type from Pixabay
-  const bgmSearchTerms = {
-    wedding: 'romantic wedding instrumental',
-    sangeet: 'bollywood festive dance',
-    birthday: 'happy birthday celebration',
-    corporate: 'corporate professional background',
-    graduation: 'inspiring achievement',
+  // Free royalty-free music from Pixabay CDN (no API key needed)
+  const bgmTracks = {
+    wedding: 'https://cdn.pixabay.com/download/audio/2022/08/04/audio_2dde668d05.mp3',
+    birthday: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0c6ff1bbb.mp3',
+    corporate: 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c8a73467.mp3',
+    default: 'https://cdn.pixabay.com/download/audio/2022/08/04/audio_2dde668d05.mp3',
   };
 
-  const searchTerm = bgmSearchTerms[eventType] || bgmSearchTerms.wedding;
-
-  try {
-    console.log(`🎵 Fetching BGM for: ${eventType}`);
-
-    const response = await axios.get('https://pixabay.com/api/videos/', {
-      params: {
-        key: process.env.PIXABAY_API_KEY,
-        q: searchTerm,
-        video_type: 'music',
-        per_page: 5,
-      },
-    });
-
-    if (response.data.hits && response.data.hits.length > 0) {
-      const randomTrack = response.data.hits[Math.floor(Math.random() * response.data.hits.length)];
-      return randomTrack.videos?.medium?.url || null;
-    }
-  } catch (err) {
-    console.error('⚠️ BGM fetch failed:', err.message);
-  }
-
-  // Fallback — use local BGM file if exists
-  const localBGM = path.join(__dirname, 'bgm', `${eventType}.mp3`);
-  if (fs.existsSync(localBGM)) return localBGM;
-
-  return null;
+  const url = bgmTracks[eventType] || bgmTracks.default;
+  console.log(`🎵 Using BGM: ${url}`);
+  return url;
 }
 
 // ════════════════════════════════════════
@@ -623,10 +598,14 @@ async function createReel(photoBuffers, eventName, eventType, bgmUrl) {
 
       // Add BGM
       if (bgmPath) {
-        cmd.input(bgmPath)
-          .audioCodec('aac')
-          .audioBitrate('192k')
-          .outputOptions(['-shortest', '-map 0:v:0', '-map 1:a:0']);
+        try {
+          cmd.input(bgmPath)
+            .audioCodec('aac')
+            .audioBitrate('128k')
+            .outputOptions(['-shortest', '-map 0:v:0', '-map 1:a:0?']);
+        } catch(e) {
+          cmd.outputOptions(['-an']);
+        }
       } else {
         cmd.outputOptions(['-an']); // No audio if no BGM
       }
