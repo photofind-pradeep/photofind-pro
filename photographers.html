@@ -4,380 +4,480 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Find My Photographer — PhotoFind Pro</title>
-<meta name="description" content="Find the best wedding photographers in Odisha. Browse portfolios, compare packages and connect directly.">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<meta name="description" content="Odisha's finest wedding & event photographers. Browse portfolios, compare packages and connect instantly.">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=DM+Sans:wght@200;300;400;500;600;700;800&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --gold:#D4A843;--gold2:#F0C866;--gold3:#A07830;
-  --dark:#07060A;--dark2:#0D0B12;--dark3:#141220;
-  --text:#F0EEF8;--muted:rgba(240,238,248,0.45);--muted2:rgba(240,238,248,0.25);
-  --border:rgba(212,168,67,0.12);--border2:rgba(212,168,67,0.25);
-  --green:#25D366;
+  --ink:#0A0806;--ink2:#14100C;--ink3:#1E1810;
+  --gold:#C9963C;--gold2:#E8B85A;--gold3:#F5D080;--gold-dim:rgba(201,150,60,0.08);
+  --cream:#F5F0E8;--cream2:#EDE6D8;--cream3:#E0D5C0;
+  --text:#1A1208;--muted:rgba(26,18,8,0.5);--muted2:rgba(26,18,8,0.3);
+  --border:rgba(201,150,60,0.15);--border2:rgba(201,150,60,0.3);
+  --green:#1A6B3C;--green-light:#25A85A;
+  --rose:#8B2340;
 }
-html{scroll-behavior:smooth}
-body{font-family:'DM Sans',sans-serif;background:var(--dark);color:var(--text);overflow-x:hidden}
+html{scroll-behavior:smooth;overflow-x:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);overflow-x:hidden;cursor:none}
 
-/* Grain */
-body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.3}
+/* ── CURSOR ── */
+.cur{position:fixed;z-index:9999;pointer-events:none;mix-blend-mode:multiply}
+.cur-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);transition:transform 0.1s}
+.cur-ring{position:fixed;width:36px;height:36px;border:1px solid rgba(201,150,60,0.5);border-radius:50%;z-index:9998;pointer-events:none;transition:all 0.18s ease;mix-blend-mode:multiply}
 
-/* NAV */
-nav{position:fixed;top:0;left:0;right:0;z-index:500;padding:0 5%;height:64px;display:flex;align-items:center;justify-content:space-between;background:rgba(7,6,10,0.92);backdrop-filter:blur(20px);border-bottom:0.5px solid var(--border)}
-.nav-logo{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600}
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:500;height:64px;padding:0 6%;display:flex;align-items:center;justify-content:space-between;background:rgba(245,240,232,0);transition:all 0.4s}
+nav.solid{background:rgba(245,240,232,0.95);backdrop-filter:blur(20px);border-bottom:0.5px solid var(--border);box-shadow:0 2px 24px rgba(26,18,8,0.06)}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:600;color:var(--text);letter-spacing:-0.01em}
 .nav-logo em{color:var(--gold);font-style:normal}
-.nav-links{display:flex;align-items:center;gap:24px}
-.nav-links a{font-size:12px;color:var(--muted);text-decoration:none;transition:color 0.2s}
+.nav-links{display:flex;align-items:center;gap:28px}
+.nav-links a{font-size:12px;color:var(--muted);text-decoration:none;letter-spacing:0.08em;font-weight:500;transition:color 0.2s}
 .nav-links a:hover{color:var(--text)}
-.nav-cta{padding:8px 20px;background:linear-gradient(135deg,var(--gold3),var(--gold));color:var(--dark);border-radius:6px;font-size:12px;font-weight:700;text-decoration:none;transition:all 0.2s}
-.nav-cta:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(212,168,67,0.3)}
-.nav-register{padding:8px 20px;background:transparent;border:0.5px solid var(--border2);color:var(--gold);border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;transition:all 0.2s}
-.nav-register:hover{background:rgba(212,168,67,0.08)}
+.nav-btns{display:flex;gap:8px;align-items:center}
+.btn-ghost-ink{padding:8px 18px;border:0.5px solid rgba(26,18,8,0.2);border-radius:2px;font-size:11px;font-weight:600;color:var(--muted);text-decoration:none;transition:all 0.2s;letter-spacing:0.08em}
+.btn-ghost-ink:hover{border-color:var(--gold);color:var(--text)}
+.btn-solid-gold{padding:8px 20px;background:var(--gold);border-radius:2px;font-size:11px;font-weight:700;color:white;text-decoration:none;transition:all 0.2s;letter-spacing:0.08em;border:none;cursor:none}
+.btn-solid-gold:hover{background:var(--gold2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(201,150,60,0.3)}
 
-/* HERO */
-.hero{min-height:60vh;display:flex;align-items:center;padding:100px 5% 60px;position:relative;overflow:hidden}
-.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(212,168,67,0.06),transparent 50%),radial-gradient(ellipse at 70% 30%,rgba(200,96,122,0.04),transparent 50%)}
-.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(212,168,67,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(212,168,67,0.03) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse at 30% 50%,black 20%,transparent 60%)}
-.hero-content{position:relative;z-index:2;max-width:600px}
-.hero-label{font-size:10px;letter-spacing:0.4em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
-.hero-label::before{content:'';width:24px;height:0.5px;background:var(--gold)}
-.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,9vw,88px);line-height:0.9;letter-spacing:0.02em;margin-bottom:16px}
-.hero-title .gold{color:var(--gold)}
-.hero-sub{font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;color:var(--muted);line-height:1.5;margin-bottom:28px;max-width:480px}
-.hero-stats{display:flex;gap:24px;flex-wrap:wrap}
-.hs{text-align:center}
-.hs-num{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--gold);line-height:1}
-.hs-lbl{font-size:10px;color:var(--muted2);letter-spacing:0.1em;text-transform:uppercase}
+/* ── HERO ── */
+.hero{min-height:88vh;display:grid;grid-template-columns:1fr 1fr;position:relative;overflow:hidden;padding-top:64px}
 
-/* Hero right — photographer cards preview */
-.hero-preview{position:absolute;right:5%;top:50%;transform:translateY(-50%);display:grid;grid-template-columns:1fr 1fr;gap:8px;opacity:0.6;pointer-events:none}
-.hp-card{background:var(--dark2);border:0.5px solid var(--border);border-radius:12px;padding:14px;width:140px}
-.hp-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--gold3),var(--gold));display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:8px}
-.hp-name{font-size:11px;font-weight:600;color:var(--text);margin-bottom:2px}
-.hp-city{font-size:9px;color:var(--muted2)}
-.hp-rating{font-size:9px;color:var(--gold);margin-top:4px}
+/* Left panel */
+.hero-left{background:var(--ink);position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;padding:60px 8% 60px 6%}
+.hero-left-pattern{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(201,150,60,0.06) 1px,transparent 1px);background-size:32px 32px}
+.hero-left-glow{position:absolute;bottom:-100px;left:-100px;width:400px;height:400px;background:radial-gradient(ellipse,rgba(201,150,60,0.12),transparent 65%);border-radius:50%}
+.hero-left-glow2{position:absolute;top:-50px;right:-50px;width:280px;height:280px;background:radial-gradient(ellipse,rgba(139,35,64,0.08),transparent 65%);border-radius:50%}
 
-/* FILTERS */
-.filters-section{padding:24px 5%;background:rgba(255,255,255,0.02);border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border);position:sticky;top:64px;z-index:100;backdrop-filter:blur(20px)}
-.filters-wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.filter-select{background:rgba(255,255,255,0.04);border:0.5px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;cursor:pointer;transition:border-color 0.2s}
-.filter-select:focus{border-color:var(--border2)}
-.filter-select option{background:#0D0B12;color:white}
-.search-input{flex:1;min-width:200px;background:rgba(255,255,255,0.04);border:0.5px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;transition:border-color 0.2s}
-.search-input:focus{border-color:var(--border2)}
+.hero-eyebrow{font-size:9px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(201,150,60,0.6);font-weight:600;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.hero-eyebrow::before{content:'';width:32px;height:0.5px;background:var(--gold);opacity:0.5}
+
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(60px,8vw,104px);line-height:0.88;letter-spacing:0.025em;color:white;margin-bottom:24px}
+.hero-title .accent{color:var(--gold);display:block}
+.hero-title .outline{-webkit-text-stroke:1px rgba(255,255,255,0.2);color:transparent;display:block}
+
+.hero-sub{font-family:'Cormorant Garamond',serif;font-size:18px;font-style:italic;color:rgba(255,255,255,0.45);line-height:1.55;max-width:360px;margin-bottom:36px}
+
+.hero-stats{display:flex;gap:28px;padding-top:28px;border-top:0.5px solid rgba(255,255,255,0.08)}
+.hs{display:flex;flex-direction:column;gap:3px}
+.hs-num{font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--gold);line-height:1}
+.hs-lbl{font-size:9px;color:rgba(255,255,255,0.3);letter-spacing:0.2em;text-transform:uppercase}
+
+/* Right panel — collage */
+.hero-right{position:relative;overflow:hidden;background:var(--cream2)}
+.hero-collage{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,1fr);gap:3px}
+.hc-item{overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:32px;position:relative}
+.hc-item:first-child{grid-row:span 2}
+.hc-item::after{content:'';position:absolute;inset:0;background:linear-gradient(160deg,rgba(10,8,6,0.1),transparent)}
+.hc-bg{width:100%;height:100%;display:flex;align-items:center;justify-content:center;transition:transform 8s ease}
+.hc-item:hover .hc-bg{transform:scale(1.08)}
+
+.hc1{background:linear-gradient(160deg,#1A0A08,#2A1200)}
+.hc2{background:linear-gradient(160deg,#0A1208,#08180A)}
+.hc3{background:linear-gradient(160deg,#08081A,#14082A)}
+.hc4{background:linear-gradient(160deg,#1A1000,#2A1A00)}
+.hc5{background:linear-gradient(160deg,#180A08,#280E08)}
+
+.hero-right-overlay{position:absolute;left:0;top:0;bottom:0;width:60px;background:linear-gradient(90deg,var(--ink),transparent);pointer-events:none}
+
+/* ── SEARCH STRIP ── */
+.search-strip{background:white;border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border);padding:0 6%;position:sticky;top:64px;z-index:400;box-shadow:0 4px 20px rgba(26,18,8,0.06)}
+.search-inner{display:flex;align-items:stretch;gap:0;height:56px}
+.search-main{flex:1;display:flex;align-items:center;gap:10px;padding:0 16px;border-right:0.5px solid var(--border)}
+.search-icon{font-size:14px;opacity:0.4;flex-shrink:0}
+.search-input{flex:1;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:transparent}
 .search-input::placeholder{color:var(--muted2)}
-.filter-tag{padding:7px 14px;border-radius:20px;border:0.5px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;transition:all 0.2s}
-.filter-tag.active{border-color:var(--gold);background:rgba(212,168,67,0.1);color:var(--gold)}
-.results-count{font-size:11px;color:var(--muted2);margin-left:auto}
+.search-filter{display:flex;align-items:center;padding:0 14px;gap:6px;border-right:0.5px solid var(--border);cursor:pointer;transition:background 0.2s;flex-shrink:0}
+.search-filter:hover{background:var(--cream)}
+.sf-label{font-size:11px;color:var(--muted);font-weight:500}
+.sf-select{border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:11px;color:var(--text);background:transparent;cursor:pointer;font-weight:600;max-width:130px}
+.sf-select option{background:white;color:var(--text)}
+.search-tags{display:flex;align-items:center;gap:6px;padding:0 14px;overflow-x:auto;flex:1}
+.search-tags::-webkit-scrollbar{display:none}
+.stag{padding:4px 12px;border-radius:20px;border:0.5px solid var(--border);background:transparent;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;color:var(--muted);cursor:pointer;transition:all 0.15s;white-space:nowrap;letter-spacing:0.04em}
+.stag.on{border-color:var(--gold);background:var(--gold-dim);color:var(--gold)}
+.results-badge{flex-shrink:0;padding:0 16px;display:flex;align-items:center;font-size:10px;color:var(--muted2);letter-spacing:0.05em;border-left:0.5px solid var(--border)}
 
-/* PHOTOGRAPHERS GRID */
-.photographers-section{padding:48px 5%;position:relative;z-index:1}
-.sec-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
-.sec-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:600;color:var(--text)}
-.sec-title em{color:var(--gold);font-style:italic}
-.sort-select{background:rgba(255,255,255,0.04);border:0.5px solid var(--border);border-radius:6px;padding:6px 12px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;outline:none;cursor:pointer}
-.sort-select option{background:#0D0B12}
+/* ── MAIN CONTENT ── */
+.main{padding:40px 6% 80px;display:grid;grid-template-columns:220px 1fr;gap:32px;align-items:start}
 
-.photographers-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+/* Sidebar */
+.sidebar{position:sticky;top:136px}
+.sidebar-section{margin-bottom:24px}
+.ss-title{font-size:9px;letter-spacing:0.35em;text-transform:uppercase;color:var(--muted2);font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.ss-title::after{content:'';flex:1;height:0.5px;background:var(--border)}
+.ss-option{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:0.5px solid rgba(26,18,8,0.05);cursor:pointer;transition:all 0.15s}
+.ss-option:hover .ss-name{color:var(--text)}
+.ss-name{font-size:12px;color:var(--muted);font-weight:500;transition:color 0.15s;display:flex;align-items:center;gap:7px}
+.ss-name.active{color:var(--gold);font-weight:700}
+.ss-count{font-size:10px;color:var(--muted2);background:var(--cream2);border-radius:20px;padding:1px 7px}
+.ss-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;opacity:0.6}
 
-.pg-card{background:var(--dark2);border:0.5px solid var(--border);border-radius:20px;overflow:hidden;transition:all 0.3s;cursor:pointer;text-decoration:none;display:flex;flex-direction:column}
-.pg-card:hover{transform:translateY(-4px);border-color:var(--border2);box-shadow:0 16px 48px rgba(0,0,0,0.3)}
+/* Price range */
+.price-range{display:flex;flex-direction:column;gap:6px}
+.pr-option{padding:8px 10px;border:0.5px solid var(--border);border-radius:4px;font-size:11px;color:var(--muted);cursor:pointer;transition:all 0.15s;font-weight:500}
+.pr-option:hover{border-color:var(--gold);color:var(--text)}
+.pr-option.on{border-color:var(--gold);background:var(--gold-dim);color:var(--gold);font-weight:700}
 
-/* Portfolio preview */
-.pg-portfolio{height:180px;position:relative;overflow:hidden;background:var(--dark3)}
-.pg-photos{display:grid;grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;height:100%;gap:2px}
-.pg-photo{overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:24px;background:linear-gradient(135deg,var(--dark3),var(--dark2))}
-.pg-photo:first-child{grid-row:span 2}
-.pg-badge{position:absolute;top:10px;left:10px;padding:3px 10px;border-radius:20px;font-size:9px;font-weight:700;letter-spacing:0.1em}
-.badge-featured{background:var(--gold);color:var(--dark)}
-.badge-verified{background:rgba(93,214,138,0.2);border:0.5px solid rgba(93,214,138,0.4);color:#5DD68A}
-.pg-overlay{position:absolute;inset:0;background:linear-gradient(0deg,rgba(7,6,10,0.8),transparent 50%);opacity:0;transition:opacity 0.3s}
-.pg-card:hover .pg-overlay{opacity:1}
+/* Featured bar */
+.featured-bar{background:var(--ink);border-radius:4px;padding:14px;margin-bottom:24px}
+.fb-title{font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(201,150,60,0.5);margin-bottom:8px;font-weight:700}
+.fb-toggle{display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.fb-text{font-size:12px;color:rgba(255,255,255,0.7)}
+.fb-switch{width:32px;height:18px;border-radius:9px;background:rgba(255,255,255,0.1);position:relative;transition:background 0.2s;flex-shrink:0}
+.fb-switch.on{background:var(--gold)}
+.fb-switch::after{content:'';position:absolute;width:14px;height:14px;border-radius:50%;background:white;top:2px;left:2px;transition:transform 0.2s}
+.fb-switch.on::after{transform:translateX(14px)}
 
-/* Card info */
-.pg-info{padding:18px;flex:1;display:flex;flex-direction:column}
-.pg-header{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
-.pg-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--gold3),var(--gold));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border:2px solid rgba(212,168,67,0.3)}
-.pg-name{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--text);margin-bottom:2px}
-.pg-studio{font-size:11px;color:var(--muted2)}
-.pg-location{font-size:11px;color:var(--gold);display:flex;align-items:center;gap:4px;margin-top:1px}
+/* ── PHOTOGRAPHERS GRID ── */
+.pg-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.pg-grid.list-view{grid-template-columns:1fr}
 
-.pg-rating{display:flex;align-items:center;gap:6px;margin-bottom:10px}
-.pg-stars{color:var(--gold);font-size:12px;letter-spacing:1px}
-.pg-rating-num{font-size:12px;font-weight:600;color:var(--text)}
-.pg-reviews{font-size:10px;color:var(--muted2)}
+/* ── PHOTOGRAPHER CARD ── */
+.ph-card{border-radius:4px;overflow:hidden;background:white;border:0.5px solid var(--border);transition:all 0.35s;cursor:none;position:relative;display:flex;flex-direction:column}
+.ph-card:hover{transform:translateY(-6px);box-shadow:0 24px 60px rgba(26,18,8,0.12);border-color:var(--border2)}
 
-.pg-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
-.pg-tag{padding:3px 10px;border-radius:20px;font-size:9px;font-weight:600;background:rgba(212,168,67,0.06);border:0.5px solid var(--border);color:var(--muted);letter-spacing:0.05em}
+/* Card portfolio strip */
+.card-portfolio{height:200px;position:relative;overflow:hidden;background:var(--ink)}
+.cp-grid{display:grid;grid-template-columns:2fr 1fr;height:100%;gap:2px}
+.cp-main{overflow:hidden;position:relative}
+.cp-side{display:grid;grid-template-rows:1fr 1fr;gap:2px}
+.cp-cell{overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:22px;transition:transform 0.4s ease}
+.ph-card:hover .cp-cell{transform:scale(1.06)}
+.cp-overlay{position:absolute;inset:0;background:linear-gradient(0deg,rgba(10,8,6,0.7) 0%,rgba(10,8,6,0.1) 50%,transparent 100%)}
 
-.pg-price-row{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:12px;border-top:0.5px solid var(--border)}
-.pg-price-label{font-size:9px;color:var(--muted2);letter-spacing:0.1em;text-transform:uppercase}
-.pg-price{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold)}
-.pg-price-per{font-size:9px;color:var(--muted2)}
+/* Card badges */
+.card-badges{position:absolute;top:12px;left:12px;display:flex;gap:5px;z-index:2}
+.cbadge{padding:3px 9px;border-radius:2px;font-size:8px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase}
+.cbadge-feat{background:var(--gold);color:white}
+.cbadge-new{background:var(--ink);color:var(--gold2);border:0.5px solid rgba(201,150,60,0.3)}
+.cbadge-ver{background:rgba(26,107,60,0.9);color:#7DEB9A}
 
-.pg-actions{display:flex;gap:6px;margin-top:12px}
-.pg-btn-wa{flex:1;padding:9px;background:var(--green);color:white;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:5px}
-.pg-btn-wa:hover{opacity:0.9;transform:translateY(-1px)}
-.pg-btn-view{padding:9px 14px;background:rgba(212,168,67,0.06);border:0.5px solid var(--border);color:var(--gold);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none;display:flex;align-items:center;justify-content:center}
-.pg-btn-view:hover{border-color:var(--border2);background:rgba(212,168,67,0.1)}
+/* Card service pills on portfolio */
+.card-services-preview{position:absolute;bottom:10px;left:10px;right:10px;display:flex;gap:4px;flex-wrap:wrap;z-index:2}
+.csp{padding:2px 8px;border-radius:20px;font-size:8px;font-weight:700;background:rgba(10,8,6,0.7);color:rgba(255,255,255,0.8);border:0.5px solid rgba(255,255,255,0.1);backdrop-filter:blur(4px);letter-spacing:0.04em}
 
-/* INQUIRY MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:600;display:none;align-items:flex-end;justify-content:center}
-.modal-overlay.open{display:flex}
-.inq-modal{background:var(--dark2);border:0.5px solid var(--border);border-radius:20px 20px 0 0;padding:0;width:100%;max-width:520px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column}
+/* Card body */
+.card-body{padding:16px;flex:1;display:flex;flex-direction:column}
+.card-header{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+.card-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--ink2),var(--ink3));display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold);flex-shrink:0;border:1.5px solid var(--border2)}
+.card-name{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:1px;line-height:1.1}
+.card-studio{font-size:10px;color:var(--muted2);letter-spacing:0.04em}
+.card-loc{font-size:10px;color:var(--gold);display:flex;align-items:center;gap:3px;margin-top:2px;font-weight:600}
 
-/* Modal header */
-.inq-modal-header{padding:16px 18px;border-bottom:0.5px solid var(--border);flex-shrink:0}
-.inq-header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.inq-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600}
-.inq-title em{color:var(--gold);font-style:italic}
-.inq-close{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.06);border:none;color:var(--muted);font-size:14px;cursor:pointer}
-.inq-photographer{display:flex;align-items:center;gap:10px;background:rgba(212,168,67,0.05);border:0.5px solid var(--border);border-radius:8px;padding:8px 12px}
-.inq-ph-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gold3),var(--gold));display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
-.inq-ph-name{font-size:13px;font-weight:600;color:var(--text)}
-.inq-ph-city{font-size:10px;color:var(--muted2)}
+/* Rating */
+.card-rating{display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.stars{display:flex;gap:1px}
+.star{font-size:10px;color:var(--gold)}
+.star.empty{color:var(--cream3)}
+.rating-num{font-size:12px;font-weight:700;color:var(--text)}
+.review-count{font-size:10px;color:var(--muted2)}
+.exp-badge{margin-left:auto;font-size:9px;color:var(--muted2);background:var(--cream2);border-radius:2px;padding:2px 7px;font-weight:600}
 
-/* Scrollable body */
-.inq-modal-body{flex:1;overflow-y:auto;padding:16px 18px}
-.inq-modal-body::-webkit-scrollbar{width:3px}
-.inq-modal-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+/* Specialties */
+.card-specs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px}
+.spec-tag{padding:3px 8px;border-radius:2px;font-size:9px;font-weight:600;background:var(--cream);border:0.5px solid var(--border);color:var(--muted);letter-spacing:0.04em}
+.spec-tag.highlight{border-color:var(--gold);background:var(--gold-dim);color:var(--gold)}
 
-/* Steps inside modal */
-.inq-steps{display:flex;gap:0;margin-bottom:16px}
-.inq-step{flex:1;text-align:center}
-.inq-step-dot{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:rgba(255,255,255,0.3);margin:0 auto 3px;transition:all 0.3s}
-.inq-step.active .inq-step-dot{background:var(--gold);border-color:var(--gold);color:#0C0A07}
-.inq-step.done .inq-step-dot{background:rgba(93,214,138,0.2);border-color:var(--green);color:var(--green)}
-.inq-step-lbl{font-size:7px;color:rgba(255,255,255,0.2);letter-spacing:0.08em;text-transform:uppercase}
-.inq-step.active .inq-step-lbl{color:var(--gold)}
-.inq-step-line{flex:1;height:0.5px;background:rgba(255,255,255,0.06);margin-bottom:11px}
+/* Price + actions */
+.card-footer{margin-top:auto;display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:0.5px solid var(--border)}
+.card-price{}
+.cp-label{font-size:8px;text-transform:uppercase;letter-spacing:0.15em;color:var(--muted2);font-weight:700}
+.cp-amount{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--gold);line-height:1}
+.cp-per{font-size:9px;color:var(--muted2)}
 
-.inq-page{display:none}.inq-page.active{display:block}
+.card-actions{display:flex;gap:6px}
+.ca-btn{padding:8px 14px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;cursor:none;transition:all 0.2s;border:none;letter-spacing:0.05em}
+.ca-btn:active{transform:scale(0.97)}
+.ca-inquiry{background:var(--gold);color:white}
+.ca-inquiry:hover{background:var(--gold2)}
+.ca-view{background:transparent;border:0.5px solid var(--border2);color:var(--text)}
+.ca-view:hover{background:var(--cream);border-color:var(--gold)}
 
-/* Form inputs */
-.fi{width:100%;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;color:white;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;margin-bottom:8px;transition:border-color 0.2s}
-.fi:focus{border-color:rgba(232,200,122,0.3)}
-.fi::placeholder{color:rgba(255,255,255,0.2)}
-.fi option{background:#1A1208;color:white}
-.fi-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.fi-label{font-size:9px;color:rgba(255,255,255,0.35);margin-bottom:4px;display:block;letter-spacing:0.08em;text-transform:uppercase}
+/* ── FEATURED CARD (Large) ── */
+.ph-card-featured{grid-column:span 2;display:grid;grid-template-columns:1fr 1fr;border-radius:4px;overflow:hidden;background:white;border:0.5px solid var(--border2);transition:all 0.35s;cursor:none}
+.ph-card-featured:hover{transform:translateY(-4px);box-shadow:0 24px 60px rgba(26,18,8,0.12)}
+.feat-portfolio{position:relative;overflow:hidden;min-height:280px}
+.feat-portfolio-bg{position:absolute;inset:0;background:var(--ink);display:flex;align-items:center;justify-content:center;font-size:60px;transition:transform 0.5s ease}
+.ph-card-featured:hover .feat-portfolio-bg{transform:scale(1.04)}
+.feat-overlay{position:absolute;inset:0;background:linear-gradient(90deg,transparent 40%,rgba(255,255,255,0.03) 100%),linear-gradient(0deg,rgba(10,8,6,0.8),rgba(10,8,6,0.2) 50%,transparent)}
+.feat-info{padding:28px;display:flex;flex-direction:column;justify-content:space-between}
+.feat-crown{font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.feat-crown::before{content:'✦';font-size:8px}
+.feat-name{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--text);margin-bottom:3px;line-height:1.1}
+.feat-studio{font-size:12px;color:var(--muted2);margin-bottom:8px}
+.feat-location{font-size:11px;color:var(--gold);font-weight:600;margin-bottom:12px}
+.feat-bio{font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:var(--muted);line-height:1.6;margin-bottom:16px;flex:1}
+.feat-bottom{}
+.feat-specs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px}
+.feat-actions{display:flex;gap:8px}
+.feat-price-tag{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--gold);line-height:1;margin-bottom:6px}
+.feat-price-lbl{font-size:8px;text-transform:uppercase;letter-spacing:0.15em;color:var(--muted2);font-weight:700}
 
-/* Service selection */
-.services-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:12px}
-.svc-btn{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.08);border-radius:8px;padding:9px 10px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:7px;text-align:left}
-.svc-btn.selected{border-color:rgba(232,200,122,0.35);background:rgba(232,200,122,0.07)}
-.svc-btn:active{transform:scale(0.97)}
-.svc-icon{font-size:14px;flex-shrink:0}
-.svc-name{font-size:11px;font-weight:500;color:rgba(255,255,255,0.6);line-height:1.2}
-.svc-btn.selected .svc-name{color:var(--gold)}
-.svc-check{width:14px;height:14px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);margin-left:auto;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;transition:all 0.2s}
-.svc-btn.selected .svc-check{background:var(--gold);border-color:var(--gold);color:#0C0A07}
+/* ── EMPTY STATE ── */
+.empty-state{grid-column:span 2;text-align:center;padding:80px 20px}
+.es-icon{font-size:48px;opacity:0.15;margin-bottom:14px}
+.es-title{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--muted);margin-bottom:6px;font-style:italic}
+.es-sub{font-size:13px;color:var(--muted2)}
 
-/* Event days builder */
-.event-days{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
-.event-day-card{background:rgba(255,255,255,0.03);border:0.5px solid rgba(255,255,255,0.08);border-radius:10px;overflow:hidden}
-.event-day-header{padding:10px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:rgba(255,255,255,0.02)}
-.event-day-title{font-size:12px;font-weight:600;color:white;display:flex;align-items:center;gap:6px}
-.event-day-badge{font-size:9px;color:var(--gold);background:rgba(232,200,122,0.08);border:0.5px solid rgba(232,200,122,0.2);border-radius:20px;padding:2px 8px}
-.event-day-remove{width:20px;height:20px;border-radius:50%;background:rgba(224,122,143,0.1);border:none;color:rgba(224,122,143,0.6);font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.event-day-body{padding:10px 12px;border-top:0.5px solid rgba(255,255,255,0.06)}
-.day-services-mini{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
-.dsm{padding:3px 8px;border-radius:20px;font-size:9px;font-weight:600;background:rgba(232,200,122,0.08);border:0.5px solid rgba(232,200,122,0.2);color:var(--gold)}
-.add-day-btn{width:100%;padding:10px;background:rgba(255,255,255,0.02);border:0.5px dashed rgba(255,255,255,0.1);border-radius:8px;color:rgba(255,255,255,0.3);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;transition:all 0.2s;margin-bottom:12px}
-.add-day-btn:hover{border-color:rgba(232,200,122,0.3);color:var(--gold)}
+/* ── LIST YOUR STUDIO BANNER ── */
+.list-banner{margin:0 6% 60px;border-radius:4px;overflow:hidden;display:grid;grid-template-columns:1fr auto;align-items:center;background:var(--ink);padding:36px 40px;gap:24px;position:relative}
+.list-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 80% 50%,rgba(201,150,60,0.08),transparent 50%)}
+.lb-label{font-size:9px;letter-spacing:0.4em;text-transform:uppercase;color:rgba(201,150,60,0.5);margin-bottom:8px;font-weight:700}
+.lb-title{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:700;color:white;margin-bottom:6px}
+.lb-title em{color:var(--gold);font-style:italic}
+.lb-sub{font-size:13px;color:rgba(255,255,255,0.4);line-height:1.5;max-width:500px}
+.lb-features{display:flex;gap:16px;margin-top:14px;flex-wrap:wrap}
+.lbf{font-size:11px;color:rgba(255,255,255,0.4);display:flex;align-items:center;gap:5px}
+.lbf::before{content:'✓';color:var(--gold);font-weight:700}
+.lb-cta{background:var(--gold);color:white;padding:13px 28px;border-radius:2px;font-size:12px;font-weight:700;text-decoration:none;transition:all 0.2s;white-space:nowrap;flex-shrink:0;letter-spacing:0.06em;border:none;cursor:none;position:relative;z-index:1}
+.lb-cta:hover{background:var(--gold2);transform:translateY(-1px);box-shadow:0 8px 24px rgba(201,150,60,0.3)}
 
-/* Summary */
-.booking-summary{background:rgba(232,200,122,0.04);border:0.5px solid rgba(232,200,122,0.15);border-radius:10px;padding:14px;margin-bottom:12px}
-.bs-title{font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(232,200,122,0.5);margin-bottom:10px;font-weight:700}
-.bs-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;color:rgba(255,255,255,0.5)}
-.bs-row strong{color:white}
-.bs-events{margin-top:8px;padding-top:8px;border-top:0.5px solid rgba(232,200,122,0.1)}
-.bs-event{font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:4px;display:flex;gap:6px}
-.bs-event-date{color:var(--gold);font-weight:600;flex-shrink:0}
-
-/* Modal footer */
-.inq-modal-footer{padding:12px 18px;border-top:0.5px solid var(--border);flex-shrink:0;display:flex;gap:8px}
-.inq-btn-primary{flex:2;padding:11px;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#0C0A07;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.15s}
-.inq-btn-secondary{flex:1;padding:11px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.4);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer}
-.inq-btn-primary:active{transform:scale(0.98)}
-
-/* Portfolio links */
-.pg-portfolio-links{display:flex;gap:6px;padding:0 18px 14px;flex-wrap:wrap}
-.port-link{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:9px;font-weight:600;text-decoration:none;border:0.5px solid var(--border);color:var(--muted);transition:all 0.2s;letter-spacing:0.05em}
-.port-link:hover{border-color:var(--border2);color:var(--text)}
-.port-link.instagram{border-color:rgba(200,100,150,0.3);color:rgba(200,100,150,0.8)}
-.port-link.youtube{border-color:rgba(255,80,80,0.3);color:rgba(255,80,80,0.8)}
-.port-link.portfolio{border-color:rgba(212,168,67,0.3);color:var(--gold)}
-.no-results-icon{font-size:48px;margin-bottom:14px;opacity:0.4}
-
-/* LIST YOUR STUDIO CTA */
-.list-cta{margin:0 5% 60px;background:linear-gradient(135deg,rgba(212,168,67,0.06),rgba(212,168,67,0.02));border:0.5px solid var(--border2);border-radius:20px;padding:40px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap}
-.list-cta-content{}
-.list-cta-label{font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:10px}
-.list-cta-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:var(--text);margin-bottom:8px}
-.list-cta-title em{color:var(--gold);font-style:italic}
-.list-cta-sub{font-size:14px;color:var(--muted);line-height:1.5}
-.list-cta-features{display:flex;gap:16px;margin-top:14px;flex-wrap:wrap}
-.lcf{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
-.lcf::before{content:'✓';color:var(--gold);font-weight:700}
-.list-cta-btn{padding:14px 32px;background:linear-gradient(135deg,var(--gold3),var(--gold));color:var(--dark);border-radius:8px;font-size:14px;font-weight:700;text-decoration:none;transition:all 0.2s;white-space:nowrap;flex-shrink:0}
-.list-cta-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(212,168,67,0.3)}
-
-/* FOOTER */
-footer{padding:32px 5%;border-top:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
-.footer-logo{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600}
+/* ── FOOTER ── */
+footer{background:var(--ink2);padding:32px 6%;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.footer-logo{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:rgba(255,255,255,0.6)}
 .footer-logo em{color:var(--gold);font-style:normal}
 .footer-links{display:flex;gap:20px;flex-wrap:wrap}
-.footer-links a{font-size:11px;color:var(--muted2);text-decoration:none;transition:color 0.2s}
-.footer-links a:hover{color:var(--text)}
-.footer-copy{font-size:10px;color:rgba(255,255,255,0.15)}
+.footer-links a{font-size:10px;color:rgba(255,255,255,0.25);text-decoration:none;transition:color 0.2s;letter-spacing:0.06em}
+.footer-links a:hover{color:rgba(255,255,255,0.5)}
+.footer-copy{font-size:9px;color:rgba(255,255,255,0.15);letter-spacing:0.08em}
+
+/* ── INQUIRY MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(10,8,6,0.9);backdrop-filter:blur(12px);z-index:800;display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.inq-sheet{background:white;border-radius:4px 4px 0 0;padding:0;width:100%;max-width:540px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;border:0.5px solid var(--border)}
+.inq-sheet-header{padding:20px 22px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.inq-sheet-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--text)}
+.inq-sheet-title em{color:var(--gold);font-style:italic}
+.inq-close{width:28px;height:28px;border-radius:50%;background:var(--cream);border:none;font-size:13px;color:var(--muted);cursor:pointer}
+.inq-ph-row{display:flex;align-items:center;gap:10px;padding:12px 22px;background:var(--cream);border-bottom:0.5px solid var(--border);flex-shrink:0}
+.inq-ph-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--ink),var(--ink2));display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--gold);flex-shrink:0}
+.inq-ph-name{font-size:13px;font-weight:700;color:var(--text)}
+.inq-ph-city{font-size:10px;color:var(--muted2)}
+.inq-body{flex:1;overflow-y:auto;padding:18px 22px}
+.inq-steps{display:flex;gap:0;margin-bottom:18px}
+.inq-step-item{flex:1;text-align:center}
+.isd{width:22px;height:22px;border-radius:50%;background:var(--cream2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--muted);margin:0 auto 3px;transition:all 0.3s}
+.inq-step-item.active .isd{background:var(--gold);border-color:var(--gold);color:white}
+.inq-step-item.done .isd{background:var(--green);border-color:var(--green);color:white}
+.isl{font-size:7px;color:var(--muted2);letter-spacing:0.1em;text-transform:uppercase}
+.inq-step-item.active .isl{color:var(--gold)}
+.is-line{flex:1;height:0.5px;background:var(--border);margin-bottom:11px}
+.inq-page{display:none}.inq-page.active{display:block}
+.fi{width:100%;background:var(--cream);border:0.5px solid var(--border);border-radius:2px;padding:10px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;outline:none;margin-bottom:8px;transition:border-color 0.2s}
+.fi:focus{border-color:var(--gold)}
+.fi::placeholder{color:var(--muted2)}
+.fi option{background:white;color:var(--text)}
+.fi-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fi-label{font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted2);font-weight:700;margin-bottom:4px;display:block}
+.svc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:5px;margin-bottom:12px}
+.svc-btn{display:flex;align-items:center;gap:7px;padding:8px 10px;border:0.5px solid var(--border);border-radius:2px;cursor:pointer;transition:all 0.15s;background:var(--cream)}
+.svc-btn.sel{border-color:var(--gold);background:var(--gold-dim)}
+.svc-btn-icon{font-size:13px;flex-shrink:0}
+.svc-btn-name{font-size:10px;font-weight:600;color:var(--muted);line-height:1.2}
+.svc-btn.sel .svc-btn-name{color:var(--gold)}
+.svc-check{width:14px;height:14px;border-radius:50%;border:1px solid var(--border);margin-left:auto;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px}
+.svc-btn.sel .svc-check{background:var(--gold);border-color:var(--gold);color:white}
+.day-card{background:var(--cream);border:0.5px solid var(--border);border-radius:2px;margin-bottom:6px;overflow:hidden}
+.day-header{padding:9px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.day-title{font-size:12px;font-weight:700;color:var(--text)}
+.day-badge{font-size:9px;color:var(--gold);background:var(--gold-dim);border:0.5px solid var(--border2);border-radius:20px;padding:2px 8px}
+.day-remove{width:18px;height:18px;border-radius:50%;background:rgba(139,35,64,0.08);border:none;color:var(--rose);font-size:9px;cursor:pointer}
+.day-body{padding:0 12px 10px;border-top:0.5px solid var(--border)}
+.add-day{width:100%;padding:9px;background:transparent;border:0.5px dashed var(--border);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:11px;color:var(--muted2);cursor:pointer;transition:all 0.2s;margin-bottom:10px}
+.add-day:hover{border-color:var(--gold);color:var(--gold)}
+.summary-card{background:var(--gold-dim);border:0.5px solid var(--border2);border-radius:2px;padding:14px;margin-bottom:12px}
+.sc-title{font-size:9px;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:10px}
+.sc-row{display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px;color:var(--muted)}
+.sc-row strong{color:var(--text);font-weight:600}
+.sc-events{margin-top:8px;padding-top:8px;border-top:0.5px solid var(--border)}
+.sc-event{font-size:10px;color:var(--muted);margin-bottom:4px}
+.sc-event-date{color:var(--gold);font-weight:700}
+.inq-footer{padding:14px 22px;border-top:0.5px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+.inq-btn-back{flex:1;padding:11px;background:var(--cream);border:0.5px solid var(--border);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;display:none}
+.inq-btn-next{flex:2;padding:11px;background:var(--gold);border:none;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;color:white;cursor:pointer;letter-spacing:0.05em;transition:all 0.2s}
+.inq-btn-next:hover{background:var(--gold2)}
 
 /* Float WA */
-.float-wa{position:fixed;bottom:24px;right:24px;z-index:400;width:52px;height:52px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:22px;text-decoration:none;box-shadow:0 8px 24px rgba(37,211,102,0.35);animation:floatWA 3s ease infinite}
+.float-wa{position:fixed;bottom:24px;right:24px;z-index:700;width:50px;height:50px;border-radius:50%;background:#25A85A;display:flex;align-items:center;justify-content:center;font-size:22px;text-decoration:none;box-shadow:0 8px 24px rgba(37,168,90,0.35);animation:floatWA 3s ease infinite;cursor:none}
 @keyframes floatWA{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+
+/* Loading */
+.loading-grid{grid-column:span 2;display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.skeleton{border-radius:4px;overflow:hidden;background:white;border:0.5px solid var(--border);height:340px;position:relative;overflow:hidden}
+.skeleton::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(201,150,60,0.05) 50%,transparent 100%);animation:shimmer 1.5s infinite}
+@keyframes shimmer{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
 
 /* Reveal */
 .reveal{opacity:0;transform:translateY(20px);transition:all 0.6s ease}
-.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal.v{opacity:1;transform:translateY(0)}
 
-/* Loading */
-#loadingEl{text-align:center;padding:60px;color:var(--muted)}
-.load-spin{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px}
-@keyframes spin{to{transform:rotate(360deg)}}
+/* Toast */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--gold2);padding:9px 18px;border-radius:2px;font-size:11px;font-weight:700;z-index:999;pointer-events:none;opacity:0;transition:opacity 0.3s;letter-spacing:0.05em}
+.toast.show{opacity:1}
 
-@media(max-width:900px){
+/* Portfolio links under card */
+.card-port-links{display:flex;gap:5px;padding:0 16px 12px}
+.cpl{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:2px;font-size:8px;font-weight:700;text-decoration:none;border:0.5px solid var(--border);color:var(--muted2);transition:all 0.15s;letter-spacing:0.06em;text-transform:uppercase}
+.cpl:hover{border-color:var(--gold);color:var(--gold)}
+.cpl.insta{border-color:rgba(200,80,130,0.2);color:rgba(200,80,130,0.7)}
+.cpl.yt{border-color:rgba(220,60,60,0.2);color:rgba(220,60,60,0.7)}
+
+@media(max-width:960px){
+  .hero{grid-template-columns:1fr}
+  .hero-right{display:none}
+  .main{grid-template-columns:1fr}
+  .sidebar{position:static;display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .pg-grid{grid-template-columns:1fr}
+  .ph-card-featured{grid-template-columns:1fr}
+  .feat-portfolio{min-height:180px}
   .nav-links{display:none}
-  .photographers-grid{grid-template-columns:1fr}
-  .hero-preview{display:none}
-  .list-cta{flex-direction:column}
-}
-@media(max-width:600px){
-  .photographers-grid{grid-template-columns:1fr}
+  .list-banner{grid-template-columns:1fr}
+  .loading-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
 
-<nav>
+<!-- Cursor -->
+<div class="cur" id="curDot"><div class="cur-dot"></div></div>
+<div class="cur-ring" id="curRing"></div>
+
+<!-- NAV -->
+<nav id="nav">
   <div class="nav-logo">Photo<em>Find</em> Pro</div>
   <div class="nav-links">
     <a href="https://www.templecity.digital">Home</a>
-    <a href="#photographers">Photographers</a>
-    <a href="https://www.templecity.digital/landing.html">Features</a>
+    <a href="https://www.templecity.digital/landing.html">Platform</a>
     <a href="https://www.templecity.digital/booking.html">Book Event</a>
   </div>
-  <div style="display:flex;gap:8px">
-    <a href="photographer-register.html" class="nav-register">📸 List Your Studio</a>
-    <a href="https://www.templecity.digital/booking.html" class="nav-cta">Book Now →</a>
+  <div class="nav-btns">
+    <a href="photographer-register.html" class="btn-ghost-ink">List Your Studio</a>
+    <a href="https://www.templecity.digital/booking.html" class="btn-solid-gold">Book Now</a>
   </div>
 </nav>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-grid"></div>
-  <div class="hero-content">
-    <div class="hero-label">✦ Odisha's Finest</div>
+  <div class="hero-left">
+    <div class="hero-left-pattern"></div>
+    <div class="hero-left-glow"></div>
+    <div class="hero-left-glow2"></div>
+    <div class="hero-eyebrow">Odisha's Finest</div>
     <h1 class="hero-title">
       FIND YOUR<br>
-      PERFECT<br>
-      <span class="gold">PHOTOGRAPHER</span>
+      <span class="accent">PERFECT</span>
+      <span class="outline">PHOTOGRAPHER</span>
     </h1>
-    <p class="hero-sub">Browse Odisha's best wedding & event photographers. Compare portfolios, packages and connect instantly.</p>
+    <p class="hero-sub">Browse Odisha's most talented wedding & event photographers. Real portfolios, real reviews, direct connection.</p>
     <div class="hero-stats">
-      <div class="hs"><div class="hs-num" id="statTotal">0</div><div class="hs-lbl">Photographers</div></div>
-      <div class="hs"><div class="hs-num">15+</div><div class="hs-lbl">Cities in Odisha</div></div>
-      <div class="hs"><div class="hs-num">4.8★</div><div class="hs-lbl">Avg Rating</div></div>
+      <div class="hs"><div class="hs-num" id="heroStatTotal">50+</div><div class="hs-lbl">Photographers</div></div>
+      <div class="hs"><div class="hs-num">15+</div><div class="hs-lbl">Cities</div></div>
+      <div class="hs"><div class="hs-num">4.9★</div><div class="hs-lbl">Avg Rating</div></div>
     </div>
   </div>
-
-  <!-- Preview cards -->
-  <div class="hero-preview">
-    <div class="hp-card"><div class="hp-avatar">📸</div><div class="hp-name">Rajesh Studio</div><div class="hp-city">📍 Bhubaneswar</div><div class="hp-rating">★★★★★ 4.9</div></div>
-    <div class="hp-card"><div class="hp-avatar">🎬</div><div class="hp-name">Pixel Perfect</div><div class="hp-city">📍 Cuttack</div><div class="hp-rating">★★★★★ 4.8</div></div>
-    <div class="hp-card"><div class="hp-avatar">✨</div><div class="hp-name">Dream Clicks</div><div class="hp-city">📍 Puri</div><div class="hp-rating">★★★★☆ 4.7</div></div>
-    <div class="hp-card"><div class="hp-avatar">💍</div><div class="hp-name">Wedding Lens</div><div class="hp-city">📍 Rourkela</div><div class="hp-rating">★★★★★ 5.0</div></div>
+  <div class="hero-right">
+    <div class="hero-collage">
+      <div class="hc-item hc1"><div class="hc-bg"><span style="font-size:48px">💒</span></div></div>
+      <div class="hc-item hc2"><div class="hc-bg"><span style="font-size:32px">📸</span></div></div>
+      <div class="hc-item hc3"><div class="hc-bg"><span style="font-size:32px">🎎</span></div></div>
+      <div class="hc-item hc4"><div class="hc-bg"><span style="font-size:32px">💑</span></div></div>
+      <div class="hc-item hc5"><div class="hc-bg"><span style="font-size:32px">🎊</span></div></div>
+    </div>
+    <div class="hero-right-overlay"></div>
   </div>
 </section>
 
-<!-- FILTERS -->
-<div class="filters-section" id="photographers">
-  <div class="filters-wrap">
-    <input class="search-input" id="searchInput" placeholder="🔍 Search photographer or studio name..." oninput="filterPhotographers()">
-    <select class="filter-select" id="cityFilter" onchange="filterPhotographers()">
-      <option value="">All Cities</option>
-      <option value="Bhubaneswar">Bhubaneswar</option>
-      <option value="Cuttack">Cuttack</option>
-      <option value="Puri">Puri</option>
-      <option value="Rourkela">Rourkela</option>
-      <option value="Sambalpur">Sambalpur</option>
-      <option value="Berhampur">Berhampur</option>
-      <option value="Balasore">Balasore</option>
-      <option value="Brahmapur">Brahmapur</option>
-    </select>
-    <select class="filter-select" id="budgetFilter" onchange="filterPhotographers()">
-      <option value="">All Budgets</option>
-      <option value="budget">Under ₹20,000</option>
-      <option value="mid">₹20,000 - ₹50,000</option>
-      <option value="premium">₹50,000 - ₹1,00,000</option>
-      <option value="luxury">Above ₹1,00,000</option>
-    </select>
-    <select class="filter-select" id="specialtyFilter" onchange="filterPhotographers()">
-      <option value="">All Types</option>
-      <option value="Wedding">Wedding</option>
-      <option value="Pre-Wedding">Pre-Wedding</option>
-      <option value="Birthday">Birthday</option>
-      <option value="Corporate">Corporate</option>
-      <option value="Maternity">Maternity</option>
-      <option value="Candid Photography">Candid Photography</option>
-      <option value="Traditional Photography">Traditional Photography</option>
-      <option value="Baby Shower Shoot">Baby Shower Shoot</option>
-      <option value="Instagram Reels">Instagram Reels</option>
-    </select>
-    <button class="filter-tag active" onclick="filterByTag(this,'all')">All</button>
-    <button class="filter-tag" onclick="filterByTag(this,'featured')">⭐ Featured</button>
-    <button class="filter-tag" onclick="filterByTag(this,'verified')">✅ Verified</button>
-    <span class="results-count" id="resultsCount"></span>
+<!-- SEARCH STRIP -->
+<div class="search-strip">
+  <div class="search-inner">
+    <div class="search-main">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="searchInput" placeholder="Search photographer or studio..." oninput="filter()">
+    </div>
+    <div class="search-filter">
+      <span class="sf-label">City</span>
+      <select class="sf-select" id="cityFilter" onchange="filter()">
+        <option value="">All Cities</option>
+        <option>Bhubaneswar</option><option>Cuttack</option><option>Puri</option>
+        <option>Rourkela</option><option>Sambalpur</option><option>Berhampur</option>
+        <option>Balasore</option>
+      </select>
+    </div>
+    <div class="search-filter">
+      <span class="sf-label">Budget</span>
+      <select class="sf-select" id="budgetFilter" onchange="filter()">
+        <option value="">All Budgets</option>
+        <option value="budget">Under ₹20K</option>
+        <option value="mid">₹20K–₹50K</option>
+        <option value="premium">₹50K–₹1L</option>
+        <option value="luxury">Above ₹1L</option>
+      </select>
+    </div>
+    <div class="search-tags" id="serviceTagsRow"></div>
+    <div class="results-badge" id="resultsBadge">Loading...</div>
   </div>
 </div>
 
-<!-- PHOTOGRAPHERS GRID -->
-<section class="photographers-section">
-  <div class="sec-title-row">
-    <h2 class="sec-title reveal">Our <em>Photographers</em></h2>
-    <select class="sort-select" id="sortSelect" onchange="filterPhotographers()">
-      <option value="featured">Sort: Featured First</option>
-      <option value="rating">Sort: Highest Rated</option>
-      <option value="price-low">Sort: Price Low to High</option>
-      <option value="price-high">Sort: Price High to Low</option>
-    </select>
-  </div>
+<!-- MAIN -->
+<div class="main">
 
-  <div id="loadingEl">
-    <div class="load-spin"></div>
-    <div style="font-size:12px;color:var(--muted2)">Loading photographers...</div>
-  </div>
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="featured-bar">
+      <div class="fb-title">✦ Filter</div>
+      <div class="fb-toggle" onclick="toggleFeatured()">
+        <span class="fb-text">Featured Only</span>
+        <div class="fb-switch" id="featSwitch"></div>
+      </div>
+    </div>
 
-  <div class="photographers-grid reveal" id="photographersGrid" style="display:none"></div>
-  <div class="no-results" id="noResults" style="display:none">
-    <div class="no-results-icon">📸</div>
-    <div style="font-size:16px;font-weight:600;margin-bottom:6px">No photographers found</div>
-    <div style="font-size:13px">Try adjusting your filters</div>
-  </div>
-</section>
+    <div class="sidebar-section">
+      <div class="ss-title">Sort By</div>
+      <div class="ss-option" onclick="setSort('featured',this)"><span class="ss-name active" id="sort-featured">⭐ Featured First</span></div>
+      <div class="ss-option" onclick="setSort('rating',this)"><span class="ss-name" id="sort-rating">★ Highest Rated</span></div>
+      <div class="ss-option" onclick="setSort('price-low',this)"><span class="ss-name" id="sort-price-low">↑ Price Low–High</span></div>
+      <div class="ss-option" onclick="setSort('price-high',this)"><span class="ss-name" id="sort-price-high">↓ Price High–Low</span></div>
+    </div>
 
-<!-- LIST YOUR STUDIO CTA -->
-<div class="list-cta reveal">
-  <div class="list-cta-content">
-    <div class="list-cta-label">✦ Are You a Photographer?</div>
-    <h2 class="list-cta-title">List Your Studio &<br><em>Get More Clients</em></h2>
-    <p class="list-cta-sub">Join Odisha's fastest growing photographer marketplace. Reach thousands of couples planning their wedding.</p>
-    <div class="list-cta-features">
-      <div class="lcf">Free listing to start</div>
-      <div class="lcf">Direct WhatsApp leads</div>
-      <div class="lcf">Portfolio showcase</div>
-      <div class="lcf">AI photo delivery included</div>
+    <div class="sidebar-section">
+      <div class="ss-title">Price Range</div>
+      <div class="price-range">
+        <div class="pr-option on" onclick="setPriceFilter('',this)">All Budgets</div>
+        <div class="pr-option" onclick="setPriceFilter('budget',this)">Under ₹20,000</div>
+        <div class="pr-option" onclick="setPriceFilter('mid',this)">₹20,000 – ₹50,000</div>
+        <div class="pr-option" onclick="setPriceFilter('premium',this)">₹50,000 – ₹1,00,000</div>
+        <div class="pr-option" onclick="setPriceFilter('luxury',this)">Above ₹1,00,000</div>
+      </div>
     </div>
   </div>
-  <a href="photographer-register.html" class="list-cta-btn">📸 List Your Studio Free →</a>
+
+  <!-- GRID -->
+  <div>
+    <div class="pg-grid" id="pgGrid">
+      <div class="loading-grid">
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+        <div class="skeleton"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LIST STUDIO BANNER -->
+<div class="list-banner reveal">
+  <div>
+    <div class="lb-label">✦ Are You a Photographer?</div>
+    <h2 class="lb-title">List Your Studio &<br><em>Get More Clients</em></h2>
+    <p class="lb-sub">Join Odisha's fastest growing photographer marketplace. Reach thousands of couples planning their wedding.</p>
+    <div class="lb-features">
+      <div class="lbf">Free listing to start</div>
+      <div class="lbf">Direct WhatsApp leads</div>
+      <div class="lbf">Filtered portfolio showcase</div>
+      <div class="lbf">Commission-based model</div>
+    </div>
+  </div>
+  <a href="photographer-register.html" class="lb-cta">List Studio Free →</a>
 </div>
 
 <!-- FOOTER -->
@@ -385,7 +485,7 @@ footer{padding:32px 5%;border-top:0.5px solid var(--border);display:flex;align-i
   <div class="footer-logo">Photo<em>Find</em> Pro · Temple City Digital</div>
   <div class="footer-links">
     <a href="https://www.templecity.digital">Guest App</a>
-    <a href="https://www.templecity.digital/landing.html">Features</a>
+    <a href="https://www.templecity.digital/landing.html">Platform</a>
     <a href="https://www.templecity.digital/booking.html">Book Event</a>
     <a href="photographer-register.html">List Studio</a>
     <a href="https://wa.me/918895195862">WhatsApp</a>
@@ -394,683 +494,479 @@ footer{padding:32px 5%;border-top:0.5px solid var(--border);display:flex;align-i
 </footer>
 
 <!-- INQUIRY MODAL -->
-<div class="modal-overlay" id="inquiryModal">
-  <div class="inq-modal">
-
-    <!-- Header -->
-    <div class="inq-modal-header">
-      <div class="inq-header-row">
-        <div class="inq-title">Book <em>Photographer</em></div>
-        <button class="inq-close" onclick="closeInquiry()">✕</button>
-      </div>
-      <div class="inq-photographer">
-        <div class="inq-ph-avatar" id="inqAvatar">📸</div>
-        <div>
-          <div class="inq-ph-name" id="inqPhName">Photographer</div>
-          <div class="inq-ph-city" id="inqPhCity">📍 City</div>
-        </div>
-      </div>
+<div class="modal-overlay" id="inqModal">
+  <div class="inq-sheet">
+    <div class="inq-sheet-header">
+      <div class="inq-sheet-title">Book <em>Photographer</em></div>
+      <button class="inq-close" onclick="closeInq()">✕</button>
     </div>
-
-    <!-- Body -->
-    <div class="inq-modal-body">
-
-      <!-- Step indicators -->
+    <div class="inq-ph-row">
+      <div class="inq-ph-av" id="inqAv">P</div>
+      <div><div class="inq-ph-name" id="inqPhName">Photographer</div><div class="inq-ph-city" id="inqPhCity">City</div></div>
+    </div>
+    <div class="inq-body">
+      <!-- Steps -->
       <div class="inq-steps">
-        <div class="inq-step active" id="is1"><div class="inq-step-dot">1</div><div class="inq-step-lbl">Details</div></div>
-        <div class="inq-step-line"></div>
-        <div class="inq-step" id="is2"><div class="inq-step-dot">2</div><div class="inq-step-lbl">Services</div></div>
-        <div class="inq-step-line"></div>
-        <div class="inq-step" id="is3"><div class="inq-step-dot">3</div><div class="inq-step-lbl">Schedule</div></div>
-        <div class="inq-step-line"></div>
-        <div class="inq-step" id="is4"><div class="inq-step-dot">4</div><div class="inq-step-lbl">Review</div></div>
+        <div class="inq-step-item active" id="is1"><div class="isd">1</div><div class="isl">Details</div></div>
+        <div class="is-line"></div>
+        <div class="inq-step-item" id="is2"><div class="isd">2</div><div class="isl">Services</div></div>
+        <div class="is-line"></div>
+        <div class="inq-step-item" id="is3"><div class="isd">3</div><div class="isl">Schedule</div></div>
+        <div class="is-line"></div>
+        <div class="inq-step-item" id="is4"><div class="isd">4</div><div class="isl">Review</div></div>
       </div>
 
-      <!-- Page 1: Contact Details -->
+      <!-- Page 1 -->
       <div class="inq-page active" id="ip1">
-        <label class="fi-label">Your Full Name *</label>
-        <input class="fi" id="inqName" placeholder="e.g. Priya Sharma">
-        <label class="fi-label">WhatsApp Number *</label>
-        <input class="fi" id="inqPhone" placeholder="10-digit number" type="tel" maxlength="10">
+        <label class="fi-label">Full Name *</label><input class="fi" id="iName" placeholder="Your name">
+        <label class="fi-label">WhatsApp *</label><input class="fi" id="iPhone" placeholder="10-digit number" type="tel" maxlength="10">
         <div class="fi-row">
-          <div>
-            <label class="fi-label">Your City</label>
-            <input class="fi" id="inqCity" placeholder="e.g. Bhubaneswar">
-          </div>
-          <div>
-            <label class="fi-label">Overall Budget</label>
-            <select class="fi" id="inqBudget">
-              <option value="">Select Budget</option>
-              <option>Under ₹15,000</option>
-              <option>₹15,000 - ₹25,000</option>
-              <option>₹25,000 - ₹50,000</option>
-              <option>₹50,000 - ₹1,00,000</option>
+          <div><label class="fi-label">Budget</label>
+            <select class="fi" id="iBudget">
+              <option value="">Select</option>
+              <option>Under ₹15,000</option><option>₹15,000–₹25,000</option>
+              <option>₹25,000–₹50,000</option><option>₹50,000–₹1,00,000</option>
               <option>Above ₹1,00,000</option>
             </select>
           </div>
+          <div><label class="fi-label">Your City</label><input class="fi" id="iCity" placeholder="e.g. Bhubaneswar"></div>
         </div>
-        <label class="fi-label">Additional Message (optional)</label>
-        <textarea class="fi" id="inqMsg" placeholder="Any special requirements, venue details..." style="resize:none;min-height:60px"></textarea>
+        <label class="fi-label">Message (optional)</label>
+        <textarea class="fi" id="iMsg" style="resize:none;min-height:60px" placeholder="Any special requirements..."></textarea>
       </div>
 
-      <!-- Page 2: Services Required -->
+      <!-- Page 2 -->
       <div class="inq-page" id="ip2">
-        <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:10px;line-height:1.5">Select all services you need. Photographer will quote based on these.</div>
-        <div class="services-grid" id="servicesGrid">
-          <div class="svc-btn" onclick="toggleService(this,'💒','Wedding')"><span class="svc-icon">💒</span><span class="svc-name">Wedding</span><span class="svc-check"></span></div>
-          <div class="svc-btn" onclick="toggleService(this,'🎊','Reception')"><span class="svc-icon">🎊</span><span class="svc-name">Reception</span><span class="svc-check"></span></div>
-          <div class="svc-btn" onclick="toggleService(this,'💛','Haldi')"><span class="svc-icon">💛</span><span class="svc-name">Haldi</span><span class="svc-check"></span></div>
-          <div class="svc-btn" onclick="toggleService(this,'🌿','Mehendi')"><span class="svc-icon">🌿</span><span class="svc-name">Mehendi</span><span class="svc-check"></span></div>
-          <div class="svc-btn" onclick="toggleService(this,'🎵','Sangeet')"><span class="svc-icon">🎵</span><span class="svc-name">Sangeet</span><span class="svc-check"></span></div>
-          <div class="svc-btn" onclick="toggleService(this,'💑','Pre-Wedding')"><span class="svc-icon">💑</span><span class="svc-name">Pre-Wedding</span><span class="svc-check"></span></div>
-          <div class="svc-btn" onclick="toggleService(this,'🌅','Post-Wedding')"><span class="svc-icon">🌅</span><span class="svc-name">Post-Wedding</span><span class="svc-check"></span></div>
-          <div class="svc-btn" onclick="toggleService(this,'👨‍👩‍👧','Family Function')"><span class="svc-icon">👨‍👩‍👧</span><span class="svc-name">Family Function</span><span class="svc-check"></span></div>
-          <div class="svc-btn" onclick="toggleService(this,'💼','Corporate Event')"><span class="svc-icon">💼</span><span class="svc-name">Corporate Event</span><span class="svc-check"></span></div>
-          <div class="svc-btn" onclick="toggleService(this,'🎓','College Function')"><span class="svc-icon">🎓</span><span class="svc-name">College Function</span><span class="svc-check"></span></div>
-          <div class="svc-btn" onclick="toggleService(this,'🎂','Birthday Party')"><span class="svc-icon">🎂</span><span class="svc-name">Birthday Party</span><span class="svc-check"></span></div>
-          <div class="svc-btn" onclick="toggleService(this,'🙏','Engagement')"><span class="svc-icon">🙏</span><span class="svc-name">Engagement</span><span class="svc-check"></span></div>
-          <div class="svc-btn" onclick="toggleService(this,'📸','Candid Photography')"><span class="svc-icon">📸</span><span class="svc-name">Candid Photography</span><span class="svc-check"></span></div>
-          <div class="svc-btn" onclick="toggleService(this,'🎎','Traditional Photography')"><span class="svc-icon">🎎</span><span class="svc-name">Traditional Photography</span><span class="svc-check"></span></div>
-          <div class="svc-btn" onclick="toggleService(this,'🍼','Baby Shower Shoot')"><span class="svc-icon">🍼</span><span class="svc-name">Baby Shower Shoot</span><span class="svc-check"></span></div>
-          <div class="svc-btn" onclick="toggleService(this,'🎬','Instagram Reels')"><span class="svc-icon">🎬</span><span class="svc-name">Instagram Reels</span><span class="svc-check"></span></div>
+        <label class="fi-label" style="margin-bottom:8px">Select Services Needed</label>
+        <div class="svc-grid" id="svcGrid">
+          <div class="svc-btn" onclick="togSvc(this,'💒','Wedding')"><span class="svc-btn-icon">💒</span><span class="svc-btn-name">Wedding</span><span class="svc-check"></span></div>
+          <div class="svc-btn" onclick="togSvc(this,'🎊','Reception')"><span class="svc-btn-icon">🎊</span><span class="svc-btn-name">Reception</span><span class="svc-check"></span></div>
+          <div class="svc-btn" onclick="togSvc(this,'💛','Haldi')"><span class="svc-btn-icon">💛</span><span class="svc-btn-name">Haldi</span><span class="svc-check"></span></div>
+          <div class="svc-btn" onclick="togSvc(this,'🌿','Mehendi')"><span class="svc-btn-icon">🌿</span><span class="svc-btn-name">Mehendi</span><span class="svc-check"></span></div>
+          <div class="svc-btn" onclick="togSvc(this,'🎵','Sangeet')"><span class="svc-btn-icon">🎵</span><span class="svc-btn-name">Sangeet</span><span class="svc-check"></span></div>
+          <div class="svc-btn" onclick="togSvc(this,'💑','Pre-Wedding')"><span class="svc-btn-icon">💑</span><span class="svc-btn-name">Pre-Wedding</span><span class="svc-check"></span></div>
+          <div class="svc-btn" onclick="togSvc(this,'🌅','Post-Wedding')"><span class="svc-btn-icon">🌅</span><span class="svc-btn-name">Post-Wedding</span><span class="svc-check"></span></div>
+          <div class="svc-btn" onclick="togSvc(this,'📸','Candid Photography')"><span class="svc-btn-icon">📸</span><span class="svc-btn-name">Candid</span><span class="svc-check"></span></div>
+          <div class="svc-btn" onclick="togSvc(this,'🎎','Traditional Photography')"><span class="svc-btn-icon">🎎</span><span class="svc-btn-name">Traditional</span><span class="svc-check"></span></div>
+          <div class="svc-btn" onclick="togSvc(this,'💼','Corporate Event')"><span class="svc-btn-icon">💼</span><span class="svc-btn-name">Corporate</span><span class="svc-check"></span></div>
+          <div class="svc-btn" onclick="togSvc(this,'🎂','Birthday Party')"><span class="svc-btn-icon">🎂</span><span class="svc-btn-name">Birthday</span><span class="svc-check"></span></div>
+          <div class="svc-btn" onclick="togSvc(this,'🍼','Baby Shower Shoot')"><span class="svc-btn-icon">🍼</span><span class="svc-btn-name">Baby Shower</span><span class="svc-check"></span></div>
+          <div class="svc-btn" onclick="togSvc(this,'🎬','Instagram Reels')"><span class="svc-btn-icon">🎬</span><span class="svc-btn-name">Instagram Reels</span><span class="svc-check"></span></div>
+          <div class="svc-btn" onclick="togSvc(this,'🙏','Engagement')"><span class="svc-btn-icon">🙏</span><span class="svc-btn-name">Engagement</span><span class="svc-check"></span></div>
+          <div class="svc-btn" onclick="togSvc(this,'🎓','College Function')"><span class="svc-btn-icon">🎓</span><span class="svc-btn-name">College Event</span><span class="svc-check"></span></div>
+          <div class="svc-btn" onclick="togSvc(this,'👨‍👩‍👧','Family Function')"><span class="svc-btn-icon">👨‍👩‍👧</span><span class="svc-btn-name">Family</span><span class="svc-check"></span></div>
         </div>
-        <div id="servicesWarning" style="display:none;font-size:11px;color:rgba(224,122,143,0.8);margin-top:-4px">⚠️ Please select at least one service!</div>
+        <div id="svcWarn" style="display:none;font-size:11px;color:var(--rose)">⚠ Select at least one service!</div>
       </div>
 
-      <!-- Page 3: Event Schedule Builder -->
+      <!-- Page 3 -->
       <div class="inq-page" id="ip3">
-        <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:12px;line-height:1.5">Add each event day with date and services. Photographer uses this to prepare a detailed quote.</div>
-
-        <div class="event-days" id="eventDaysContainer"></div>
-
-        <button class="add-day-btn" onclick="addEventDay()">+ Add Event Day</button>
-
-        <div style="background:rgba(255,255,255,0.02);border:0.5px solid rgba(255,255,255,0.06);border-radius:8px;padding:10px 12px;font-size:11px;color:rgba(255,255,255,0.3);line-height:1.6">
-          💡 Example:<br>
-          Day 1 — 13 June: Haldi + Mehendi + Sangeet<br>
-          Day 2 — 14 June: Wedding Ceremony<br>
-          Day 3 — 15 June: Reception
-        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6;background:var(--cream);border-radius:2px;padding:10px 12px;border:0.5px solid var(--border)">Add each event day so the photographer can prepare an accurate quote.</div>
+        <div id="dayContainer"></div>
+        <button class="add-day" onclick="addDay()">+ Add Event Day</button>
+        <div style="font-size:10px;color:var(--muted2);line-height:1.6;padding:8px;border-left:2px solid var(--border2)">Example: Day 1 — Haldi + Mehendi · Day 2 — Wedding · Day 3 — Reception</div>
       </div>
 
-      <!-- Page 4: Review & Send -->
+      <!-- Page 4 -->
       <div class="inq-page" id="ip4">
-        <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:12px;line-height:1.5">Review your booking request before sending to photographer.</div>
-
-        <div class="booking-summary" id="bookingSummary">
-          <div class="bs-title">✦ Booking Summary</div>
-          <div id="bsContent"></div>
+        <div class="summary-card" id="summaryCard">
+          <div class="sc-title">✦ Booking Summary</div>
+          <div id="summaryContent"></div>
         </div>
-
-        <div style="background:rgba(37,211,102,0.04);border:0.5px solid rgba(37,211,102,0.15);border-radius:8px;padding:10px 12px;font-size:11px;color:rgba(37,211,102,0.7);line-height:1.6">
-          ✅ Photographer will receive your request on PhotoFind Pro<br>
-          ✅ You'll get a WhatsApp notification when they reply<br>
-          ✅ Photographer will send you a custom quote!
+        <div style="background:rgba(26,107,60,0.06);border:0.5px solid rgba(26,107,60,0.2);border-radius:2px;padding:10px 12px;font-size:11px;color:rgba(26,107,60,0.8);line-height:1.6">
+          ✅ Request saved on PhotoFind Pro<br>
+          ✅ Photographer notified via WhatsApp<br>
+          ✅ They'll send you a custom quote!
         </div>
       </div>
 
       <!-- Success -->
-      <div class="inq-page" id="ipSuccess">
+      <div class="inq-page" id="ipDone">
         <div style="text-align:center;padding:20px 0">
-          <div style="font-size:48px;margin-bottom:12px">✅</div>
-          <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-bottom:6px">Request Sent!</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.4);line-height:1.6;margin-bottom:16px">
-            <span id="inqSuccessName"></span> has received your booking request.<br>
-            They will reply with a quote soon!
-          </div>
-          <div style="background:rgba(255,255,255,0.02);border:0.5px solid var(--border);border-radius:10px;padding:12px;text-align:left;font-size:11px;color:rgba(255,255,255,0.3);line-height:1.7">
-            📱 Check WhatsApp for photographer's reply<br>
-            💬 You can also message directly via WhatsApp<br>
-            📊 All conversations tracked on our platform
-          </div>
+          <div style="font-size:44px;margin-bottom:12px">✅</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--text);margin-bottom:6px">Request Sent!</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6"><span id="donePhName"></span> will reply with a quote soon.<br>Check WhatsApp for their response!</div>
         </div>
       </div>
-
     </div>
 
-    <!-- Footer actions -->
-    <div class="inq-modal-footer" id="inqFooter">
-      <button class="inq-btn-secondary" id="inqBackBtn" onclick="inqPrev()" style="display:none">← Back</button>
-      <button class="inq-btn-primary" id="inqNextBtn" onclick="inqNext()">Continue →</button>
+    <div class="inq-footer" id="inqFooter">
+      <button class="inq-btn-back" id="inqBack" onclick="inqPrev()">← Back</button>
+      <button class="inq-btn-next" id="inqNext" onclick="inqNext()">Continue →</button>
     </div>
-
   </div>
 </div>
 
 <a class="float-wa" href="https://wa.me/918895195862?text=Hi!%20I%20want%20to%20find%20a%20photographer" target="_blank">💬</a>
+<div class="toast" id="toast"></div>
 
 <script>
-const SERVER = 'https://api.templecity.digital';
-let allPhotographers = [];
-let activeTag = 'all';
+const SERVER='https://api.templecity.digital';
+let allPh=[],filtered=[],activeSvc='',featOnly=false,sortMode='featured',priceFilter='',dayCounter=0;
+let selSvcs=[],eventDays=[],curPh={},inqPage=1;
 
-// Demo photographers for initial display
-const DEMO_PHOTOGRAPHERS = [
-  {
-    id:'demo1', name:'Rajesh Mohanty', studio:'Rajesh Photography Studio',
-    city:'Bhubaneswar', phone:'9876543210', email:'rajesh@example.com',
-    specialties:['Wedding','Pre-Wedding','Reception'],
-    startingPrice:25000, rating:4.9, reviews:48,
-    experience:8, featured:true, verified:true,
-    bio:'Specialist in candid wedding photography with 8 years of experience across Odisha.',
-    photos:['💒','💍','📸'],
-    instagram:'', whatsapp:'9876543210',
-  },
-  {
-    id:'demo2', name:'Priya Sahoo', studio:'Pixel Perfect Studio',
-    city:'Cuttack', phone:'9876543211', email:'priya@example.com',
-    specialties:['Wedding','Birthday','Maternity'],
-    startingPrice:15000, rating:4.8, reviews:32,
-    experience:5, featured:true, verified:true,
-    bio:'Creative storyteller specializing in emotional wedding moments.',
-    photos:['🌸','👰','🎊'],
-    instagram:'', whatsapp:'9876543211',
-  },
-  {
-    id:'demo3', name:'Suresh Kumar', studio:'Dream Clicks',
-    city:'Puri', phone:'9876543212', email:'suresh@example.com',
-    specialties:['Wedding','Pre-Wedding','Corporate'],
-    startingPrice:20000, rating:4.7, reviews:27,
-    experience:6, featured:false, verified:true,
-    bio:'Award-winning photographer based in Puri with a cinematic style.',
-    photos:['🏖️','🌊','💑'],
-    instagram:'', whatsapp:'9876543212',
-  },
-  {
-    id:'demo4', name:'Anita Das', studio:'Moments by Anita',
-    city:'Bhubaneswar', phone:'9876543213', email:'anita@example.com',
-    specialties:['Wedding','Maternity','Birthday'],
-    startingPrice:18000, rating:4.9, reviews:41,
-    experience:7, featured:false, verified:true,
-    bio:'Known for natural light photography and heartfelt storytelling.',
-    photos:['🤱','👶','💐'],
-    instagram:'', whatsapp:'9876543213',
-  },
-  {
-    id:'demo5', name:'Bikash Panda', studio:'Cinematic Weddings',
-    city:'Rourkela', phone:'9876543214', email:'bikash@example.com',
-    specialties:['Wedding','Pre-Wedding'],
-    startingPrice:35000, rating:5.0, reviews:19,
-    experience:4, featured:true, verified:true,
-    bio:'Cinematic wedding films and photography with drone coverage.',
-    photos:['🎬','🚁','💍'],
-    instagram:'', whatsapp:'9876543214',
-  },
-  {
-    id:'demo6', name:'Sanjay Nayak', studio:'Wedding Frames',
-    city:'Sambalpur', phone:'9876543215', email:'sanjay@example.com',
-    specialties:['Wedding','Reception','Corporate'],
-    startingPrice:12000, rating:4.6, reviews:55,
-    experience:10, featured:false, verified:false,
-    bio:'10 years of experience capturing weddings across Western Odisha.',
-    photos:['🎊','🙏','✨'],
-    instagram:'', whatsapp:'9876543215',
-  },
+// ── DEMO DATA ──
+const DEMO=[
+  {id:'d1',name:'Rajesh Mohanty',studio:'Rajesh Photography Studio',city:'Bhubaneswar',phone:'9876543210',whatsapp:'9876543210',experience:8,rating:4.9,reviews:48,startingPrice:25000,featured:true,verified:true,bio:'Specialist in candid and traditional wedding photography.',specialties:['Wedding','Candid Photography','Traditional Photography','Pre-Wedding','Reception'],photos:['💒','📸','🎊'],instagram:'https://instagram.com',youtube:'https://youtube.com',portfolio:'https://drive.google.com'},
+  {id:'d2',name:'Priya Sahoo',studio:'Pixel Perfect Studio',city:'Cuttack',phone:'9876543211',whatsapp:'9876543211',experience:5,rating:4.8,reviews:32,startingPrice:15000,featured:true,verified:true,bio:'Creative storyteller specializing in emotional wedding moments.',specialties:['Wedding','Pre-Wedding','Birthday Party','Baby Shower Shoot'],photos:['🌸','👰','🎂'],instagram:'https://instagram.com'},
+  {id:'d3',name:'Suresh Kumar',studio:'Dream Clicks',city:'Puri',phone:'9876543212',whatsapp:'9876543212',experience:6,rating:4.7,reviews:27,startingPrice:20000,featured:false,verified:true,bio:'Award-winning photographer based in Puri with a cinematic style.',specialties:['Wedding','Pre-Wedding','Corporate Event','Instagram Reels'],photos:['🏖️','🌊','💑']},
+  {id:'d4',name:'Anita Das',studio:'Moments by Anita',city:'Bhubaneswar',phone:'9876543213',whatsapp:'9876543213',experience:7,rating:4.9,reviews:41,startingPrice:18000,featured:false,verified:true,bio:'Known for natural light photography and heartfelt storytelling.',specialties:['Wedding','Traditional Photography','Baby Shower Shoot','Mehendi'],photos:['🤱','👶','💐']},
+  {id:'d5',name:'Bikash Panda',studio:'Cinematic Weddings',city:'Rourkela',phone:'9876543214',whatsapp:'9876543214',experience:4,rating:5.0,reviews:19,startingPrice:35000,featured:true,verified:true,bio:'Cinematic wedding films and photography with drone coverage.',specialties:['Wedding','Reception','Sangeet','Instagram Reels'],photos:['🎬','🚁','💍'],youtube:'https://youtube.com'},
+  {id:'d6',name:'Sanjay Nayak',studio:'Wedding Frames',city:'Sambalpur',phone:'9876543215',whatsapp:'9876543215',experience:10,rating:4.6,reviews:55,startingPrice:12000,featured:false,verified:false,bio:'10 years capturing weddings across Western Odisha.',specialties:['Wedding','Reception','Corporate Event','Family Function'],photos:['🎊','🙏','✨']},
 ];
 
-async function loadPhotographers() {
-  try {
-    const res = await fetch(`${SERVER}/photographers`);
-    const data = await res.json();
-    if (data.success && data.photographers.length > 0) {
-      allPhotographers = [...data.photographers, ...DEMO_PHOTOGRAPHERS];
-    } else {
-      allPhotographers = DEMO_PHOTOGRAPHERS;
-    }
-  } catch(e) {
-    allPhotographers = DEMO_PHOTOGRAPHERS;
-  }
+const ALL_SERVICES=['Wedding','Reception','Haldi','Mehendi','Sangeet','Pre-Wedding','Post-Wedding','Candid Photography','Traditional Photography','Corporate Event','Birthday Party','Baby Shower Shoot','Instagram Reels','Engagement','College Function','Family Function'];
 
-  document.getElementById('statTotal').textContent = allPhotographers.length + '+';
-  document.getElementById('loadingEl').style.display = 'none';
-  document.getElementById('photographersGrid').style.display = 'grid';
-  renderPhotographers(allPhotographers);
+// ── CURSOR ──
+const curDot=document.getElementById('curDot'),curRing=document.getElementById('curRing');
+document.addEventListener('mousemove',e=>{
+  curDot.style.cssText=`left:${e.clientX-4}px;top:${e.clientY-4}px`;
+  curRing.style.cssText=`left:${e.clientX-18}px;top:${e.clientY-18}px`;
+});
+document.addEventListener('mousedown',()=>{curRing.style.transform='scale(0.7)'});
+document.addEventListener('mouseup',()=>{curRing.style.transform='scale(1)'});
+
+// ── NAV ──
+window.addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('solid',window.scrollY>40));
+
+// ── SERVICE TAGS ──
+function buildServiceTags(){
+  const row=document.getElementById('serviceTagsRow');
+  row.innerHTML=ALL_SERVICES.map(s=>`<button class="stag${activeSvc===s?' on':''}" onclick="setSvcFilter('${s}',this)">${s}</button>`).join('');
 }
 
-function renderPhotographers(list) {
-  const grid = document.getElementById('photographersGrid');
-  document.getElementById('resultsCount').textContent = `${list.length} photographer${list.length!==1?'s':''} found`;
-
-  if (list.length === 0) {
-    grid.style.display = 'none';
-    document.getElementById('noResults').style.display = 'block';
-    return;
-  }
-
-  document.getElementById('noResults').style.display = 'none';
-  grid.style.display = 'grid';
-
-  grid.innerHTML = list.map(p => `
-    <div class="pg-card">
-      <div class="pg-portfolio">
-        <div class="pg-photos">
-          <div class="pg-photo" style="font-size:36px">${p.photos?.[0]||'📸'}</div>
-          <div class="pg-photo">${p.photos?.[1]||'💍'}</div>
-          <div class="pg-photo">${p.photos?.[2]||'🎊'}</div>
-        </div>
-        ${p.featured ? '<span class="pg-badge badge-featured">⭐ Featured</span>' : ''}
-        ${p.verified ? '<span class="pg-badge badge-verified" style="top:${p.featured?30:10}px">✅ Verified</span>' : ''}
-        <div class="pg-overlay"></div>
-      </div>
-      <div class="pg-info">
-        <div class="pg-header">
-          <div class="pg-avatar">${p.name?.charAt(0)||'📸'}</div>
-          <div>
-            <div class="pg-name">${p.name}</div>
-            <div class="pg-studio">${p.studio}</div>
-            <div class="pg-location">📍 ${p.city}</div>
-          </div>
-        </div>
-        <div class="pg-rating">
-          <div class="pg-stars">${'★'.repeat(Math.floor(p.rating||5))}${'☆'.repeat(5-Math.floor(p.rating||5))}</div>
-          <div class="pg-rating-num">${p.rating||5.0}</div>
-          <div class="pg-reviews">(${p.reviews||0} reviews)</div>
-          <div style="margin-left:auto;font-size:10px;color:var(--muted2)">${p.experience||1}+ yrs exp</div>
-        </div>
-        <div class="pg-tags">
-          ${(p.specialties||[]).map(s=>`<span class="pg-tag">${s}</span>`).join('')}
-        </div>
-        <div class="pg-price-row">
-          <div>
-            <div class="pg-price-label">Starting From</div>
-            <div style="display:flex;align-items:baseline;gap:2px">
-              <div class="pg-price">₹${(p.startingPrice||0).toLocaleString('en-IN')}</div>
-              <div class="pg-price-per">/event</div>
-            </div>
-          </div>
-          <div style="text-align:right;font-size:10px;color:var(--muted2)">
-            ${p.bio ? p.bio.substring(0,60)+'...' : ''}
-          </div>
-        </div>
-        <div class="pg-actions">
-          <button class="pg-btn-wa" onclick="openInquiry('${p.id}','${p.name}','${p.city}','${p.whatsapp||p.phone}')">
-            📩 Send Inquiry
-          </button>
-          <button class="pg-btn-view" onclick="viewProfile('${p.id}','${p.city}')">View →</button>
-        </div>
-        ${(p.instagram||p.portfolio||p.youtube) ? `
-        <div class="pg-portfolio-links">
-          ${p.portfolio?`<a href="${p.portfolio}" target="_blank" class="port-link portfolio">📁 Portfolio</a>`:''}
-          ${p.instagram?`<a href="${p.instagram}" target="_blank" class="port-link instagram">📸 Instagram</a>`:''}
-          ${p.youtube?`<a href="${p.youtube}" target="_blank" class="port-link youtube">▶️ Videos</a>`:''}
-        </div>`:''}
-      </div>
-    </div>
-  `).join('');
+function setSvcFilter(svc,el){
+  activeSvc=activeSvc===svc?'':svc;
+  buildServiceTags();
+  filter();
 }
 
-function filterPhotographers() {
-  const search = document.getElementById('searchInput').value.toLowerCase();
-  const city = document.getElementById('cityFilter').value;
-  const budget = document.getElementById('budgetFilter').value;
-  const specialty = document.getElementById('specialtyFilter').value;
-  const sort = document.getElementById('sortSelect').value;
+// ── LOAD ──
+async function loadPhotographers(){
+  try{
+    const res=await fetch(`${SERVER}/photographers`);
+    const data=await res.json();
+    allPh=data.success&&data.photographers.length>0?[...data.photographers,...DEMO]:DEMO;
+  }catch(e){allPh=DEMO}
+  document.getElementById('heroStatTotal').textContent=allPh.length+'+';
+  buildServiceTags();
+  filter();
+}
 
-  let filtered = allPhotographers.filter(p => {
-    const matchSearch = !search || p.name?.toLowerCase().includes(search) || p.studio?.toLowerCase().includes(search) || p.city?.toLowerCase().includes(search);
-    const matchCity = !city || p.city === city;
-    const matchSpecialty = !specialty || (p.specialties||[]).includes(specialty);
-    const matchBudget = !budget || checkBudget(p.startingPrice, budget);
-    const matchTag = activeTag === 'all' || (activeTag === 'featured' && p.featured) || (activeTag === 'verified' && p.verified);
-    return matchSearch && matchCity && matchSpecialty && matchBudget && matchTag;
+// ── FILTER & SORT ──
+function filter(){
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  const city=document.getElementById('cityFilter').value;
+  const budget=document.getElementById('budgetFilter').value||priceFilter;
+
+  filtered=allPh.filter(p=>{
+    const ms=!q||p.name?.toLowerCase().includes(q)||p.studio?.toLowerCase().includes(q)||p.city?.toLowerCase().includes(q);
+    const mc=!city||p.city===city;
+    const mb=!budget||checkBudget(p.startingPrice,budget);
+    const msvc=!activeSvc||(p.specialties||[]).includes(activeSvc);
+    const mf=!featOnly||p.featured;
+    return ms&&mc&&mb&&msvc&&mf;
   });
 
-  // Sort
-  if(sort === 'rating') filtered.sort((a,b) => (b.rating||0)-(a.rating||0));
-  else if(sort === 'price-low') filtered.sort((a,b) => (a.startingPrice||0)-(b.startingPrice||0));
-  else if(sort === 'price-high') filtered.sort((a,b) => (b.startingPrice||0)-(a.startingPrice||0));
-  else filtered.sort((a,b) => (b.featured?1:0)-(a.featured?1:0));
+  if(sortMode==='rating') filtered.sort((a,b)=>(b.rating||0)-(a.rating||0));
+  else if(sortMode==='price-low') filtered.sort((a,b)=>(a.startingPrice||0)-(b.startingPrice||0));
+  else if(sortMode==='price-high') filtered.sort((a,b)=>(b.startingPrice||0)-(a.startingPrice||0));
+  else filtered.sort((a,b)=>(b.featured?1:0)-(a.featured?1:0));
 
-  renderPhotographers(filtered);
+  document.getElementById('resultsBadge').textContent=`${filtered.length} result${filtered.length!==1?'s':''}`;
+  render();
 }
 
-function checkBudget(price, budget) {
-  if(budget === 'budget') return price < 20000;
-  if(budget === 'mid') return price >= 20000 && price < 50000;
-  if(budget === 'premium') return price >= 50000 && price < 100000;
-  if(budget === 'luxury') return price >= 100000;
+function checkBudget(price,b){
+  if(b==='budget') return price<20000;
+  if(b==='mid') return price>=20000&&price<50000;
+  if(b==='premium') return price>=50000&&price<100000;
+  if(b==='luxury') return price>=100000;
   return true;
 }
 
-function filterByTag(el, tag) {
-  activeTag = tag;
-  document.querySelectorAll('.filter-tag').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-  filterPhotographers();
+function setSort(mode,el){
+  sortMode=mode;
+  document.querySelectorAll('.ss-name').forEach(e=>e.classList.remove('active'));
+  el.querySelector('.ss-name').classList.add('active');
+  filter();
 }
 
-// ── INQUIRY BOOKING SYSTEM ──
-let currentPhotographer = {};
-let selectedServices = [];
-let eventDays = [];
-let inqCurrentPage = 1;
-
-const ALL_SERVICES = {
-  '💒': 'Wedding', '🎊': 'Reception', '💛': 'Haldi',
-  '🌿': 'Mehendi', '🎵': 'Sangeet', '💑': 'Pre-Wedding',
-  '🌅': 'Post-Wedding', '👨‍👩‍👧': 'Family Function',
-  '💼': 'Corporate Event', '🎓': 'College Function',
-  '🎂': 'Birthday Party', '🙏': 'Engagement',
-  '📸': 'Candid Photography', '🎎': 'Traditional Photography',
-  '🍼': 'Baby Shower Shoot', '🎬': 'Instagram Reels',
-};
-
-function openInquiry(id, name, city, phone) {
-  currentPhotographer = { id, name, city, phone };
-  selectedServices = [];
-  eventDays = [];
-  inqCurrentPage = 1;
-
-  document.getElementById('inqPhName').textContent = name;
-  document.getElementById('inqPhCity').textContent = '📍 ' + city;
-  document.getElementById('inqAvatar').textContent = name.charAt(0);
-  document.getElementById('inqSuccessName').textContent = name;
-
-  // Reset form
-  document.getElementById('inqName').value = '';
-  document.getElementById('inqPhone').value = '';
-  document.getElementById('inqCity').value = '';
-  document.getElementById('inqBudget').value = '';
-  document.getElementById('inqMsg').value = '';
-  document.querySelectorAll('.svc-btn').forEach(b => b.classList.remove('selected'));
-  document.getElementById('eventDaysContainer').innerHTML = '';
-
-  goInqPage(1);
-  document.getElementById('inquiryModal').classList.add('open');
-  document.body.style.overflow = 'hidden';
+function setPriceFilter(val,el){
+  priceFilter=val;
+  document.querySelectorAll('.pr-option').forEach(e=>e.classList.remove('on'));
+  el.classList.add('on');
+  filter();
 }
 
-function closeInquiry() {
-  document.getElementById('inquiryModal').classList.remove('open');
-  document.body.style.overflow = '';
+let featSwitchOn=false;
+function toggleFeatured(){
+  featSwitchOn=!featSwitchOn;
+  document.getElementById('featSwitch').classList.toggle('on',featSwitchOn);
+  featOnly=featSwitchOn;
+  filter();
 }
 
-function goInqPage(n) {
-  inqCurrentPage = n;
-  document.querySelectorAll('.inq-page').forEach(p => p.classList.remove('active'));
-  document.getElementById('ip' + n)?.classList.add('active');
+// ── RENDER ──
+function stars(r){
+  return Array(5).fill(0).map((_,i)=>`<span class="star${i<Math.floor(r)?'':' empty'}">★</span>`).join('');
+}
 
-  // Update step indicators
-  for(let i = 1; i <= 4; i++) {
-    const s = document.getElementById('is' + i);
-    if(!s) continue;
-    s.classList.remove('active', 'done');
-    if(i < n) s.classList.add('done');
-    else if(i === n) s.classList.add('active');
-  }
-
-  // Update footer buttons
-  const backBtn = document.getElementById('inqBackBtn');
-  const nextBtn = document.getElementById('inqNextBtn');
-  const footer = document.getElementById('inqFooter');
-
-  if(n === 5) { // Success
-    footer.style.display = 'none';
+function render(){
+  const grid=document.getElementById('pgGrid');
+  if(filtered.length===0){
+    grid.innerHTML=`<div class="empty-state"><div class="es-icon">📷</div><div class="es-title">No photographers found</div><div class="es-sub">Try adjusting your filters</div></div>`;
     return;
   }
 
-  footer.style.display = 'flex';
-  backBtn.style.display = n > 1 ? 'block' : 'none';
+  let html='';
+  filtered.forEach((p,i)=>{
+    const isFeat=p.featured&&i===0&&sortMode==='featured';
+    const hl=activeSvc&&(p.specialties||[]).includes(activeSvc);
 
-  if(n === 4) {
-    nextBtn.textContent = '📩 Send Request';
-    buildSummary();
-  } else {
-    nextBtn.textContent = 'Continue →';
-  }
-}
-
-function inqNext() {
-  if(inqCurrentPage === 1) {
-    const name = document.getElementById('inqName').value.trim();
-    const phone = document.getElementById('inqPhone').value.trim();
-    if(!name) { showToast('Enter your name!'); return; }
-    if(!phone || phone.length !== 10) { showToast('Enter valid WhatsApp number!'); return; }
-    goInqPage(2);
-  } else if(inqCurrentPage === 2) {
-    if(selectedServices.length === 0) {
-      document.getElementById('servicesWarning').style.display = 'block';
-      return;
-    }
-    document.getElementById('servicesWarning').style.display = 'none';
-    // Auto-add event days based on selected services
-    if(eventDays.length === 0) autoCreateDays();
-    goInqPage(3);
-  } else if(inqCurrentPage === 3) {
-    if(eventDays.length === 0) { showToast('Add at least one event day!'); return; }
-    for(const day of eventDays) {
-      if(!day.date) { showToast('Add date for all event days!'); return; }
-      if(day.services.length === 0) { showToast('Select services for all event days!'); return; }
-    }
-    goInqPage(4);
-  } else if(inqCurrentPage === 4) {
-    submitInquiry();
-  }
-}
-
-function inqPrev() {
-  if(inqCurrentPage > 1) goInqPage(inqCurrentPage - 1);
-}
-
-function toggleService(el, icon, name) {
-  el.classList.toggle('selected');
-  if(el.classList.contains('selected')) {
-    const check = el.querySelector('.svc-check');
-    check.textContent = '✓';
-    if(!selectedServices.find(s => s.name === name)) {
-      selectedServices.push({ icon, name });
-    }
-  } else {
-    el.querySelector('.svc-check').textContent = '';
-    selectedServices = selectedServices.filter(s => s.name !== name);
-  }
-  document.getElementById('servicesWarning').style.display = 'none';
-}
-
-function autoCreateDays() {
-  // Group services into suggested days
-  const weddingServices = selectedServices.filter(s =>
-    ['Haldi','Mehendi','Sangeet'].includes(s.name));
-  const mainServices = selectedServices.filter(s =>
-    ['Wedding','Engagement'].includes(s.name));
-  const afterServices = selectedServices.filter(s =>
-    ['Reception','Post-Wedding'].includes(s.name));
-  const otherServices = selectedServices.filter(s =>
-    !['Haldi','Mehendi','Sangeet','Wedding','Engagement','Reception','Post-Wedding'].includes(s.name));
-
-  if(weddingServices.length > 0) addEventDay(weddingServices);
-  if(mainServices.length > 0) addEventDay(mainServices);
-  if(afterServices.length > 0) addEventDay(afterServices);
-  if(otherServices.length > 0) addEventDay(otherServices);
-
-  if(eventDays.length === 0) addEventDay(selectedServices);
-}
-
-let dayCounter = 0;
-function addEventDay(preServices = []) {
-  dayCounter++;
-  const dayId = 'day_' + dayCounter;
-  const dayNum = eventDays.length + 1;
-
-  const day = { id: dayId, date: '', services: [...preServices] };
-  eventDays.push(day);
-
-  const container = document.getElementById('eventDaysContainer');
-  const el = document.createElement('div');
-  el.className = 'event-day-card';
-  el.id = dayId;
-
-  el.innerHTML = `
-    <div class="event-day-header">
-      <div class="event-day-title">
-        📅 <span>Day ${dayNum}</span>
-        <span class="event-day-badge" id="badge-${dayId}">${preServices.length > 0 ? preServices.map(s=>s.name).join(' + ') : 'No services'}</span>
-      </div>
-      <button class="event-day-remove" onclick="removeDay('${dayId}')">✕</button>
-    </div>
-    <div class="event-day-body">
-      <label class="fi-label">Event Date *</label>
-      <input class="fi" type="date" id="date-${dayId}" style="margin-bottom:10px" onchange="updateDayDate('${dayId}',this.value)">
-      <label class="fi-label">Services on this day</label>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:6px">
-        ${selectedServices.map(s => `
-          <div style="display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:6px;border:0.5px solid rgba(255,255,255,0.08);cursor:pointer;background:${preServices.find(ps=>ps.name===s.name)?'rgba(232,200,122,0.08)':'rgba(255,255,255,0.02)'};border-color:${preServices.find(ps=>ps.name===s.name)?'rgba(232,200,122,0.25)':'rgba(255,255,255,0.08)'}"
-            id="ds-${dayId}-${s.name.replace(/\s/g,'')}"
-            onclick="toggleDayService('${dayId}','${s.icon}','${s.name}',this)">
-            <span style="font-size:12px">${s.icon}</span>
-            <span style="font-size:9px;font-weight:500;color:${preServices.find(ps=>ps.name===s.name)?'var(--gold)':'rgba(255,255,255,0.5)'}">${s.name}</span>
+    if(isFeat){
+      html+=`<div class="ph-card-featured reveal">
+        <div class="feat-portfolio">
+          <div class="feat-portfolio-bg">${p.photos?.[0]||'📸'}</div>
+          <div class="feat-overlay"></div>
+          <div class="card-badges" style="position:absolute;top:14px;left:14px;z-index:2">
+            <span class="cbadge cbadge-feat">⭐ Featured</span>
+            ${p.verified?'<span class="cbadge cbadge-ver">✓ Verified</span>':''}
           </div>
-        `).join('')}
-      </div>
-      <input class="fi" placeholder="Venue / Location for this day (optional)" id="venue-${dayId}" onchange="updateDayVenue('${dayId}',this.value)">
-    </div>
-  `;
-
-  container.appendChild(el);
-}
-
-function removeDay(dayId) {
-  eventDays = eventDays.filter(d => d.id !== dayId);
-  document.getElementById(dayId)?.remove();
-  // Re-number
-  document.querySelectorAll('.event-day-title span:first-of-type').forEach((el, i) => {
-    el.textContent = `Day ${i + 1}`;
-  });
-}
-
-function updateDayDate(dayId, date) {
-  const day = eventDays.find(d => d.id === dayId);
-  if(day) day.date = date;
-}
-
-function updateDayVenue(dayId, venue) {
-  const day = eventDays.find(d => d.id === dayId);
-  if(day) day.venue = venue;
-}
-
-function toggleDayService(dayId, icon, name, el) {
-  const day = eventDays.find(d => d.id === dayId);
-  if(!day) return;
-
-  const exists = day.services.find(s => s.name === name);
-  if(exists) {
-    day.services = day.services.filter(s => s.name !== name);
-    el.style.background = 'rgba(255,255,255,0.02)';
-    el.style.borderColor = 'rgba(255,255,255,0.08)';
-    el.querySelector('span:last-child').style.color = 'rgba(255,255,255,0.5)';
-  } else {
-    day.services.push({ icon, name });
-    el.style.background = 'rgba(232,200,122,0.08)';
-    el.style.borderColor = 'rgba(232,200,122,0.25)';
-    el.querySelector('span:last-child').style.color = 'var(--gold)';
-  }
-
-  // Update badge
-  const badge = document.getElementById('badge-' + dayId);
-  if(badge) badge.textContent = day.services.length > 0 ? day.services.map(s=>s.name).join(' + ') : 'No services';
-}
-
-function buildSummary() {
-  const name = document.getElementById('inqName').value;
-  const phone = document.getElementById('inqPhone').value;
-  const budget = document.getElementById('inqBudget').value;
-
-  let html = `
-    <div class="bs-row"><span>👤 Name</span><strong>${name}</strong></div>
-    <div class="bs-row"><span>📱 WhatsApp</span><strong>+91${phone}</strong></div>
-    <div class="bs-row"><span>💰 Budget</span><strong>${budget || 'Not specified'}</strong></div>
-    <div class="bs-row"><span>🎯 Services</span><strong>${selectedServices.map(s=>s.name).join(', ')}</strong></div>
-    <div class="bs-events">
-      <div style="font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(232,200,122,0.4);margin-bottom:6px">Event Schedule</div>
-      ${eventDays.map((day, i) => `
-        <div class="bs-event">
-          <span class="bs-event-date">Day ${i+1}${day.date ? ' — '+new Date(day.date+'T12:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}) : ''}</span>
-          <span>${day.services.map(s=>s.icon+' '+s.name).join(', ')}${day.venue?' · '+day.venue:''}</span>
         </div>
-      `).join('')}
-    </div>`;
+        <div class="feat-info">
+          <div>
+            <div class="feat-crown">Editor's Choice</div>
+            <div class="feat-name">${p.name}</div>
+            <div class="feat-studio">${p.studio}</div>
+            <div class="feat-location">📍 ${p.city} · ${p.experience}+ yrs exp</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+              <div class="stars">${stars(p.rating)}</div>
+              <span style="font-size:12px;font-weight:700;color:var(--text)">${p.rating}</span>
+              <span style="font-size:10px;color:var(--muted2)">(${p.reviews} reviews)</span>
+            </div>
+            <div class="feat-bio">${p.bio||''}</div>
+          </div>
+          <div class="feat-bottom">
+            <div class="feat-specs">${(p.specialties||[]).map(s=>`<span class="spec-tag${hl&&s===activeSvc?' highlight':''}">${s}</span>`).join('')}</div>
+            <div class="feat-price-lbl">Starting From</div>
+            <div class="feat-price-tag">₹${(p.startingPrice||0).toLocaleString('en-IN')}</div>
+            <div class="feat-actions">
+              <button class="ca-btn ca-inquiry" onclick="openInq('${p.id}','${p.name}','${p.city}','${p.whatsapp||p.phone}')">📩 Send Inquiry</button>
+              <button class="ca-btn ca-view" onclick="viewProfile('${p.id}')">View Portfolio →</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    } else {
+      html+=`<div class="ph-card reveal">
+        <div class="card-portfolio">
+          <div class="cp-grid">
+            <div class="cp-main cp-cell" style="background:linear-gradient(160deg,#${Math.floor(Math.random()*4+1)*4}0A08,#1A1200)">${p.photos?.[0]||'📸'}</div>
+            <div class="cp-side">
+              <div class="cp-cell" style="background:linear-gradient(160deg,#0A1208,#081800)">${p.photos?.[1]||'💍'}</div>
+              <div class="cp-cell" style="background:linear-gradient(160deg,#0A080A,#180820)">${p.photos?.[2]||'🎊'}</div>
+            </div>
+          </div>
+          <div class="cp-overlay"></div>
+          <div class="card-badges">
+            ${p.featured?'<span class="cbadge cbadge-feat">⭐ Featured</span>':''}
+            ${p.verified?'<span class="cbadge cbadge-ver">✓ Verified</span>':''}
+            ${!p.verified&&!p.featured?'<span class="cbadge cbadge-new">New</span>':''}
+          </div>
+          <div class="card-services-preview">
+            ${(p.specialties||[]).slice(0,3).map(s=>`<span class="csp">${s}</span>`).join('')}
+            ${(p.specialties||[]).length>3?`<span class="csp">+${(p.specialties||[]).length-3}</span>`:''}
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="card-header">
+            <div class="card-avatar">${p.name?.charAt(0)||'P'}</div>
+            <div>
+              <div class="card-name">${p.name}</div>
+              <div class="card-studio">${p.studio}</div>
+              <div class="card-loc">📍 ${p.city}</div>
+            </div>
+          </div>
+          <div class="card-rating">
+            <div class="stars">${stars(p.rating)}</div>
+            <span class="rating-num">${p.rating}</span>
+            <span class="review-count">(${p.reviews})</span>
+            <span class="exp-badge">${p.experience}+ yrs</span>
+          </div>
+          <div class="card-specs">${(p.specialties||[]).map(s=>`<span class="spec-tag${hl&&s===activeSvc?' highlight':''}">${s}</span>`).join('')}</div>
+          <div class="card-footer">
+            <div class="card-price">
+              <div class="cp-label">Starting From</div>
+              <div class="cp-amount">₹${(p.startingPrice||0).toLocaleString('en-IN')}</div>
+              <div class="cp-per">per event</div>
+            </div>
+            <div class="card-actions">
+              <button class="ca-btn ca-inquiry" onclick="openInq('${p.id}','${p.name}','${p.city}','${p.whatsapp||p.phone}')">📩 Inquire</button>
+              <button class="ca-btn ca-view" onclick="viewProfile('${p.id}')">View →</button>
+            </div>
+          </div>
+        </div>
+        ${(p.instagram||p.portfolio||p.youtube)?`<div class="card-port-links">
+          ${p.portfolio?`<a href="${p.portfolio}" target="_blank" class="cpl">📁 Portfolio</a>`:''}
+          ${p.instagram?`<a href="${p.instagram}" target="_blank" class="cpl insta">📸 Insta</a>`:''}
+          ${p.youtube?`<a href="${p.youtube}" target="_blank" class="cpl yt">▶ YouTube</a>`:''}
+        </div>`:''}
+      </div>`;
+    }
+  });
 
-  document.getElementById('bsContent').innerHTML = html;
+  grid.innerHTML=html;
+  // Trigger reveals
+  setTimeout(()=>document.querySelectorAll('.reveal').forEach(el=>el.classList.add('v')),50);
+  const obs=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('v')}),{threshold:0.05});
+  document.querySelectorAll('.reveal:not(.v)').forEach(el=>obs.observe(el));
 }
 
-async function submitInquiry() {
-  const name = document.getElementById('inqName').value.trim();
-  const phone = document.getElementById('inqPhone').value.trim();
-  const budget = document.getElementById('inqBudget').value;
-  const msg = document.getElementById('inqMsg').value.trim();
+function viewProfile(id){
+  const svc=activeSvc||'all';
+  window.location.href=`photographer-profile.html?id=${id}&service=${encodeURIComponent(svc)}`;
+}
 
-  document.getElementById('inqNextBtn').textContent = '⏳ Sending...';
-  document.getElementById('inqNextBtn').disabled = true;
+// ── INQUIRY SYSTEM ──
+function openInq(id,name,city,phone){
+  curPh={id,name,city,phone};selSvcs=[];eventDays=[];inqPage=1;dayCounter=0;
+  document.getElementById('inqAv').textContent=name.charAt(0);
+  document.getElementById('inqPhName').textContent=name;
+  document.getElementById('inqPhCity').textContent='📍 '+city;
+  document.getElementById('donePhName').textContent=name;
+  document.getElementById('iName').value='';
+  document.getElementById('iPhone').value='';
+  document.getElementById('iMsg').value='';
+  document.getElementById('dayContainer').innerHTML='';
+  document.querySelectorAll('.svc-btn').forEach(b=>{b.classList.remove('sel');const c=b.querySelector('.svc-check');if(c)c.textContent='';});
+  goPage(1);
+  document.getElementById('inqModal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeInq(){document.getElementById('inqModal').classList.remove('open');document.body.style.overflow='';}
+document.getElementById('inqModal').addEventListener('click',function(e){if(e.target===this)closeInq();});
 
-  const inquiryData = {
-    photographerId: currentPhotographer.id,
-    photographerPhone: currentPhotographer.phone,
-    photographerName: currentPhotographer.name,
-    coupleName: name,
-    couplePhone: phone,
-    budget,
-    message: msg,
-    services: selectedServices,
-    eventDays: eventDays,
-    eventType: selectedServices.map(s=>s.name).join(', '),
-    eventDate: eventDays[0]?.date || '',
-  };
+function goPage(n){
+  inqPage=n;
+  document.querySelectorAll('.inq-page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(n===5?'ipDone':'ip'+n)?.classList.add('active');
+  for(let i=1;i<=4;i++){const s=document.getElementById('is'+i);if(!s)continue;s.classList.remove('active','done');if(i<n)s.classList.add('done');else if(i===n)s.classList.add('active');}
+  const back=document.getElementById('inqBack'),next=document.getElementById('inqNext'),footer=document.getElementById('inqFooter');
+  if(n===5){footer.style.display='none';return;}
+  footer.style.display='flex';
+  back.style.display=n>1?'block':'none';
+  next.textContent=n===4?'📩 Send Request':'Continue →';
+}
 
-  try {
-    const res = await fetch(`${SERVER}/send-inquiry`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(inquiryData),
-    });
-    const data = await res.json();
-    if(data.success) showSuccess(inquiryData);
-    else throw new Error(data.error);
-  } catch(e) {
-    sendViaWhatsApp(inquiryData);
+function inqNext(){
+  if(inqPage===1){
+    if(!document.getElementById('iName').value.trim()){toast('Enter your name!');return;}
+    if(document.getElementById('iPhone').value.trim().length!==10){toast('Enter valid 10-digit number!');return;}
+    goPage(2);
+  } else if(inqPage===2){
+    if(selSvcs.length===0){document.getElementById('svcWarn').style.display='block';return;}
+    document.getElementById('svcWarn').style.display='none';
+    if(eventDays.length===0)autoCreateDays();
+    goPage(3);
+  } else if(inqPage===3){
+    if(eventDays.length===0){toast('Add at least one event day!');return;}
+    for(const d of eventDays){if(!d.date){toast('Add date for all days!');return;}}
+    buildSummary();goPage(4);
+  } else if(inqPage===4){
+    submitInq();
   }
 }
+function inqPrev(){if(inqPage>1)goPage(inqPage-1);}
 
-function sendViaWhatsApp(data) {
-  const schedule = data.eventDays.map((day, i) => {
-    const date = day.date ? new Date(day.date+'T12:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'}) : 'TBD';
-    return `Day ${i+1} (${date}): ${day.services.map(s=>s.icon+s.name).join(', ')}${day.venue?' @ '+day.venue:''}`;
-  }).join('\n');
+function togSvc(el,icon,name){
+  el.classList.toggle('sel');
+  const chk=el.querySelector('.svc-check');
+  if(el.classList.contains('sel')){chk.textContent='✓';if(!selSvcs.find(s=>s.name===name))selSvcs.push({icon,name});}
+  else{chk.textContent='';selSvcs=selSvcs.filter(s=>s.name!==name);}
+  document.getElementById('svcWarn').style.display='none';
+}
 
-  const waMsg = `📸 *Booking Request — PhotoFind Pro*\n\n` +
-    `👤 *Name:* ${data.coupleName}\n` +
-    `📱 *WhatsApp:* +91${data.couplePhone}\n` +
-    `💰 *Budget:* ${data.budget || 'TBD'}\n\n` +
-    `🎯 *Services Required:*\n${data.services.map(s=>s.icon+' '+s.name).join(', ')}\n\n` +
-    `📅 *Event Schedule:*\n${schedule}\n\n` +
-    `${data.message ? '💬 *Message:* '+data.message+'\n\n' : ''}` +
-    `_Sent via PhotoFind Pro · templecity.digital/photographers.html_`;
+function autoCreateDays(){
+  const pre=selSvcs.filter(s=>['Haldi','Mehendi','Sangeet'].includes(s.name));
+  const main=selSvcs.filter(s=>['Wedding','Engagement'].includes(s.name));
+  const post=selSvcs.filter(s=>['Reception','Post-Wedding'].includes(s.name));
+  const other=selSvcs.filter(s=>!['Haldi','Mehendi','Sangeet','Wedding','Engagement','Reception','Post-Wedding'].includes(s.name));
+  if(pre.length)addDay(pre);
+  if(main.length)addDay(main);
+  if(post.length)addDay(post);
+  if(other.length)addDay(other);
+  if(eventDays.length===0)addDay(selSvcs);
+}
 
-  window.open(`https://wa.me/91${data.photographerPhone}?text=${encodeURIComponent(waMsg)}`, '_blank');
+function addDay(preSvcs=[]){
+  dayCounter++;
+  const id='d'+dayCounter;
+  const day={id,date:'',services:[...preSvcs],venue:''};
+  eventDays.push(day);
+  const c=document.getElementById('dayContainer');
+  const el=document.createElement('div');el.className='day-card';el.id=id;
+  el.innerHTML=`<div class="day-header"><div class="day-title">Day ${eventDays.length} <span class="day-badge" id="db-${id}">${preSvcs.map(s=>s.name).join(' + ')||'No services'}</span></div><button class="day-remove" onclick="removeDay('${id}')">✕</button></div>
+  <div class="day-body">
+    <label class="fi-label">Date *</label><input class="fi" type="date" id="dt-${id}" onchange="updateDay('${id}','date',this.value)" style="margin-bottom:8px">
+    <label class="fi-label">Services this day</label>
+    <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">${selSvcs.map(s=>`
+      <div style="padding:4px 10px;border-radius:2px;font-size:9px;font-weight:700;border:0.5px solid ${preSvcs.find(ps=>ps.name===s.name)?'var(--gold)':'var(--border)'};background:${preSvcs.find(ps=>ps.name===s.name)?'var(--gold-dim)':'var(--cream)'};color:${preSvcs.find(ps=>ps.name===s.name)?'var(--gold)':'var(--muted)'};cursor:pointer;transition:all 0.15s;letter-spacing:0.04em"
+        id="ds-${id}-${s.name.replace(/\s/g,'')}" onclick="togDaySvc('${id}','${s.icon}','${s.name}',this)">
+        ${s.icon} ${s.name}</div>`).join('')}</div>
+    <label class="fi-label">Venue (optional)</label><input class="fi" placeholder="Venue name & location" onchange="updateDay('${id}','venue',this.value)">
+  </div>`;
+  c.appendChild(el);
+}
+
+function removeDay(id){eventDays=eventDays.filter(d=>d.id!==id);document.getElementById(id)?.remove();}
+function updateDay(id,field,val){const d=eventDays.find(d=>d.id===id);if(d)d[field]=val;}
+function togDaySvc(id,icon,name,el){
+  const day=eventDays.find(d=>d.id===id);if(!day)return;
+  const ex=day.services.find(s=>s.name===name);
+  if(ex){day.services=day.services.filter(s=>s.name!==name);el.style.borderColor='var(--border)';el.style.background='var(--cream)';el.style.color='var(--muted)';}
+  else{day.services.push({icon,name});el.style.borderColor='var(--gold)';el.style.background='var(--gold-dim)';el.style.color='var(--gold)';}
+  const badge=document.getElementById('db-'+id);if(badge)badge.textContent=day.services.map(s=>s.name).join(' + ')||'No services';
+}
+
+function buildSummary(){
+  const name=document.getElementById('iName').value,phone=document.getElementById('iPhone').value,budget=document.getElementById('iBudget').value;
+  let html=`<div class="sc-row"><span>👤 Name</span><strong>${name}</strong></div>
+  <div class="sc-row"><span>📱 WhatsApp</span><strong>+91${phone}</strong></div>
+  <div class="sc-row"><span>💰 Budget</span><strong>${budget||'Not specified'}</strong></div>
+  <div class="sc-row"><span>🎯 Services</span><strong>${selSvcs.map(s=>s.name).join(', ')}</strong></div>
+  <div class="sc-events"><div style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;font-weight:700">Event Schedule</div>
+  ${eventDays.map((d,i)=>{const dt=d.date?new Date(d.date+'T12:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'TBD';return`<div class="sc-event"><span class="sc-event-date">Day ${i+1} (${dt})</span> — ${d.services.map(s=>s.icon+s.name).join(', ')}${d.venue?' @ '+d.venue:''}</div>`}).join('')}</div>`;
+  document.getElementById('summaryContent').innerHTML=html;
+}
+
+async function submitInq(){
+  const name=document.getElementById('iName').value.trim(),phone=document.getElementById('iPhone').value.trim(),budget=document.getElementById('iBudget').value,msg=document.getElementById('iMsg').value.trim();
+  document.getElementById('inqNext').textContent='⏳ Sending...';document.getElementById('inqNext').disabled=true;
+  const data={photographerId:curPh.id,photographerPhone:curPh.phone,photographerName:curPh.name,coupleName:name,couplePhone:phone,budget,message:msg,services:selSvcs,eventDays,eventType:selSvcs.map(s=>s.name).join(', '),eventDate:eventDays[0]?.date||''};
+  try{const res=await fetch(`${SERVER}/send-inquiry`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const r=await res.json();if(r.success)showSuccess(data);else throw 0;}catch(e){sendWA(data);}
+}
+
+function sendWA(data){
+  const sched=data.eventDays.map((d,i)=>{const dt=d.date?new Date(d.date+'T12:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'}):'TBD';return`Day ${i+1} (${dt}): ${d.services.map(s=>s.icon+s.name).join(', ')}${d.venue?' @ '+d.venue:''}`;}).join('\n');
+  const waMsg=`📸 *Booking Request — PhotoFind Pro*\n\n👤 *Name:* ${data.coupleName}\n📱 *Phone:* +91${data.couplePhone}\n💰 *Budget:* ${data.budget||'TBD'}\n\n🎯 *Services:* ${data.services.map(s=>s.icon+s.name).join(', ')}\n\n📅 *Schedule:*\n${sched}${data.message?'\n\n💬 '+data.message:''}\n\n_via PhotoFind Pro_`;
+  window.open(`https://wa.me/91${data.photographerPhone}?text=${encodeURIComponent(waMsg)}`,'_blank');
   showSuccess(data);
 }
 
-function showSuccess(data) {
-  document.querySelectorAll('.inq-page').forEach(p => p.classList.remove('active'));
-  document.getElementById('ipSuccess').classList.add('active');
-  document.getElementById('inqFooter').style.display = 'none';
-  for(let i=1;i<=4;i++) document.getElementById('is'+i)?.classList.add('done');
-  showToast('✅ Booking request sent!');
+function showSuccess(){
+  document.querySelectorAll('.inq-page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('ipDone').classList.add('active');
+  document.getElementById('inqFooter').style.display='none';
+  for(let i=1;i<=4;i++)document.getElementById('is'+i)?.classList.add('done');
+  toast('✅ Request sent!');
 }
 
-// Close modal on overlay click
-document.getElementById('inquiryModal').addEventListener('click', function(e) {
-  if(e.target === this) closeInquiry();
-});
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 
-function viewProfile(id, city) {
-  // Pass currently selected specialty filter if any
-  const serviceFilter = document.getElementById('specialtyFilter').value || 'all';
-  window.location.href = `photographer-profile.html?id=${id}&service=${encodeURIComponent(serviceFilter)}`;
-}
-
-// Reveal
-const obs = new IntersectionObserver(entries => entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); }), {threshold:0.1});
-document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+// Reveal on scroll
+const revObs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('v')}),{threshold:0.05});
+document.querySelectorAll('.reveal').forEach(el=>revObs.observe(el));
 
 loadPhotographers();
 </script>
