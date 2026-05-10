@@ -71,11 +71,12 @@ nav.solid{background:rgba(245,240,232,0.95);backdrop-filter:blur(20px);border-bo
 .hc-bg{width:100%;height:100%;display:flex;align-items:center;justify-content:center;transition:transform 8s ease}
 .hc-item:hover .hc-bg{transform:scale(1.08)}
 
-.hc1{background:linear-gradient(160deg,#1A0A08,#2A1200)}
-.hc2{background:linear-gradient(160deg,#0A1208,#08180A)}
-.hc3{background:linear-gradient(160deg,#08081A,#14082A)}
-.hc4{background:linear-gradient(160deg,#1A1000,#2A1A00)}
-.hc5{background:linear-gradient(160deg,#180A08,#280E08)}
+.hc1{background:linear-gradient(160deg,#1A0A08,#2A1200);position:relative}
+.hc2{background:linear-gradient(160deg,#0A1208,#08180A);position:relative}
+.hc3{background:linear-gradient(160deg,#08081A,#14082A);position:relative}
+.hc4{background:linear-gradient(160deg,#1A1000,#2A1A00);position:relative}
+.hc5{background:linear-gradient(160deg,#180A08,#280E08);position:relative}
+.hc-label{position:absolute;bottom:10px;left:0;right:0;text-align:center;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.3);font-weight:600;font-family:'DM Sans',sans-serif}
 
 .hero-right-overlay{position:absolute;left:0;top:0;bottom:0;width:60px;background:linear-gradient(90deg,var(--ink),transparent);pointer-events:none}
 
@@ -377,11 +378,11 @@ footer{background:var(--ink2);padding:32px 6%;display:flex;align-items:center;ju
   </div>
   <div class="hero-right">
     <div class="hero-collage">
-      <div class="hc-item hc1"><div class="hc-bg"><span style="font-size:48px">💒</span></div></div>
-      <div class="hc-item hc2"><div class="hc-bg"><span style="font-size:32px">📸</span></div></div>
-      <div class="hc-item hc3"><div class="hc-bg"><span style="font-size:32px">🎎</span></div></div>
-      <div class="hc-item hc4"><div class="hc-bg"><span style="font-size:32px">💑</span></div></div>
-      <div class="hc-item hc5"><div class="hc-bg"><span style="font-size:32px">🎊</span></div></div>
+      <div class="hc-item hc1"><div class="hc-bg"><span style="font-size:80px;filter:drop-shadow(0 0 40px rgba(201,150,60,0.3))">💒</span></div><div class="hc-label">Wedding</div></div>
+      <div class="hc-item hc2"><div class="hc-bg"><span style="font-size:56px;filter:drop-shadow(0 0 30px rgba(201,150,60,0.2))">📸</span></div><div class="hc-label">Candid</div></div>
+      <div class="hc-item hc3"><div class="hc-bg"><span style="font-size:56px;filter:drop-shadow(0 0 30px rgba(137,180,255,0.2))">🎎</span></div><div class="hc-label">Traditional</div></div>
+      <div class="hc-item hc4"><div class="hc-bg"><span style="font-size:56px;filter:drop-shadow(0 0 30px rgba(201,150,60,0.2))">💑</span></div><div class="hc-label">Pre-Wedding</div></div>
+      <div class="hc-item hc5"><div class="hc-bg"><span style="font-size:56px;filter:drop-shadow(0 0 30px rgba(200,96,122,0.2))">🎊</span></div><div class="hc-label">Reception</div></div>
     </div>
     <div class="hero-right-overlay"></div>
   </div>
