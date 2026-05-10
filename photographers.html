@@ -686,7 +686,7 @@ function renderPhotographers(list) {
           <button class="pg-btn-wa" onclick="openInquiry('${p.id}','${p.name}','${p.city}','${p.whatsapp||p.phone}')">
             📩 Send Inquiry
           </button>
-          <button class="pg-btn-view" onclick="viewProfile('${p.id}')">View →</button>
+          <button class="pg-btn-view" onclick="viewProfile('${p.id}','${p.city}')">View →</button>
         </div>
         ${(p.instagram||p.portfolio||p.youtube) ? `
         <div class="pg-portfolio-links">
@@ -1062,9 +1062,10 @@ document.getElementById('inquiryModal').addEventListener('click', function(e) {
   if(e.target === this) closeInquiry();
 });
 
-function viewProfile(id) {
-  // Future: open photographer profile page
-  alert('Full profile page coming soon! Connect via WhatsApp for now.');
+function viewProfile(id, city) {
+  // Pass currently selected specialty filter if any
+  const serviceFilter = document.getElementById('specialtyFilter').value || 'all';
+  window.location.href = `photographer-profile.html?id=${id}&service=${encodeURIComponent(serviceFilter)}`;
 }
 
 // Reveal

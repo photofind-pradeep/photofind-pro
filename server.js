@@ -1467,6 +1467,36 @@ app.get('/commission-stats', (req, res) => {
   };
   res.json({ success: true, stats });
 });
+// ── Photographer Portfolio Management ──
+const portfolios = {};
+
+app.post('/save-portfolio', async (req, res) => {
+  try {
+    const { photographerId, service, photos, videos, driveLink } = req.body;
+    if(!photographerId || !service) return res.status(400).json({success:false,error:'Missing fields'});
+    if(!portfolios[photographerId]) portfolios[photographerId] = {};
+    portfolios[photographerId][service] = {
+      photos: photos || [], videos: videos || [],
+      driveLink: driveLink || '', updatedAt: new Date().toISOString(),
+    };
+    console.log(`📸 Portfolio saved: ${photographerId} → ${service}`);
+    res.json({success:true, message:'Portfolio saved!'});
+  } catch(err) {
+    res.status(500).json({success:false, error:err.message});
+  }
+});
+
+app.get('/photographer-profile/:id', (req, res) => {
+  const ph = photographers.find(p => p.id === req.params.id);
+  if(!ph) return res.status(404).json({success:false, error:'Not found'});
+  res.json({success:true, photographer:ph, portfolio: portfolios[req.params.id] || {}});
+});
+
+app.get('/portfolio/:photographerId', (req, res) => {
+  res.json({success:true, portfolio: portfolios[req.params.photographerId] || {}});
+});
+
+// ── Photographer Directory ──
 const photographers = [];
 
 app.post('/register-photographer', async (req, res) => {

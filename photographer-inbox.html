@@ -149,6 +149,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);color:white;min-hei
       <div class="tab" onclick="switchTab(this,'new')">🔔 New</div>
       <div class="tab" onclick="switchTab(this,'replied')">💬 Replied</div>
       <div class="tab" onclick="switchTab(this,'booked')">✅ Booked</div>
+      <div class="tab" onclick="switchTab(this,'portfolio')">📸 Portfolio</div>
     </div>
 
     <!-- Loading -->
@@ -156,6 +157,41 @@ body{font-family:'DM Sans',sans-serif;background:var(--dark);color:white;min-hei
 
     <!-- Inquiries list -->
     <div id="inquiriesList"></div>
+
+    <!-- Portfolio Manager -->
+    <div id="portfolioManager" style="display:none">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.6;background:rgba(232,200,122,0.04);border:0.5px solid rgba(232,200,122,0.12);border-radius:8px;padding:10px 12px">
+        💡 Add your photos per service category. Clients will see only relevant photos based on what they're looking for!
+      </div>
+
+      <!-- Service selector -->
+      <div style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:700">Select Service Category</div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:16px" id="portServiceGrid"></div>
+
+      <!-- Photo upload for selected service -->
+      <div id="portUploadSection" style="display:none">
+        <div style="font-size:11px;font-weight:700;color:white;margin-bottom:10px" id="portServiceTitle">Wedding Photos</div>
+
+        <!-- Drive link option -->
+        <div style="font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Google Drive Folder Link</div>
+        <input id="portDriveLink" style="width:100%;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);border-radius:8px;padding:9px 12px;color:white;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;margin-bottom:8px" placeholder="https://drive.google.com/drive/folders/...">
+
+        <!-- Individual photo URLs -->
+        <div style="font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Or add photo URLs (one per line)</div>
+        <textarea id="portPhotoUrls" style="width:100%;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);border-radius:8px;padding:9px 12px;color:white;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;resize:none;min-height:80px;margin-bottom:8px" placeholder="https://drive.google.com/file/d/...&#10;https://drive.google.com/file/d/..."></textarea>
+
+        <!-- Video URLs -->
+        <div style="font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:5px">Video/Reel Links (YouTube/Instagram)</div>
+        <textarea id="portVideoUrls" style="width:100%;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);border-radius:8px;padding:9px 12px;color:white;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;resize:none;min-height:60px;margin-bottom:12px" placeholder="https://youtube.com/watch?v=...&#10;https://instagram.com/reel/..."></textarea>
+
+        <button onclick="savePortfolio()" style="width:100%;padding:12px;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#0C0A07;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer">
+          💾 Save Portfolio for this Service
+        </button>
+
+        <!-- Saved indicator -->
+        <div id="portSavedMsg" style="display:none;text-align:center;margin-top:8px;font-size:11px;color:var(--green)">✅ Portfolio saved! Visible on your profile.</div>
+      </div>
+    </div>
 
   </div>
 </div>
@@ -403,7 +439,95 @@ function switchTab(el, tab) {
   currentTab = tab;
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
-  renderInquiries(tab);
+
+  if(tab === 'portfolio') {
+    document.getElementById('inquiriesList').style.display = 'none';
+    document.getElementById('portfolioManager').style.display = 'block';
+    buildPortfolioManager();
+  } else {
+    document.getElementById('inquiriesList').style.display = 'block';
+    document.getElementById('portfolioManager').style.display = 'none';
+    renderInquiries(tab);
+  }
+}
+
+// ── PORTFOLIO MANAGER ──
+const ALL_SERVICES = [
+  {icon:'💒',name:'Wedding'},{icon:'🎊',name:'Reception'},
+  {icon:'💛',name:'Haldi'},{icon:'🌿',name:'Mehendi'},
+  {icon:'🎵',name:'Sangeet'},{icon:'💑',name:'Pre-Wedding'},
+  {icon:'🌅',name:'Post-Wedding'},{icon:'📸',name:'Candid Photography'},
+  {icon:'🎎',name:'Traditional Photography'},{icon:'🍼',name:'Baby Shower Shoot'},
+  {icon:'🎬',name:'Instagram Reels'},{icon:'💼',name:'Corporate Event'},
+  {icon:'🎂',name:'Birthday Party'},{icon:'🙏',name:'Engagement'},
+  {icon:'🎓',name:'College Function'},{icon:'👨‍👩‍👧','name':'Family Function'},
+];
+
+let selectedPortService = null;
+let savedPortfolios = {};
+
+async function buildPortfolioManager() {
+  // Load existing portfolio
+  try {
+    const res = await fetch(`${SERVER}/portfolio/${photographerId}`);
+    const data = await res.json();
+    if(data.success) savedPortfolios = data.portfolio || {};
+  } catch(e) {}
+
+  const grid = document.getElementById('portServiceGrid');
+  grid.innerHTML = ALL_SERVICES.map(s => `
+    <div onclick="selectPortService('${s.name}','${s.icon}')"
+      id="psg-${s.name.replace(/\s/g,'_')}"
+      style="display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:8px;border:0.5px solid ${savedPortfolios[s.name]?'rgba(93,214,138,0.3)':'rgba(255,255,255,0.08)'};background:${savedPortfolios[s.name]?'rgba(93,214,138,0.06)':'rgba(255,255,255,0.02)'};cursor:pointer;transition:all 0.15s">
+      <span style="font-size:14px">${s.icon}</span>
+      <span style="font-size:11px;font-weight:500;color:${savedPortfolios[s.name]?'var(--green)':'rgba(255,255,255,0.5)'}">
+        ${s.name}${savedPortfolios[s.name]?` ✓`:''}</span>
+    </div>
+  `).join('');
+}
+
+function selectPortService(name, icon) {
+  selectedPortService = name;
+  document.getElementById('portServiceTitle').textContent = `${icon} ${name} Portfolio`;
+  document.getElementById('portUploadSection').style.display = 'block';
+  document.getElementById('portSavedMsg').style.display = 'none';
+
+  // Load existing data
+  const existing = savedPortfolios[name];
+  document.getElementById('portDriveLink').value = existing?.driveLink || '';
+  document.getElementById('portPhotoUrls').value = (existing?.photos||[]).map(p=>p.url).filter(Boolean).join('\n');
+  document.getElementById('portVideoUrls').value = (existing?.videos||[]).map(v=>v.url).filter(Boolean).join('\n');
+
+  // Scroll to upload section
+  document.getElementById('portUploadSection').scrollIntoView({behavior:'smooth'});
+}
+
+async function savePortfolio() {
+  if(!selectedPortService) { showToast('Select a service first!'); return; }
+
+  const driveLink = document.getElementById('portDriveLink').value.trim();
+  const photoUrls = document.getElementById('portPhotoUrls').value.trim().split('\n').filter(u=>u.trim());
+  const videoUrls = document.getElementById('portVideoUrls').value.trim().split('\n').filter(u=>u.trim());
+
+  const photos = photoUrls.map((url,i) => ({ id:`p${i}`, url:url.trim(), caption:`${selectedPortService} ${i+1}` }));
+  const videos = videoUrls.map((url,i) => ({ id:`v${i}`, url:url.trim(), title:`${selectedPortService} Video ${i+1}`, thumb:'🎬' }));
+
+  try {
+    const res = await fetch(`${SERVER}/save-portfolio`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ photographerId, service:selectedPortService, photos, videos, driveLink }),
+    });
+    const data = await res.json();
+    if(data.success) {
+      savedPortfolios[selectedPortService] = { photos, videos, driveLink };
+      document.getElementById('portSavedMsg').style.display = 'block';
+      showToast(`✅ ${selectedPortService} portfolio saved!`);
+      buildPortfolioManager(); // Refresh grid with checkmarks
+    }
+  } catch(e) {
+    showToast('❌ Save failed. Try again!');
+  }
 }
 
 function showToast(msg) {

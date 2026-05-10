@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Photographer Profile — PhotoFind Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--gold:#D4A843;--gold2:#F0C866;--gold3:#A07830;--dark:#07060A;--dark2:#0D0B12;--dark3:#141220;--text:#F0EEF8;--muted:rgba(240,238,248,0.45);--muted2:rgba(240,238,248,0.25);--border:rgba(212,168,67,0.12);--border2:rgba(212,168,67,0.25);--green:#25D366}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--dark);color:var(--text);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:0.3}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:500;height:60px;padding:0 5%;display:flex;align-items:center;justify-content:space-between;background:rgba(7,6,10,0.92);backdrop-filter:blur(20px);border-bottom:0.5px solid var(--border)}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600}
+.nav-logo em{color:var(--gold);font-style:normal}
+.nav-back{font-size:12px;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color 0.2s}
+.nav-back:hover{color:var(--text)}
+
+/* HERO */
+.profile-hero{padding:80px 5% 0;position:relative;z-index:1}
+.profile-hero-bg{position:absolute;top:0;left:0;right:0;height:300px;background:linear-gradient(160deg,rgba(212,168,67,0.06),rgba(200,96,122,0.04),transparent);pointer-events:none}
+
+.profile-top{display:flex;gap:24px;align-items:flex-start;padding-bottom:28px;border-bottom:0.5px solid var(--border);position:relative;z-index:1}
+.profile-avatar-wrap{position:relative;flex-shrink:0}
+.profile-avatar{width:90px;height:90px;border-radius:20px;background:linear-gradient(135deg,var(--gold3),var(--gold));display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:700;color:var(--dark);border:2px solid rgba(212,168,67,0.3);box-shadow:0 8px 24px rgba(0,0,0,0.3)}
+.verified-badge{position:absolute;bottom:-6px;right:-6px;width:22px;height:22px;background:#5DD68A;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;border:2px solid var(--dark)}
+
+.profile-info{flex:1}
+.profile-name{font-family:'Playfair Display',serif;font-size:clamp(22px,5vw,32px);font-weight:700;color:var(--text);margin-bottom:3px}
+.profile-studio{font-size:14px;color:var(--muted);margin-bottom:8px}
+.profile-meta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.pm-item{font-size:11px;color:var(--muted2);display:flex;align-items:center;gap:4px}
+.pm-item.gold{color:var(--gold)}
+
+.profile-tags{display:flex;flex-wrap:wrap;gap:5px}
+.profile-tag{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:rgba(212,168,67,0.06);border:0.5px solid var(--border);color:var(--muted);letter-spacing:0.04em}
+
+.profile-actions{display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+.btn-inquire{padding:11px 22px;background:linear-gradient(135deg,var(--gold3),var(--gold));color:var(--dark);border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.btn-inquire:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(212,168,67,0.3)}
+.btn-wa{padding:10px 20px;background:rgba(37,211,102,0.1);border:0.5px solid rgba(37,211,102,0.25);color:#5DD68A;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap;text-decoration:none;display:block;text-align:center}
+.btn-wa:hover{background:rgba(37,211,102,0.15)}
+
+/* STATS ROW */
+.profile-stats{display:flex;gap:0;padding:20px 5%;border-bottom:0.5px solid var(--border);position:relative;z-index:1}
+.ps-item{flex:1;text-align:center;padding:0 16px;border-right:0.5px solid var(--border)}
+.ps-item:last-child{border-right:none}
+.ps-num{font-family:'Playfair Display',serif;font-size:24px;font-weight:900;color:var(--gold);line-height:1;margin-bottom:3px}
+.ps-lbl{font-size:9px;color:var(--muted2);letter-spacing:0.1em;text-transform:uppercase}
+
+/* BIO */
+.bio-section{padding:24px 5%;border-bottom:0.5px solid var(--border);position:relative;z-index:1}
+.bio-text{font-family:'Cormorant Garamond',serif;font-size:17px;font-style:italic;color:var(--muted);line-height:1.7;max-width:700px}
+
+/* PORTFOLIO */
+.portfolio-section{padding:24px 5%;position:relative;z-index:1}
+
+/* Service filter tabs */
+.service-filter-wrap{overflow-x:auto;padding-bottom:8px;margin-bottom:20px}
+.service-filter-wrap::-webkit-scrollbar{height:2px}
+.service-filter-wrap::-webkit-scrollbar-thumb{background:var(--border)}
+.service-tabs{display:flex;gap:6px;white-space:nowrap;min-width:max-content}
+
+.svc-tab{padding:8px 16px;border-radius:20px;border:0.5px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:5px;letter-spacing:0.04em}
+.svc-tab.active{border-color:var(--gold);background:rgba(212,168,67,0.1);color:var(--gold)}
+.svc-tab:hover:not(.active){border-color:var(--border2);color:var(--text)}
+.svc-tab-count{background:rgba(212,168,67,0.15);color:var(--gold);border-radius:10px;padding:1px 6px;font-size:9px}
+
+/* Photo grid */
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;border-radius:12px;overflow:hidden}
+.photo-item{aspect-ratio:1;overflow:hidden;cursor:pointer;position:relative;background:var(--dark2)}
+.photo-item:nth-child(7n+1){grid-column:span 2;aspect-ratio:2/1}
+.photo-item img{width:100%;height:100%;object-fit:cover;transition:transform 0.3s}
+.photo-item:hover img{transform:scale(1.05)}
+.photo-item-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--dark3)}
+.ph-placeholder-icon{font-size:28px;opacity:0.3}
+.ph-placeholder-text{font-size:10px;color:var(--muted2)}
+.photo-overlay{position:absolute;inset:0;background:rgba(7,6,10,0);transition:background 0.2s;display:flex;align-items:center;justify-content:center}
+.photo-item:hover .photo-overlay{background:rgba(7,6,10,0.4)}
+.photo-overlay-icon{font-size:20px;opacity:0;transition:opacity 0.2s}
+.photo-item:hover .photo-overlay-icon{opacity:1}
+
+/* Video grid */
+.video-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.video-item{border-radius:10px;overflow:hidden;background:var(--dark2);border:0.5px solid var(--border);cursor:pointer;transition:all 0.2s}
+.video-item:hover{border-color:var(--border2);transform:translateY(-2px)}
+.video-thumb{aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;font-size:36px;background:var(--dark3);position:relative}
+.play-btn{position:absolute;width:44px;height:44px;background:rgba(212,168,67,0.9);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px}
+.video-info{padding:10px}
+.video-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px}
+.video-meta{font-size:10px;color:var(--muted2)}
+
+/* Empty state */
+.empty-portfolio{text-align:center;padding:48px 20px;border:0.5px dashed var(--border);border-radius:12px}
+.ep-icon{font-size:40px;opacity:0.2;margin-bottom:10px}
+.ep-text{font-size:13px;color:var(--muted2);margin-bottom:4px}
+.ep-sub{font-size:11px;color:rgba(255,255,255,0.15)}
+
+/* PACKAGES */
+.packages-section{padding:24px 5%;border-top:0.5px solid var(--border);position:relative;z-index:1}
+.sec-label{font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.sec-label::before{content:'';width:20px;height:0.5px;background:var(--gold)}
+.packages-grid{display:grid;grid-template-columns:1fr;gap:10px}
+.pkg-card{background:var(--dark2);border:0.5px solid var(--border);border-radius:12px;padding:16px}
+.pkg-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px}
+.pkg-price{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:var(--gold);margin-bottom:6px}
+.pkg-desc{font-size:12px;color:var(--muted);line-height:1.5}
+
+/* SOCIAL LINKS */
+.social-section{padding:16px 5% 24px;position:relative;z-index:1;display:flex;gap:10px;flex-wrap:wrap}
+.soc-link{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;font-size:11px;font-weight:600;text-decoration:none;border:0.5px solid var(--border);color:var(--muted);transition:all 0.2s}
+.soc-link:hover{border-color:var(--border2);color:var(--text)}
+.soc-link.insta{border-color:rgba(200,100,150,0.3);color:rgba(200,100,150,0.8)}
+.soc-link.yt{border-color:rgba(255,80,80,0.3);color:rgba(255,80,80,0.8)}
+.soc-link.port{border-color:rgba(212,168,67,0.3);color:var(--gold)}
+
+/* LIGHTBOX */
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}
+.lightbox.open{display:flex}
+.lightbox-img{max-width:100%;max-height:90vh;border-radius:8px;object-fit:contain}
+.lightbox-close{position:absolute;top:16px;right:16px;width:36px;height:36px;background:rgba(255,255,255,0.1);border:none;color:white;font-size:18px;border-radius:50%;cursor:pointer}
+
+/* INQUIRY MODAL */
+.inq-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:600;display:none;align-items:flex-end;justify-content:center}
+.inq-overlay.open{display:flex}
+.inq-sheet{background:var(--dark2);border:0.5px solid var(--border);border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:500px;max-height:80vh;overflow-y:auto}
+.inq-sheet-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-bottom:16px}
+.fi{width:100%;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;color:white;font-family:'DM Sans',sans-serif;font-size:12px;outline:none;margin-bottom:8px;transition:border-color 0.2s}
+.fi:focus{border-color:rgba(212,168,67,0.3)}
+.fi::placeholder{color:rgba(255,255,255,0.2)}
+.fi option{background:#1A1208}
+.fi-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fi-ta{resize:none;min-height:60px}
+.submit-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--gold3),var(--gold));color:var(--dark);border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s}
+.submit-btn:hover{transform:translateY(-1px)}
+
+/* Loading */
+.loading{text-align:center;padding:60px;color:var(--muted)}
+.spin{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(212,168,67,0.95);color:var(--dark);padding:8px 18px;border-radius:16px;font-size:11px;font-weight:700;z-index:999;pointer-events:none;opacity:0;transition:opacity 0.3s}
+.toast.show{opacity:1}
+
+/* Mobile */
+@media(max-width:680px){
+  .profile-top{flex-direction:column}
+  .profile-actions{flex-direction:row}
+  .photo-grid{grid-template-columns:repeat(2,1fr)}
+  .photo-item:nth-child(7n+1){grid-column:span 1;aspect-ratio:1}
+  .video-grid{grid-template-columns:1fr}
+  .ps-item{padding:0 8px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Photo<em>Find</em> Pro</div>
+  <a href="photographers.html" class="nav-back">← All Photographers</a>
+</nav>
+
+<div id="loadingEl" class="loading" style="padding-top:100px">
+  <div class="spin"></div>
+  <div style="font-size:12px;color:var(--muted2)">Loading profile...</div>
+</div>
+
+<div id="profileContent" style="display:none">
+
+  <!-- HERO -->
+  <div class="profile-hero">
+    <div class="profile-hero-bg"></div>
+    <div class="profile-top">
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar" id="pAvatar">P</div>
+        <div class="verified-badge" id="pVerifiedBadge" style="display:none">✓</div>
+      </div>
+      <div class="profile-info">
+        <div class="profile-name" id="pName">Photographer</div>
+        <div class="profile-studio" id="pStudio">Studio</div>
+        <div class="profile-meta">
+          <div class="pm-item">📍 <span id="pCity">City</span></div>
+          <div class="pm-item gold">★ <span id="pRating">5.0</span></div>
+          <div class="pm-item">⏳ <span id="pExp">1</span>+ yrs exp</div>
+          <div class="pm-item">💰 From <span id="pPrice">₹15,000</span></div>
+        </div>
+        <div class="profile-tags" id="pTags"></div>
+      </div>
+      <div class="profile-actions">
+        <button class="btn-inquire" onclick="openInquiry()">📩 Send Inquiry</button>
+        <a class="btn-wa" id="pWaLink" href="#" target="_blank">💬 WhatsApp</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="profile-stats">
+    <div class="ps-item"><div class="ps-num" id="statPhotos">0</div><div class="ps-lbl">Portfolio Photos</div></div>
+    <div class="ps-item"><div class="ps-num" id="statServices">0</div><div class="ps-lbl">Services</div></div>
+    <div class="ps-item"><div class="ps-num" id="statExp">0</div><div class="ps-lbl">Years Exp</div></div>
+    <div class="ps-item"><div class="ps-num" id="statRating">5.0★</div><div class="ps-lbl">Rating</div></div>
+  </div>
+
+  <!-- BIO -->
+  <div class="bio-section" id="bioSection" style="display:none">
+    <div class="bio-text" id="pBio"></div>
+  </div>
+
+  <!-- SOCIAL LINKS -->
+  <div class="social-section" id="socialLinks"></div>
+
+  <!-- PORTFOLIO -->
+  <div class="portfolio-section">
+    <div class="sec-label">Portfolio</div>
+
+    <!-- Service filter tabs -->
+    <div class="service-filter-wrap">
+      <div class="service-tabs" id="serviceTabs"></div>
+    </div>
+
+    <!-- Photo/Video grid -->
+    <div id="portfolioGrid"></div>
+  </div>
+
+  <!-- PACKAGES -->
+  <div class="packages-section" id="packagesSection" style="display:none">
+    <div class="sec-label">Packages</div>
+    <div class="packages-grid" id="packagesGrid"></div>
+  </div>
+
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img class="lightbox-img" id="lightboxImg" src="" alt="">
+</div>
+
+<!-- INQUIRY SHEET -->
+<div class="inq-overlay" id="inqOverlay">
+  <div class="inq-sheet">
+    <div class="inq-sheet-title">📩 Send Inquiry</div>
+    <div class="fi-row">
+      <input class="fi" id="inqName" placeholder="Your Name *">
+      <input class="fi" id="inqPhone" placeholder="WhatsApp Number *" type="tel" maxlength="10">
+    </div>
+    <div class="fi-row">
+      <input class="fi" id="inqDate" placeholder="Event Date" type="date">
+      <select class="fi" id="inqBudget">
+        <option value="">Budget *</option>
+        <option>Under ₹15,000</option>
+        <option>₹15,000 - ₹25,000</option>
+        <option>₹25,000 - ₹50,000</option>
+        <option>₹50,000 - ₹1,00,000</option>
+        <option>Above ₹1,00,000</option>
+      </select>
+    </div>
+    <textarea class="fi fi-ta" id="inqMsg" placeholder="Tell the photographer about your requirements..."></textarea>
+    <button class="submit-btn" onclick="submitQuickInquiry()">📩 Send Inquiry</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SERVER = 'https://api.templecity.digital';
+const params = new URLSearchParams(window.location.search);
+const phId = params.get('id');
+const preFilter = params.get('service') || 'all';
+let photographer = null;
+let portfolio = {};
+let activeService = preFilter;
+
+// ── LOAD PROFILE ──
+async function loadProfile() {
+  try {
+    // Try server first
+    if(phId) {
+      const res = await fetch(`${SERVER}/photographer-profile/${phId}`);
+      const data = await res.json();
+      if(data.success) {
+        photographer = data.photographer;
+        portfolio = data.portfolio || {};
+        render();
+        return;
+      }
+    }
+    // Use demo data
+    photographer = getDemoPhotographer();
+    portfolio = getDemoPortfolio();
+    render();
+  } catch(e) {
+    photographer = getDemoPhotographer();
+    portfolio = getDemoPortfolio();
+    render();
+  }
+}
+
+function getDemoPhotographer() {
+  return {
+    id:'demo1', name:'Rajesh Mohanty',
+    studio:'Rajesh Photography Studio',
+    city:'Bhubaneswar', phone:'9876543210',
+    experience:8, rating:4.9, reviews:48,
+    startingPrice:25000, verified:true,
+    bio:'Specialist in candid and traditional wedding photography with 8 years of experience across Odisha. Known for capturing genuine emotions and timeless moments.',
+    specialties:['Wedding','Candid Photography','Traditional Photography','Pre-Wedding','Reception','Sangeet'],
+    packageDetails:'8 hours coverage, 500+ edited photos, 1 photographer, online gallery, same day previews',
+    instagram:'https://instagram.com',
+    youtube:'https://youtube.com',
+    portfolio:'https://drive.google.com',
+  };
+}
+
+function getDemoPortfolio() {
+  const services = ['Wedding','Candid Photography','Traditional Photography','Pre-Wedding','Reception','Sangeet'];
+  const emojis = { 'Wedding':'💒', 'Candid Photography':'📸', 'Traditional Photography':'🎎', 'Pre-Wedding':'💑', 'Reception':'🎊', 'Sangeet':'🎵' };
+  const portfolio = {};
+  services.forEach(s => {
+    portfolio[s] = {
+      photos: Array(6).fill(null).map((_,i) => ({
+        id:`${s}_${i}`, url:'', emoji: emojis[s]||'📷', caption:`${s} ${i+1}`
+      })),
+      videos: s === 'Candid Photography' ? [{id:'v1',url:'https://youtube.com',title:'Highlight Reel',thumb:'🎬'}] : [],
+    };
+  });
+  return portfolio;
+}
+
+// ── RENDER ──
+function render() {
+  const p = photographer;
+  document.title = `${p.name} — PhotoFind Pro`;
+
+  // Avatar & info
+  document.getElementById('pAvatar').textContent = p.name?.charAt(0) || 'P';
+  document.getElementById('pName').textContent = p.name;
+  document.getElementById('pStudio').textContent = p.studio;
+  document.getElementById('pCity').textContent = p.city;
+  document.getElementById('pRating').textContent = p.rating;
+  document.getElementById('pExp').textContent = p.experience;
+  document.getElementById('pPrice').textContent = '₹' + (p.startingPrice||0).toLocaleString('en-IN');
+  document.getElementById('statExp').textContent = p.experience;
+  document.getElementById('statRating').textContent = (p.rating||5)+'★';
+  document.getElementById('statServices').textContent = (p.specialties||[]).length;
+
+  if(p.verified) document.getElementById('pVerifiedBadge').style.display = 'flex';
+
+  // Tags
+  const tagsEl = document.getElementById('pTags');
+  tagsEl.innerHTML = (p.specialties||[]).map(s => `<span class="profile-tag">${s}</span>`).join('');
+
+  // WA link
+  document.getElementById('pWaLink').href = `https://wa.me/91${p.phone}?text=${encodeURIComponent('Hi '+p.name+'! I found your profile on PhotoFind Pro.')}`;
+
+  // Bio
+  if(p.bio) {
+    document.getElementById('pBio').textContent = p.bio;
+    document.getElementById('bioSection').style.display = 'block';
+  }
+
+  // Social links
+  const socEl = document.getElementById('socialLinks');
+  let socHtml = '';
+  if(p.portfolio) socHtml += `<a href="${p.portfolio}" target="_blank" class="soc-link port">📁 View Portfolio</a>`;
+  if(p.instagram) socHtml += `<a href="${p.instagram}" target="_blank" class="soc-link insta">📸 Instagram</a>`;
+  if(p.youtube) socHtml += `<a href="${p.youtube}" target="_blank" class="soc-link yt">▶️ YouTube</a>`;
+  socEl.innerHTML = socHtml;
+
+  // Count total photos
+  let totalPhotos = 0;
+  Object.values(portfolio).forEach(cat => totalPhotos += (cat.photos||[]).length);
+  document.getElementById('statPhotos').textContent = totalPhotos + '+';
+
+  // Build service tabs
+  buildServiceTabs();
+
+  // Show active service portfolio
+  showServicePortfolio(activeService);
+
+  // Show packages
+  if(p.packageDetails) {
+    document.getElementById('packagesSection').style.display = 'block';
+    document.getElementById('packagesGrid').innerHTML = `
+      <div class="pkg-card">
+        <div class="pkg-name">Standard Package</div>
+        <div class="pkg-price">₹${(p.startingPrice||0).toLocaleString('en-IN')}+</div>
+        <div class="pkg-desc">${p.packageDetails}</div>
+      </div>`;
+  }
+
+  document.getElementById('loadingEl').style.display = 'none';
+  document.getElementById('profileContent').style.display = 'block';
+}
+
+function buildServiceTabs() {
+  const tabs = document.getElementById('serviceTabs');
+  const services = Object.keys(portfolio);
+
+  let html = `<button class="svc-tab ${activeService==='all'?'active':''}" onclick="showServicePortfolio('all')">
+    All <span class="svc-tab-count">${Object.values(portfolio).reduce((s,c)=>s+(c.photos||[]).length,0)}</span>
+  </button>`;
+
+  services.forEach(s => {
+    const count = (portfolio[s]?.photos||[]).length + (portfolio[s]?.videos||[]).length;
+    if(count > 0) {
+      html += `<button class="svc-tab ${activeService===s?'active':''}" onclick="showServicePortfolio('${s}')">
+        ${s} <span class="svc-tab-count">${count}</span>
+      </button>`;
+    }
+  });
+
+  tabs.innerHTML = html;
+}
+
+function showServicePortfolio(service) {
+  activeService = service;
+
+  // Update active tab
+  document.querySelectorAll('.svc-tab').forEach(t => {
+    t.classList.toggle('active', t.textContent.trim().startsWith(service === 'all' ? 'All' : service));
+  });
+
+  // Build grid
+  const grid = document.getElementById('portfolioGrid');
+  let photos = [], videos = [];
+
+  if(service === 'all') {
+    Object.entries(portfolio).forEach(([svc, data]) => {
+      (data.photos||[]).forEach(p => photos.push({...p, service:svc}));
+      (data.videos||[]).forEach(v => videos.push({...v, service:svc}));
+    });
+  } else {
+    photos = (portfolio[service]?.photos || []).map(p => ({...p, service}));
+    videos = (portfolio[service]?.videos || []).map(v => ({...v, service}));
+  }
+
+  if(photos.length === 0 && videos.length === 0) {
+    grid.innerHTML = `<div class="empty-portfolio">
+      <div class="ep-icon">📷</div>
+      <div class="ep-text">No ${service === 'all' ? '' : service} photos yet</div>
+      <div class="ep-sub">Check back soon!</div>
+    </div>`;
+    return;
+  }
+
+  let html = '';
+
+  // Videos first if any
+  if(videos.length > 0) {
+    html += `<div style="margin-bottom:12px"><div style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted2);margin-bottom:8px">Videos</div>
+    <div class="video-grid">${videos.map(v=>`
+      <div class="video-item" onclick="window.open('${v.url}','_blank')">
+        <div class="video-thumb">${v.thumb||'🎬'}<div class="play-btn">▶</div></div>
+        <div class="video-info"><div class="video-title">${v.title||'Video'}</div><div class="video-meta">${v.service}</div></div>
+      </div>`).join('')}
+    </div></div>`;
+  }
+
+  // Photos grid
+  if(photos.length > 0) {
+    html += `<div class="photo-grid">${photos.map((photo,i) => `
+      <div class="photo-item" onclick="${photo.url ? `openLightbox('${photo.url}')` : ''}">
+        ${photo.url
+          ? `<img src="${photo.url}" alt="${photo.caption||''}" loading="lazy">`
+          : `<div class="photo-item-placeholder"><div class="ph-placeholder-icon">${photo.emoji||'📷'}</div><div class="ph-placeholder-text">${photo.service}</div></div>`
+        }
+        <div class="photo-overlay"><div class="photo-overlay-icon">🔍</div></div>
+      </div>`).join('')}
+    </div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+// ── LIGHTBOX ──
+function openLightbox(url) {
+  document.getElementById('lightboxImg').src = url;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+}
+
+// ── INQUIRY ──
+function openInquiry() {
+  document.getElementById('inqOverlay').classList.add('open');
+}
+document.getElementById('inqOverlay').addEventListener('click', function(e) {
+  if(e.target === this) this.classList.remove('open');
+});
+
+async function submitQuickInquiry() {
+  const name = document.getElementById('inqName').value.trim();
+  const phone = document.getElementById('inqPhone').value.trim();
+  const date = document.getElementById('inqDate').value;
+  const budget = document.getElementById('inqBudget').value;
+  const msg = document.getElementById('inqMsg').value.trim();
+
+  if(!name){showToast('Enter your name!');return}
+  if(!phone||phone.length!==10){showToast('Enter valid WhatsApp number!');return}
+
+  const p = photographer;
+  const service = activeService !== 'all' ? activeService : 'Photography';
+  const waMsg = `📩 *Inquiry via PhotoFind Pro*\n\n👤 *Name:* ${name}\n📱 *Phone:* +91${phone}\n📅 *Date:* ${date||'TBD'}\n💰 *Budget:* ${budget||'TBD'}\n🎯 *Service:* ${service}\n\n💬 ${msg||'Interested in your services!'}`;
+
+  try {
+    await fetch(`${SERVER}/send-inquiry`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({photographerId:p.id,photographerPhone:p.phone,photographerName:p.name,coupleName:name,couplePhone:phone,eventDate:date,eventType:service,budget,message:msg})
+    });
+  } catch(e){}
+
+  window.open(`https://wa.me/91${p.phone}?text=${encodeURIComponent(waMsg)}`,'_blank');
+  document.getElementById('inqOverlay').classList.remove('open');
+  showToast('✅ Inquiry sent!');
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+loadProfile();
+</script>
+</body>
+</html>
