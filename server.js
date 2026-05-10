@@ -1456,7 +1456,147 @@ app.get('/commission-stats', (req, res) => {
   };
   res.json({ success: true, stats });
 });
-// ── Seedance 2.0 Video Generation ──
+// ── Creatomate Professional Reel Generator ──
+const CREATOMATE_API_KEY = process.env.CREATOMATE_API_KEY;
+const CREATOMATE_TEMPLATE_ID = process.env.CREATOMATE_TEMPLATE_ID || '8f61ddc3-955e-43cd-a6d2-d27825eefc75';
+
+async function generateCreatomateReel(photoUrls, eventName, coupleNames = '') {
+  try {
+    console.log(`🎬 Generating Creatomate reel: ${eventName} — ${photoUrls.length} photos`);
+
+    // Build modifications — map photos to template slots
+    const modifications = {};
+
+    // Add up to 20 photo slots
+    photoUrls.slice(0, 20).forEach((url, i) => {
+      modifications[`Photo-${i + 1}`] = url;
+      // Also try common template naming patterns
+      modifications[`Slide-${i + 1}`] = url;
+      modifications[`Image-${i + 1}`] = url;
+      modifications[`image-${i + 1}`] = url;
+    });
+
+    // Add text overlays
+    if(coupleNames) modifications['Title'] = coupleNames;
+    modifications['Subtitle'] = eventName;
+    modifications['Text'] = coupleNames || eventName;
+
+    const response = await axios.post(
+      'https://api.creatomate.com/v1/renders',
+      {
+        template_id: CREATOMATE_TEMPLATE_ID,
+        modifications,
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${CREATOMATE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 300000, // 5 minutes
+      }
+    );
+
+    const renderId = response.data[0]?.id;
+    console.log(`📋 Creatomate render started: ${renderId}`);
+
+    // Poll for completion
+    let attempts = 0;
+    while(attempts < 60) {
+      await new Promise(r => setTimeout(r, 5000));
+      const statusRes = await axios.get(
+        `https://api.creatomate.com/v1/renders/${renderId}`,
+        { headers: { 'Authorization': `Bearer ${CREATOMATE_API_KEY}` } }
+      );
+      const status = statusRes.data.status;
+      const progress = statusRes.data.progress || 0;
+      console.log(`⏳ Creatomate attempt ${attempts + 1} — ${status} (${Math.round(progress * 100)}%)`);
+
+      if(status === 'succeeded') {
+        const videoUrl = statusRes.data.url;
+        console.log(`✅ Creatomate reel ready: ${videoUrl}`);
+        return videoUrl;
+      }
+      if(status === 'failed') {
+        throw new Error(statusRes.data.error || 'Creatomate render failed');
+      }
+      attempts++;
+    }
+    throw new Error('Creatomate render timed out');
+  } catch(err) {
+    console.error('❌ Creatomate error:', err.message);
+    throw err;
+  }
+}
+
+// Creatomate reel route — uses public Drive photo URLs
+app.post('/generate-creatomate-reel/:eventId', async (req, res) => {
+  try {
+    if(!CREATOMATE_API_KEY) return res.status(500).json({success:false, error:'Creatomate not configured'});
+
+    const { eventId } = req.params;
+    const { coupleNames = '', maxPhotos = 15 } = req.body;
+
+    // Get event info
+    const eventsRes = await drive.files.list({
+      q: `'${process.env.EVENT_FOLDER_ID}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+      fields: 'files(id, name)',
+    });
+    const eventFile = eventsRes.data.files.find(e => e.id === eventId);
+    const eventName = eventFile?.name?.split('__')[0].replace(/^\d{4}-\d{2}-\d{2}_/, '').replace(/-/g, ' ') || 'Wedding';
+
+    // Get photos from Drive
+    const subfolders = await drive.files.list({
+      q: `'${eventId}' in parents and mimeType='application/vnd.google-apps.folder' and name='original' and trashed=false`,
+      fields: 'files(id)',
+    });
+    if(!subfolders.data.files.length) return res.status(404).json({success:false, error:'No photos found'});
+
+    const photosRes = await drive.files.list({
+      q: `'${subfolders.data.files[0].id}' in parents and mimeType contains 'image/' and trashed=false`,
+      fields: 'files(id, name)',
+      pageSize: 500,
+      orderBy: 'name',
+    });
+
+    const allPhotos = photosRes.data.files;
+    if(!allPhotos.length) return res.status(404).json({success:false, error:'No photos in event'});
+
+    // Select photos evenly
+    const limit = Math.min(parseInt(maxPhotos), 20, allPhotos.length);
+    const step = Math.max(1, Math.floor(allPhotos.length / limit));
+    const selectedPhotos = allPhotos.filter((_, i) => i % step === 0).slice(0, limit);
+
+    // Make photos publicly accessible via Drive
+    const photoUrls = [];
+    for(const photo of selectedPhotos) {
+      try {
+        await drive.permissions.create({
+          fileId: photo.id,
+          requestBody: { role: 'reader', type: 'anyone' },
+        });
+        photoUrls.push(`https://drive.google.com/uc?id=${photo.id}&export=download`);
+      } catch(e) {
+        photoUrls.push(`https://drive.google.com/uc?id=${photo.id}`);
+      }
+    }
+
+    console.log(`📸 ${photoUrls.length} photos ready for Creatomate`);
+
+    // Generate reel
+    const videoUrl = await generateCreatomateReel(photoUrls, eventName, coupleNames);
+
+    res.json({
+      success: true,
+      reelLink: videoUrl,
+      photoCount: photoUrls.length,
+      eventName,
+      provider: 'Creatomate',
+    });
+  } catch(err) {
+    console.error('❌ Creatomate reel error:', err.message);
+    res.status(500).json({success:false, error:err.message});
+  }
+});
 let replicate = null;
 try {
   const Replicate = require('replicate');

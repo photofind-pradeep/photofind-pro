@@ -960,24 +960,37 @@ async function generateHighlightReel(eventId, eventName) {
   const btn = document.getElementById(`reel-btn-${eventId}`);
   if (btn) { btn.textContent = '⏳ Creating...'; btn.disabled = true; }
 
-  showToast('🎬 Creating AI Highlight Reel — this takes 2-5 minutes...');
+  showToast('🎬 Creating Professional Reel — takes 2-3 minutes...');
 
   try {
-    const res = await fetch(`${SERVER}/generate-highlight/${eventId}`, {
+    const res = await fetch(`${SERVER}/generate-creatomate-reel/${eventId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ style: 'wedding', maxPhotos: 30 }),
+      body: JSON.stringify({ maxPhotos: 15, coupleNames: eventName }),
     });
     const data = await res.json();
 
     if (data.success) {
-      showToast(`✅ Highlight Reel ready! ${data.photoCount} photos`);
-      if (btn) { btn.textContent = '✅ Reel'; btn.style.color = '#5DD68A'; }
-      // Open reel
+      showToast(`✅ Professional Reel ready! ${data.photoCount} photos`);
+      if (btn) { btn.textContent = '✅ Reel'; btn.style.color = '#5DD68A'; btn.disabled = false; }
       window.open(data.reelLink, '_blank');
     } else {
-      showToast('❌ Reel failed: ' + data.error);
-      if (btn) { btn.textContent = '🎬 Reel'; btn.disabled = false; }
+      // Fallback to FFmpeg reel
+      showToast('⚡ Using local reel generator...');
+      const res2 = await fetch(`${SERVER}/generate-highlight/${eventId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ style: 'wedding', maxPhotos: 15 }),
+      });
+      const data2 = await res2.json();
+      if(data2.success) {
+        showToast(`✅ Reel ready!`);
+        if (btn) { btn.textContent = '✅ Reel'; btn.style.color = '#5DD68A'; btn.disabled = false; }
+        window.open(data2.reelLink, '_blank');
+      } else {
+        showToast('❌ Reel failed: ' + (data2.error || data.error));
+        if (btn) { btn.textContent = '🎬 Reel'; btn.disabled = false; }
+      }
     }
   } catch(e) {
     showToast('❌ Error: ' + e.message);
