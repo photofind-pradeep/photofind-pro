@@ -1467,19 +1467,25 @@ async function generateCreatomateReel(photoUrls, eventName, coupleNames = '') {
     // Build modifications — map photos to template slots
     const modifications = {};
 
-    // Add up to 20 photo slots
+    // Creatomate image slideshow template uses these slot names
     photoUrls.slice(0, 20).forEach((url, i) => {
-      modifications[`Photo-${i + 1}`] = url;
-      // Also try common template naming patterns
-      modifications[`Slide-${i + 1}`] = url;
-      modifications[`Image-${i + 1}`] = url;
-      modifications[`image-${i + 1}`] = url;
+      const num = i + 1;
+      modifications[`Photo ${num}`] = url;
+      modifications[`Photo-${num}`] = url;
+      modifications[`Image ${num}`] = url;
+      modifications[`Slide ${num}`] = url;
     });
 
-    // Add text overlays
-    if(coupleNames) modifications['Title'] = coupleNames;
+    // Text overlays
+    if(coupleNames) {
+      modifications['Title'] = coupleNames;
+      modifications['Couple Names'] = coupleNames;
+      modifications['Name'] = coupleNames;
+    }
     modifications['Subtitle'] = eventName;
-    modifications['Text'] = coupleNames || eventName;
+    modifications['Event'] = eventName;
+
+    console.log(`🎨 Modifications:`, Object.keys(modifications).slice(0,5));
 
     const response = await axios.post(
       'https://api.creatomate.com/v1/renders',
@@ -1566,21 +1572,39 @@ app.post('/generate-creatomate-reel/:eventId', async (req, res) => {
     const step = Math.max(1, Math.floor(allPhotos.length / limit));
     const selectedPhotos = allPhotos.filter((_, i) => i % step === 0).slice(0, limit);
 
-    // Make photos publicly accessible via Drive
+    // Download photos and upload to Cloudinary for public URLs
+    console.log(`📸 Uploading ${selectedPhotos.length} photos to Cloudinary for Creatomate...`);
     const photoUrls = [];
+
     for(const photo of selectedPhotos) {
       try {
-        await drive.permissions.create({
-          fileId: photo.id,
-          requestBody: { role: 'reader', type: 'anyone' },
+        // Download from Drive
+        const stream = await drive.files.get(
+          { fileId: photo.id, alt: 'media' },
+          { responseType: 'arraybuffer' }
+        );
+        const buffer = Buffer.from(stream.data);
+
+        // Upload to Cloudinary
+        const cloudUrl = await new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            { folder: 'photofind-reel-photos', resource_type: 'image' },
+            (error, result) => {
+              if(error) reject(error);
+              else resolve(result.secure_url);
+            }
+          );
+          uploadStream.end(buffer);
         });
-        photoUrls.push(`https://drive.google.com/uc?id=${photo.id}&export=download`);
+
+        photoUrls.push(cloudUrl);
+        console.log(`✅ Photo ${photoUrls.length}/${selectedPhotos.length} uploaded`);
       } catch(e) {
-        photoUrls.push(`https://drive.google.com/uc?id=${photo.id}`);
+        console.log(`⚠️ Skip photo ${photo.name}: ${e.message}`);
       }
     }
 
-    console.log(`📸 ${photoUrls.length} photos ready for Creatomate`);
+    if(!photoUrls.length) return res.status(400).json({success:false, error:'No photos could be processed'});
 
     // Generate reel
     const videoUrl = await generateCreatomateReel(photoUrls, eventName, coupleNames);
