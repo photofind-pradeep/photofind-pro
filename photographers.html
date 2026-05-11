@@ -80,7 +80,20 @@ nav.solid{background:rgba(245,240,232,0.95);backdrop-filter:blur(20px);border-bo
 
 .hero-right-overlay{position:absolute;left:0;top:0;bottom:0;width:60px;background:linear-gradient(90deg,var(--ink),transparent);pointer-events:none}
 
-/* ── SEARCH STRIP ── */
+/* Browse by service */
+.browse-section{padding:32px 6%;background:var(--cream2);border-bottom:0.5px solid var(--border)}
+.browse-title{font-size:11px;letter-spacing:0.3em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.browse-title::after{content:'';flex:1;height:0.5px;background:var(--border)}
+.browse-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.browse-card{background:white;border:0.5px solid var(--border);border-radius:8px;padding:14px 12px;cursor:pointer;transition:all 0.2s;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+.browse-card:hover{border-color:var(--gold2);transform:translateY(-2px);box-shadow:0 8px 20px rgba(26,18,8,0.08)}
+.browse-card.active{border-color:var(--gold);background:var(--gold-dim)}
+.browse-icon{font-size:22px;line-height:1}
+.browse-name{font-size:10px;font-weight:700;color:var(--text);letter-spacing:0.04em;line-height:1.3}
+.browse-count{font-size:9px;color:var(--muted2);background:var(--cream2);border-radius:10px;padding:1px 6px}
+.browse-card.active .browse-name{color:var(--gold)}
+
+@media(max-width:680px){.browse-grid{grid-template-columns:repeat(3,1fr)}}
 .search-strip{background:white;border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border);padding:0 6%;position:sticky;top:64px;z-index:400;box-shadow:0 4px 20px rgba(26,18,8,0.06)}
 .search-inner{display:flex;align-items:stretch;gap:0;height:56px}
 .search-main{flex:1;display:flex;align-items:center;gap:10px;padding:0 16px;border-right:0.5px solid var(--border)}
@@ -388,6 +401,29 @@ footer{background:var(--ink2);padding:32px 6%;display:flex;align-items:center;ju
   </div>
 </section>
 
+<!-- BROWSE BY SERVICE -->
+<div class="browse-section">
+  <div class="browse-title">✦ Browse by Service</div>
+  <div class="browse-grid" id="browseGrid">
+    <div class="browse-card" onclick="browseService(this,'Wedding')"><div class="browse-icon">💒</div><div class="browse-name">Wedding</div></div>
+    <div class="browse-card" onclick="browseService(this,'Candid Photography')"><div class="browse-icon">📸</div><div class="browse-name">Candid Photography</div></div>
+    <div class="browse-card" onclick="browseService(this,'Traditional Photography')"><div class="browse-icon">🎎</div><div class="browse-name">Traditional Photography</div></div>
+    <div class="browse-card" onclick="browseService(this,'Pre-Wedding')"><div class="browse-icon">💑</div><div class="browse-name">Pre-Wedding</div></div>
+    <div class="browse-card" onclick="browseService(this,'Reception')"><div class="browse-icon">🎊</div><div class="browse-name">Reception</div></div>
+    <div class="browse-card" onclick="browseService(this,'Mehendi')"><div class="browse-icon">🌿</div><div class="browse-name">Mehendi</div></div>
+    <div class="browse-card" onclick="browseService(this,'Haldi')"><div class="browse-icon">💛</div><div class="browse-name">Haldi</div></div>
+    <div class="browse-card" onclick="browseService(this,'Sangeet')"><div class="browse-icon">🎵</div><div class="browse-name">Sangeet</div></div>
+    <div class="browse-card" onclick="browseService(this,'Instagram Reels')"><div class="browse-icon">🎬</div><div class="browse-name">Instagram Reels</div></div>
+    <div class="browse-card" onclick="browseService(this,'Baby Shower Shoot')"><div class="browse-icon">🍼</div><div class="browse-name">Baby Shower</div></div>
+    <div class="browse-card" onclick="browseService(this,'Birthday Party')"><div class="browse-icon">🎂</div><div class="browse-name">Birthday Party</div></div>
+    <div class="browse-card" onclick="browseService(this,'Corporate Event')"><div class="browse-icon">💼</div><div class="browse-name">Corporate Event</div></div>
+    <div class="browse-card" onclick="browseService(this,'Engagement')"><div class="browse-icon">🙏</div><div class="browse-name">Engagement</div></div>
+    <div class="browse-card" onclick="browseService(this,'Post-Wedding')"><div class="browse-icon">🌅</div><div class="browse-name">Post-Wedding</div></div>
+    <div class="browse-card" onclick="browseService(this,'Family Function')"><div class="browse-icon">👨‍👩‍👧</div><div class="browse-name">Family Function</div></div>
+    <div class="browse-card" onclick="browseService(this,'College Function')"><div class="browse-icon">🎓</div><div class="browse-name">College Function</div></div>
+  </div>
+</div>
+
 <!-- SEARCH STRIP -->
 <div class="search-strip">
   <div class="search-inner">
@@ -636,8 +672,25 @@ function buildServiceTags(){
   row.innerHTML=ALL_SERVICES.map(s=>`<button class="stag${activeSvc===s?' on':''}" onclick="setSvcFilter('${s}',this)">${s}</button>`).join('');
 }
 
-function setSvcFilter(svc,el){
-  activeSvc=activeSvc===svc?'':svc;
+function browseService(el, service) {
+  // Toggle
+  if(activeSvc === service) {
+    activeSvc = '';
+    document.querySelectorAll('.browse-card').forEach(c => c.classList.remove('active'));
+  } else {
+    activeSvc = service;
+    document.querySelectorAll('.browse-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+  }
+  // Update service tags row
+  buildServiceTags();
+  filter();
+  // Scroll to results
+  document.getElementById('photographers').scrollIntoView({behavior:'smooth', block:'start'});
+}
+function setSvcFilter(svc, el) {
+  activeSvc = activeSvc===svc ? '' : svc;
+  document.querySelectorAll('.browse-card').forEach(c => c.classList.remove('active'));
   buildServiceTags();
   filter();
 }
