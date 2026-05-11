@@ -3,907 +3,725 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PhotoFind Pro — AI-Powered Event Photo Delivery</title>
-<meta name="description" content="India's most advanced AI photo delivery platform for wedding photographers. Face recognition, digital albums, virtual exhibition and more.">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<title>PhotoFind Pro — Complete Wedding Technology Platform</title>
+<meta name="description" content="AI face recognition photo delivery + digital albums + virtual exhibition + invitations + highlight reels. Complete wedding tech platform.">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=DM+Sans:wght@200;300;400;500;600;700&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-
 :root{
-  --gold:#D4A843;--gold2:#F0C866;--gold3:#A07830;
-  --dark:#08070A;--dark2:#0F0D14;--dark3:#16141C;
+  --gold:#D4A843;--gold2:#F0C866;--gold3:#A07830;--gold-dim:rgba(212,168,67,0.08);
+  --dark:#07060A;--dark2:#0D0B12;--dark3:#141220;
   --rose:#C8607A;--rose2:#E8809A;
-  --text:#F0EEF8;--muted:rgba(240,238,248,0.45);
-  --border:rgba(212,168,67,0.15);
-  --card:rgba(255,255,255,0.03);
+  --text:#F0EEF8;--muted:rgba(240,238,248,0.45);--muted2:rgba(240,238,248,0.25);
+  --border:rgba(212,168,67,0.12);--border2:rgba(212,168,67,0.25);
+  --green:#25D366;
 }
+html{scroll-behavior:smooth;overflow-x:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--dark);color:var(--text);overflow-x:hidden;cursor:default}
 
-html{scroll-behavior:smooth}
-body{
-  font-family:'DM Sans',sans-serif;
-  background:var(--dark);
-  color:var(--text);
-  overflow-x:hidden;
-  cursor:default;
-}
-
-/* ── NOISE TEXTURE ── */
-body::before{
-  content:'';position:fixed;inset:0;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-  pointer-events:none;z-index:0;opacity:0.4;
-}
+/* ── CUSTOM CURSOR ── */
+.cursor{position:fixed;width:8px;height:8px;background:var(--gold);border-radius:50%;pointer-events:none;z-index:9999;transition:transform 0.1s;mix-blend-mode:difference}
+.cursor-ring{position:fixed;width:32px;height:32px;border:1px solid rgba(212,168,67,0.4);border-radius:50%;pointer-events:none;z-index:9998;transition:all 0.15s ease;mix-blend-mode:difference}
 
 /* ── NAV ── */
-nav{
-  position:fixed;top:0;left:0;right:0;z-index:100;
-  padding:16px 5%;
-  display:flex;align-items:center;justify-content:space-between;
-  background:rgba(8,7,10,0.85);
-  backdrop-filter:blur(20px);
-  border-bottom:0.5px solid var(--border);
-  transition:all 0.3s;
-}
-
-.nav-logo{
-  font-family:'Cormorant Garamond',serif;
-  font-size:22px;font-weight:600;
-  color:var(--text);letter-spacing:-0.01em;
-}
+nav{position:fixed;top:0;left:0;right:0;z-index:500;padding:0 5%;height:68px;display:flex;align-items:center;justify-content:space-between;background:rgba(7,6,10,0);transition:all 0.4s}
+nav.scrolled{background:rgba(7,6,10,0.92);backdrop-filter:blur(24px);border-bottom:0.5px solid var(--border)}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;letter-spacing:-0.01em}
 .nav-logo em{color:var(--gold);font-style:normal}
-
-.nav-links{
-  display:flex;align-items:center;gap:28px;
-}
-.nav-links a{
-  font-size:13px;font-weight:500;color:var(--muted);
-  text-decoration:none;transition:color 0.2s;letter-spacing:0.02em;
-}
+.nav-links{display:flex;align-items:center;gap:32px}
+.nav-links a{font-size:13px;font-weight:400;color:var(--muted);text-decoration:none;transition:color 0.2s;letter-spacing:0.02em}
 .nav-links a:hover{color:var(--text)}
-
-.nav-cta{
-  padding:9px 22px;
-  background:linear-gradient(135deg,var(--gold3),var(--gold));
-  color:var(--dark);border:none;border-radius:6px;
-  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;
-  cursor:pointer;text-decoration:none;
-  transition:all 0.2s;letter-spacing:0.03em;
-}
+.nav-cta{padding:9px 22px;background:linear-gradient(135deg,var(--gold3),var(--gold));color:var(--dark);border:none;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:all 0.2s;letter-spacing:0.03em}
 .nav-cta:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(212,168,67,0.3)}
 
 /* ── HERO ── */
-.hero{
-  min-height:100vh;
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  padding:120px 5% 80px;
-  position:relative;overflow:hidden;
-  text-align:center;
-}
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:100px 5% 60px}
 
-/* Mesh gradient bg */
-.hero::before{
-  content:'';position:absolute;inset:0;
-  background:
-    radial-gradient(ellipse at 20% 50%,rgba(212,168,67,0.07) 0%,transparent 50%),
-    radial-gradient(ellipse at 80% 20%,rgba(200,96,122,0.06) 0%,transparent 50%),
-    radial-gradient(ellipse at 60% 80%,rgba(100,80,200,0.05) 0%,transparent 50%);
-  pointer-events:none;
-}
+/* Animated background */
+.hero-bg{position:absolute;inset:0;background:var(--dark)}
+.hero-orb1{position:absolute;width:800px;height:800px;top:-200px;left:-200px;background:radial-gradient(ellipse,rgba(212,168,67,0.06),transparent 60%);border-radius:50%;animation:orbFloat1 20s ease infinite}
+.hero-orb2{position:absolute;width:600px;height:600px;bottom:-100px;right:-100px;background:radial-gradient(ellipse,rgba(200,96,122,0.05),transparent 60%);border-radius:50%;animation:orbFloat2 15s ease infinite}
+.hero-orb3{position:absolute;width:400px;height:400px;top:50%;left:50%;transform:translate(-50%,-50%);background:radial-gradient(ellipse,rgba(100,80,200,0.04),transparent 60%);border-radius:50%;animation:orbFloat3 25s ease infinite}
+@keyframes orbFloat1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(60px,40px) scale(1.1)}}
+@keyframes orbFloat2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-40px,-60px) scale(1.08)}}
+@keyframes orbFloat3{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-48%,-52%) scale(1.05)}}
 
-/* Animated grid */
-.hero-grid{
-  position:absolute;inset:0;
-  background-image:
-    linear-gradient(rgba(212,168,67,0.04) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(212,168,67,0.04) 1px,transparent 1px);
-  background-size:60px 60px;
-  mask-image:radial-gradient(ellipse at center,black 30%,transparent 70%);
-  pointer-events:none;
-}
+/* Grid lines */
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(212,168,67,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(212,168,67,0.03) 1px,transparent 1px);background-size:80px 80px;mask-image:radial-gradient(ellipse at center,black 20%,transparent 70%)}
 
-.hero-eyebrow{
-  display:inline-flex;align-items:center;gap:8px;
-  background:rgba(212,168,67,0.08);
-  border:0.5px solid rgba(212,168,67,0.25);
-  border-radius:20px;padding:6px 14px;
-  font-size:11px;font-weight:600;color:var(--gold);
-  letter-spacing:0.12em;text-transform:uppercase;
-  margin-bottom:28px;position:relative;z-index:1;
-  animation:fadeUp 0.8s ease forwards;opacity:0;
-}
-.eyebrow-dot{width:5px;height:5px;border-radius:50%;background:var(--gold);animation:pulse 2s ease infinite}
+/* Film grain */
+.grain{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")}
 
-.hero-title{
-  font-family:'Bebas Neue',sans-serif;
-  font-size:clamp(56px,10vw,120px);
-  line-height:0.92;letter-spacing:0.02em;
-  color:var(--text);
-  margin-bottom:8px;
-  position:relative;z-index:1;
-  animation:fadeUp 0.8s ease 0.15s forwards;opacity:0;
-}
-.hero-title .gold{
-  color:var(--gold);
-  text-shadow:0 0 80px rgba(212,168,67,0.3);
-}
-.hero-title .outline{
-  -webkit-text-stroke:1px rgba(240,238,248,0.4);
-  color:transparent;
-}
+.hero-content{position:relative;z-index:2;text-align:center;max-width:900px}
 
-.hero-sub{
-  font-family:'Cormorant Garamond',serif;
-  font-size:clamp(18px,3vw,26px);
-  font-style:italic;color:var(--muted);
-  margin-bottom:32px;line-height:1.4;
-  max-width:600px;
-  position:relative;z-index:1;
-  animation:fadeUp 0.8s ease 0.3s forwards;opacity:0;
-}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(212,168,67,0.07);border:0.5px solid rgba(212,168,67,0.2);border-radius:20px;padding:6px 16px;font-size:11px;font-weight:600;color:rgba(212,168,67,0.8);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:28px;animation:fadeUp 1s ease 0.2s both}
+.hero-pulse{width:5px;height:5px;border-radius:50%;background:var(--gold);animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.4;transform:scale(1.5)}}
 
-.hero-btns{
-  display:flex;gap:12px;justify-content:center;flex-wrap:wrap;
-  position:relative;z-index:1;
-  animation:fadeUp 0.8s ease 0.45s forwards;opacity:0;
-}
+.hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(64px,12vw,140px);line-height:0.88;letter-spacing:0.025em;margin-bottom:20px;animation:fadeUp 1s ease 0.4s both}
+.hero-title .line1{display:block;color:var(--text)}
+.hero-title .line2{display:block;color:var(--gold);text-shadow:0 0 120px rgba(212,168,67,0.2)}
+.hero-title .line3{display:block;-webkit-text-stroke:1px rgba(240,238,248,0.2);color:transparent}
 
-.btn-primary{
-  padding:15px 36px;
-  background:linear-gradient(135deg,var(--gold3),var(--gold),var(--gold2));
-  color:var(--dark);border:none;border-radius:8px;
-  font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;
-  cursor:pointer;text-decoration:none;
-  transition:all 0.2s;letter-spacing:0.03em;
-  box-shadow:0 8px 32px rgba(212,168,67,0.25);
-}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(212,168,67,0.35)}
+.hero-sub{font-family:'Cormorant Garamond',serif;font-size:clamp(18px,3vw,26px);font-style:italic;color:var(--muted);line-height:1.5;max-width:600px;margin:0 auto 36px;animation:fadeUp 1s ease 0.6s both}
 
-.btn-secondary{
-  padding:15px 32px;
-  background:rgba(255,255,255,0.05);
-  border:0.5px solid rgba(255,255,255,0.15);
-  color:var(--text);border-radius:8px;
-  font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;
-  cursor:pointer;text-decoration:none;
-  transition:all 0.2s;
-}
-.btn-secondary:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.25)}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:56px;animation:fadeUp 1s ease 0.8s both}
+.btn-hero-primary{padding:16px 40px;background:linear-gradient(135deg,var(--gold3),var(--gold));color:var(--dark);border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;text-decoration:none;transition:all 0.2s;letter-spacing:0.03em;box-shadow:0 8px 32px rgba(212,168,67,0.2)}
+.btn-hero-primary:hover{transform:translateY(-2px);box-shadow:0 16px 48px rgba(212,168,67,0.3)}
+.btn-hero-secondary{padding:16px 36px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(255,255,255,0.12);color:var(--text);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:400;cursor:pointer;text-decoration:none;transition:all 0.2s}
+.btn-hero-secondary:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.2)}
 
-/* Stats bar */
-.stats-bar{
-  display:flex;gap:0;
-  background:rgba(255,255,255,0.03);
-  border:0.5px solid var(--border);
-  border-radius:12px;margin-top:56px;
-  overflow:hidden;
-  position:relative;z-index:1;
-  animation:fadeUp 0.8s ease 0.6s forwards;opacity:0;
-}
-.stat{
-  flex:1;padding:20px 24px;text-align:center;
-  border-right:0.5px solid var(--border);
-  transition:background 0.2s;
-}
-.stat:last-child{border-right:none}
-.stat:hover{background:rgba(255,255,255,0.03)}
-.stat-num{
-  font-family:'Bebas Neue',sans-serif;
-  font-size:36px;color:var(--gold);
-  line-height:1;margin-bottom:4px;
-}
-.stat-lbl{font-size:11px;color:var(--muted);letter-spacing:0.08em}
+/* Scroll indicator */
+.scroll-hint{display:flex;flex-direction:column;align-items:center;gap:8px;animation:fadeUp 1s ease 1.2s both}
+.scroll-line{width:0.5px;height:48px;background:linear-gradient(180deg,transparent,rgba(212,168,67,0.4),transparent);animation:scrollLine 2s ease infinite}
+@keyframes scrollLine{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}50.01%{transform:scaleY(1);transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+.scroll-text{font-size:9px;color:var(--muted2);letter-spacing:0.25em;text-transform:uppercase}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── STATS RIBBON ── */
+.stats-ribbon{padding:28px 5%;border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border);background:rgba(212,168,67,0.02);display:flex;justify-content:center;gap:0;position:relative;z-index:2}
+.stat-item{flex:1;max-width:200px;text-align:center;padding:0 24px;border-right:0.5px solid var(--border)}
+.stat-item:last-child{border-right:none}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:42px;color:var(--gold);line-height:1;margin-bottom:4px}
+.stat-lbl{font-size:11px;color:var(--muted2);letter-spacing:0.1em;text-transform:uppercase}
 
 /* ── MARQUEE ── */
-.marquee-wrap{
-  padding:20px 0;
-  border-top:0.5px solid var(--border);
-  border-bottom:0.5px solid var(--border);
-  overflow:hidden;
-  background:rgba(212,168,67,0.03);
-}
-.marquee{
-  display:flex;gap:48px;
-  animation:marquee 20s linear infinite;
-  white-space:nowrap;
-}
-.marquee-item{
-  font-size:12px;color:rgba(212,168,67,0.5);
-  letter-spacing:0.2em;text-transform:uppercase;
-  font-weight:600;
-  display:flex;align-items:center;gap:16px;
-  flex-shrink:0;
-}
-.marquee-item::after{content:'✦';color:rgba(212,168,67,0.3)}
+.marquee-section{padding:18px 0;overflow:hidden;background:rgba(255,255,255,0.01);border-bottom:0.5px solid var(--border)}
+.marquee-track{display:flex;gap:40px;animation:marquee 25s linear infinite;white-space:nowrap}
+.marquee-item{font-size:11px;color:rgba(212,168,67,0.35);letter-spacing:0.22em;text-transform:uppercase;font-weight:600;flex-shrink:0;display:flex;align-items:center;gap:16px}
+.marquee-item::after{content:'✦';color:rgba(212,168,67,0.2)}
 @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
-/* ── SECTION ── */
-section{padding:100px 5%;position:relative;z-index:1}
-
-.section-label{
-  font-size:10px;letter-spacing:0.4em;text-transform:uppercase;
-  color:var(--gold);font-weight:600;margin-bottom:12px;
-  display:flex;align-items:center;gap:8px;
-}
-.section-label::before{content:'';width:24px;height:0.5px;background:var(--gold)}
-
-.section-title{
-  font-family:'Cormorant Garamond',serif;
-  font-size:clamp(36px,5vw,60px);
-  font-weight:600;line-height:1.05;
-  margin-bottom:16px;
-}
+/* ── SECTION BASE ── */
+.section{padding:120px 5%;position:relative}
+.section-label{font-size:10px;letter-spacing:0.4em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.section-label::before{content:'';width:28px;height:0.5px;background:var(--gold)}
+.section-title{font-family:'Cormorant Garamond',serif;font-size:clamp(40px,6vw,72px);font-weight:600;line-height:1.02;margin-bottom:16px}
 .section-title em{color:var(--gold);font-style:italic}
+.section-sub{font-size:16px;color:var(--muted);max-width:560px;line-height:1.65;margin-bottom:64px}
 
-.section-sub{
-  font-size:16px;color:var(--muted);
-  max-width:560px;line-height:1.6;
-  margin-bottom:56px;
-}
+/* ── AUDIENCE SWITCHER ── */
+.audience-section{padding:120px 5% 80px;text-align:center;position:relative;overflow:hidden}
+.audience-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(212,168,67,0.05),transparent 50%)}
+.audience-toggle{display:inline-flex;background:rgba(255,255,255,0.04);border:0.5px solid var(--border);border-radius:50px;padding:4px;margin-bottom:60px;position:relative;z-index:1}
+.aud-btn{padding:10px 28px;border-radius:46px;border:none;background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.3s;position:relative;z-index:1}
+.aud-btn.active{background:linear-gradient(135deg,var(--gold3),var(--gold));color:var(--dark);font-weight:700;box-shadow:0 4px 16px rgba(212,168,67,0.3)}
 
-/* ── PROBLEM/SOLUTION ── */
-.problem-solution{
-  display:grid;grid-template-columns:1fr 1fr;gap:2px;
-  border-radius:16px;overflow:hidden;
-  margin-bottom:60px;
-}
-.ps-card{padding:48px 40px;position:relative;overflow:hidden}
-.ps-before{background:var(--dark2)}
-.ps-after{background:linear-gradient(135deg,rgba(212,168,67,0.08),rgba(212,168,67,0.03))}
-.ps-after::before{
-  content:'';position:absolute;inset:0;
-  border:0.5px solid rgba(212,168,67,0.2);
-  border-radius:0;pointer-events:none;
-}
-.ps-label{
-  font-size:10px;letter-spacing:0.3em;text-transform:uppercase;
-  font-weight:700;margin-bottom:20px;
-  display:flex;align-items:center;gap:8px;
-}
-.ps-before .ps-label{color:rgba(255,255,255,0.25)}
-.ps-after .ps-label{color:var(--gold)}
-.ps-icon{font-size:32px;margin-bottom:16px;display:block}
-.ps-heading{
-  font-family:'Cormorant Garamond',serif;
-  font-size:28px;font-weight:600;
-  margin-bottom:16px;line-height:1.2;
-}
-.ps-before .ps-heading{color:rgba(255,255,255,0.5)}
-.ps-after .ps-heading{color:var(--text)}
-.ps-list{list-style:none;display:flex;flex-direction:column;gap:10px}
-.ps-list li{
-  font-size:14px;color:var(--muted);
-  display:flex;align-items:flex-start;gap:8px;line-height:1.4;
-}
-.ps-before .ps-list li::before{content:'✗';color:rgba(200,96,122,0.6);flex-shrink:0;margin-top:1px}
-.ps-after .ps-list li::before{content:'✓';color:var(--gold);flex-shrink:0;margin-top:1px}
+.audience-content{display:none;animation:fadeUp 0.5s ease both}
+.audience-content.active{display:block}
 
-/* ── FEATURES ── */
-.features-grid{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:1.5px;
-  background:var(--border);
-  border:0.5px solid var(--border);
-  border-radius:16px;overflow:hidden;
-}
-.feat-card{
-  background:var(--dark2);
-  padding:36px 28px;
-  transition:background 0.2s;
-  position:relative;overflow:hidden;
-}
-.feat-card:hover{background:var(--dark3)}
-.feat-card::before{
-  content:'';position:absolute;
-  top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,transparent,var(--gold),transparent);
-  opacity:0;transition:opacity 0.3s;
-}
-.feat-card:hover::before{opacity:1}
-.feat-icon{
-  font-size:28px;margin-bottom:16px;display:block;
-  filter:drop-shadow(0 0 8px rgba(212,168,67,0.2));
-}
-.feat-name{
-  font-family:'Cormorant Garamond',serif;
-  font-size:20px;font-weight:600;
-  color:var(--text);margin-bottom:8px;
-}
-.feat-desc{font-size:13px;color:var(--muted);line-height:1.5}
-.feat-tag{
-  display:inline-block;margin-top:12px;
-  padding:3px 10px;border-radius:20px;
-  font-size:9px;font-weight:700;letter-spacing:0.1em;
-  text-transform:uppercase;
-}
-.tag-all{background:rgba(212,168,67,0.1);color:var(--gold);border:0.5px solid rgba(212,168,67,0.2)}
+/* Audience cards */
+.aud-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5px;background:var(--border);border:0.5px solid var(--border);border-radius:20px;overflow:hidden;text-align:left}
+.aud-card{background:var(--dark2);padding:40px 32px;transition:background 0.2s;position:relative;overflow:hidden}
+.aud-card:hover{background:var(--dark3)}
+.aud-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1.5px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:0;transition:opacity 0.3s}
+.aud-card:hover::before{opacity:1}
+.aud-card-icon{font-size:32px;margin-bottom:18px;display:block}
+.aud-card-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--text);margin-bottom:10px}
+.aud-card-desc{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px}
+.aud-card-link{font-size:12px;color:var(--gold);text-decoration:none;display:flex;align-items:center;gap:6px;font-weight:600;letter-spacing:0.05em;transition:gap 0.2s}
+.aud-card-link:hover{gap:10px}
+
+/* ── FEATURES BENTO ── */
+.bento{display:grid;grid-template-columns:repeat(12,1fr);grid-auto-rows:minmax(160px,auto);gap:12px}
+
+.bento-card{background:var(--dark2);border:0.5px solid var(--border);border-radius:16px;padding:32px;position:relative;overflow:hidden;transition:all 0.3s;cursor:pointer;text-decoration:none;display:flex;flex-direction:column;justify-content:flex-end}
+.bento-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 16px 48px rgba(0,0,0,0.3)}
+.bento-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(212,168,67,0.03),transparent);opacity:0;transition:opacity 0.3s}
+.bento-card:hover::before{opacity:1}
+
+.b-wide{grid-column:span 7}
+.b-narrow{grid-column:span 5}
+.b-third{grid-column:span 4}
+.b-half{grid-column:span 6}
+.b-full{grid-column:span 12}
+
+.bento-card-glow{position:absolute;top:0;right:0;width:200px;height:200px;border-radius:50%;opacity:0.06;transition:opacity 0.3s}
+.bento-card:hover .bento-card-glow{opacity:0.12}
+
+.bento-tag{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:14px;width:fit-content}
+.tag-core{background:rgba(212,168,67,0.1);color:var(--gold);border:0.5px solid rgba(212,168,67,0.2)}
 .tag-adv{background:rgba(100,160,255,0.1);color:#64A0FF;border:0.5px solid rgba(100,160,255,0.2)}
 .tag-prem{background:rgba(155,137,212,0.1);color:#9B89D4;border:0.5px solid rgba(155,137,212,0.2)}
+.tag-new{background:rgba(93,214,138,0.1);color:#5DD68A;border:0.5px solid rgba(93,214,138,0.2)}
+
+.bento-icon{font-size:36px;margin-bottom:16px;display:block}
+.bento-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:var(--text);margin-bottom:8px;line-height:1.1}
+.bento-desc{font-size:13px;color:var(--muted);line-height:1.55}
+.bento-link{margin-top:16px;font-size:11px;color:var(--gold);display:flex;align-items:center;gap:6px;font-weight:600;letter-spacing:0.05em;width:fit-content;transition:gap 0.2s}
+.bento-card:hover .bento-link{gap:10px}
+
+/* Big feature card */
+.bento-big{grid-column:span 7;grid-row:span 2;background:linear-gradient(160deg,#1A1200,#0D0B12);border-color:rgba(212,168,67,0.2)}
+.bento-big .bento-title{font-size:32px}
+
+/* ── FEATURE PREVIEW CARDS ── */
+.preview-section{padding:0 5% 120px}
+.preview-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+
+.preview-card{border-radius:20px;overflow:hidden;border:0.5px solid var(--border);position:relative;aspect-ratio:4/3;display:flex;flex-direction:column;justify-content:flex-end;text-decoration:none;transition:all 0.3s;group:true}
+.preview-card:hover{transform:translateY(-4px);box-shadow:0 24px 64px rgba(0,0,0,0.4);border-color:var(--border2)}
+
+.preview-bg{position:absolute;inset:0;transition:transform 0.4s ease}
+.preview-card:hover .preview-bg{transform:scale(1.04)}
+
+.preview-overlay{position:absolute;inset:0;background:linear-gradient(0deg,rgba(7,6,10,0.95) 0%,rgba(7,6,10,0.4) 50%,transparent 100%)}
+.preview-content{position:relative;z-index:2;padding:28px}
+.preview-tag{display:inline-flex;padding:3px 10px;border-radius:20px;font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;background:rgba(212,168,67,0.15);color:var(--gold);border:0.5px solid rgba(212,168,67,0.25);margin-bottom:12px}
+.preview-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:white;margin-bottom:6px;line-height:1.1}
+.preview-desc{font-size:13px;color:rgba(255,255,255,0.5);line-height:1.5;margin-bottom:14px}
+.preview-cta{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--gold);font-weight:600;letter-spacing:0.05em;transition:gap 0.2s}
+.preview-card:hover .preview-cta{gap:12px}
 
 /* ── HOW IT WORKS ── */
-.steps-wrap{
-  display:grid;grid-template-columns:repeat(4,1fr);gap:24px;
-}
-.step-card{
-  position:relative;text-align:center;
-}
-.step-card::after{
-  content:'→';
-  position:absolute;top:28px;right:-16px;
-  color:rgba(212,168,67,0.3);font-size:20px;
-  display:block;
-}
-.step-card:last-child::after{display:none}
-.step-num{
-  width:56px;height:56px;
-  border:0.5px solid var(--border);
-  border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-family:'Bebas Neue',sans-serif;
-  font-size:24px;color:var(--gold);
-  margin:0 auto 16px;
-  background:rgba(212,168,67,0.05);
-  position:relative;z-index:1;
-  transition:all 0.3s;
-}
-.step-card:hover .step-num{
-  background:rgba(212,168,67,0.12);
-  border-color:rgba(212,168,67,0.4);
-  box-shadow:0 0 24px rgba(212,168,67,0.15);
-}
-.step-icon{font-size:20px;margin-bottom:12px;display:block}
-.step-title{
-  font-family:'Cormorant Garamond',serif;
-  font-size:18px;font-weight:600;
-  margin-bottom:6px;color:var(--text);
-}
-.step-desc{font-size:12px;color:var(--muted);line-height:1.5}
+.how-section{padding:120px 5%;background:rgba(255,255,255,0.01);border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border)}
+.how-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+.how-steps{display:flex;flex-direction:column;gap:0}
+.how-step{display:flex;gap:24px;padding:28px 0;border-bottom:0.5px solid var(--border);position:relative;transition:all 0.2s;cursor:default}
+.how-step:last-child{border-bottom:none}
+.how-step:hover .how-step-num{background:rgba(212,168,67,0.15);border-color:rgba(212,168,67,0.4)}
+.how-step-num{width:48px;height:48px;border-radius:12px;background:rgba(212,168,67,0.06);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold);flex-shrink:0;transition:all 0.3s}
+.how-step-content{}
+.how-step-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--text);margin-bottom:6px}
+.how-step-desc{font-size:13px;color:var(--muted);line-height:1.55}
+
+.how-visual{position:relative}
+.how-phone{background:var(--dark2);border:0.5px solid var(--border2);border-radius:28px;padding:16px;box-shadow:0 40px 100px rgba(0,0,0,0.5);position:relative;z-index:1}
+.how-screen{background:var(--dark3);border-radius:18px;overflow:hidden;min-height:480px;display:flex;flex-direction:column}
+.how-screen-header{background:linear-gradient(135deg,rgba(212,168,67,0.15),rgba(212,168,67,0.05));padding:24px;border-bottom:0.5px solid var(--border)}
+.how-screen-brand{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--text);margin-bottom:2px}
+.how-screen-brand em{color:var(--gold);font-style:normal}
+.how-screen-sub{font-size:11px;color:var(--muted2)}
+.how-screen-body{flex:1;padding:20px;display:flex;flex-direction:column;gap:12px}
+.how-screen-step{background:rgba(255,255,255,0.03);border:0.5px solid var(--border);border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px}
+.how-screen-step-icon{font-size:20px}
+.how-screen-step-text{font-size:12px;color:var(--muted);line-height:1.4}
+.how-screen-step-text strong{color:var(--text);display:block;font-size:13px;margin-bottom:1px}
+.how-scan-btn{background:linear-gradient(135deg,var(--gold3),var(--gold));border-radius:10px;padding:14px;text-align:center;font-size:14px;font-weight:700;color:var(--dark);margin-top:auto}
 
 /* ── PRICING ── */
-.pricing-grid{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
-}
-.price-card{
-  border-radius:16px;padding:36px 28px;
-  position:relative;overflow:hidden;
-  border:0.5px solid var(--border);
-  background:var(--dark2);
-  transition:transform 0.2s;
-}
+.pricing-section{padding:120px 5%}
+.pricing-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;max-width:800px;margin:0 auto}
+.price-card{border-radius:20px;padding:40px 32px;border:0.5px solid var(--border);background:var(--dark2);position:relative;overflow:hidden;transition:transform 0.2s}
 .price-card:hover{transform:translateY(-4px)}
-.price-card.featured{
-  border-color:rgba(212,168,67,0.4);
-  background:linear-gradient(135deg,rgba(212,168,67,0.06),var(--dark2));
-}
-.price-card.featured::before{
-  content:'MOST POPULAR';
-  position:absolute;top:16px;right:16px;
-  background:var(--gold);color:var(--dark);
-  font-size:8px;font-weight:800;
-  padding:4px 10px;border-radius:20px;
-  letter-spacing:0.12em;
-}
-.price-eyebrow{
-  font-size:10px;font-weight:600;letter-spacing:0.2em;
-  text-transform:uppercase;color:var(--muted);
-  margin-bottom:8px;
-}
-.price-name{
-  font-family:'Cormorant Garamond',serif;
-  font-size:32px;font-weight:600;
-  color:var(--text);margin-bottom:4px;
-}
-.price-amount{
-  font-family:'Bebas Neue',sans-serif;
-  font-size:52px;color:var(--gold);
-  line-height:1;margin-bottom:4px;
-}
-.price-per{font-size:12px;color:var(--muted);margin-bottom:24px}
-.price-divider{
-  height:0.5px;
-  background:linear-gradient(90deg,transparent,var(--border),transparent);
-  margin-bottom:24px;
-}
+.price-card.featured{border-color:rgba(212,168,67,0.35);background:linear-gradient(160deg,rgba(212,168,67,0.06),var(--dark2))}
+.price-card.featured::before{content:'Most Popular';position:absolute;top:20px;right:20px;background:var(--gold);color:var(--dark);font-size:8px;font-weight:800;padding:4px 12px;border-radius:20px;letter-spacing:0.12em}
+.price-plan{font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted2);font-weight:600;margin-bottom:8px}
+.price-name{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:600;color:var(--text);margin-bottom:6px}
+.price-amount{font-family:'Bebas Neue',sans-serif;font-size:56px;color:var(--gold);line-height:1;margin-bottom:4px}
+.price-period{font-size:12px;color:var(--muted2);margin-bottom:28px}
+.price-divider{height:0.5px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin-bottom:24px}
 .price-features{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:28px}
-.price-features li{
-  font-size:13px;color:var(--muted);
-  display:flex;align-items:flex-start;gap:8px;
-}
-.price-features li::before{content:'✓';color:var(--gold);flex-shrink:0}
-.price-btn{
-  width:100%;padding:13px;border:none;border-radius:8px;
-  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;
-  cursor:pointer;letter-spacing:0.05em;transition:all 0.2s;
-  text-decoration:none;display:block;text-align:center;
-}
+.price-features li{font-size:13px;color:var(--muted);display:flex;align-items:flex-start;gap:8px;line-height:1.4}
+.price-features li::before{content:'✓';color:var(--gold);flex-shrink:0;font-weight:700}
+.price-btn{width:100%;padding:14px;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;display:block;text-align:center;transition:all 0.2s;letter-spacing:0.03em}
 .price-btn-gold{background:linear-gradient(135deg,var(--gold3),var(--gold));color:var(--dark)}
-.price-btn-ghost{background:rgba(255,255,255,0.05);border:0.5px solid var(--border);color:var(--text)}
+.price-btn-ghost{background:rgba(255,255,255,0.04);border:0.5px solid var(--border2);color:var(--text)}
 .price-btn:hover{transform:translateY(-1px)}
 
-/* ── TESTIMONIALS ── */
-.testimonials-grid{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
-}
-.testimonial-card{
-  background:var(--dark2);border-radius:14px;padding:28px;
-  border:0.5px solid var(--border);
-  transition:border-color 0.2s;
-}
-.testimonial-card:hover{border-color:rgba(212,168,67,0.3)}
-.t-stars{color:var(--gold);font-size:14px;margin-bottom:14px;letter-spacing:2px}
-.t-text{
-  font-family:'Cormorant Garamond',serif;
-  font-size:17px;font-style:italic;
-  color:var(--text);line-height:1.55;margin-bottom:18px;
-}
-.t-author{display:flex;align-items:center;gap:10px}
-.t-avatar{
-  width:36px;height:36px;border-radius:50%;
-  background:linear-gradient(135deg,var(--gold3),var(--gold));
-  display:flex;align-items:center;justify-content:center;
-  font-size:14px;font-weight:700;color:var(--dark);
-  flex-shrink:0;
-}
-.t-name{font-size:13px;font-weight:600;color:var(--text)}
-.t-role{font-size:11px;color:var(--muted)}
-
 /* ── CTA SECTION ── */
-.cta-section{
-  padding:100px 5%;
-  text-align:center;
-  position:relative;overflow:hidden;
-}
-.cta-section::before{
-  content:'';position:absolute;inset:0;
-  background:
-    radial-gradient(ellipse at 50% 50%,rgba(212,168,67,0.08),transparent 60%);
-}
-.cta-title{
-  font-family:'Bebas Neue',sans-serif;
-  font-size:clamp(48px,8vw,100px);
-  line-height:0.95;color:var(--text);
-  margin-bottom:20px;
-  position:relative;z-index:1;
-}
-.cta-title em{color:var(--gold);font-style:normal}
-.cta-sub{
-  font-family:'Cormorant Garamond',serif;
-  font-size:20px;font-style:italic;
-  color:var(--muted);max-width:500px;
-  margin:0 auto 40px;line-height:1.5;
-  position:relative;z-index:1;
-}
-.cta-btns{
-  display:flex;gap:12px;justify-content:center;
-  flex-wrap:wrap;position:relative;z-index:1;
-}
-.cta-wa{
-  padding:15px 32px;
-  background:#25D366;color:white;
-  border:none;border-radius:8px;
-  font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;
-  cursor:pointer;text-decoration:none;
-  transition:all 0.2s;
-  display:flex;align-items:center;gap:8px;
-}
-.cta-wa:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(37,211,102,0.3)}
+.cta-section{padding:120px 5%;text-align:center;position:relative;overflow:hidden}
+.cta-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(212,168,67,0.07),transparent 60%)}
+.cta-eyebrow{font-family:'Dancing Script',cursive;font-size:32px;color:rgba(212,168,67,0.6);display:block;margin-bottom:16px;animation:fadeUp 0.8s ease both}
+.cta-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(56px,10vw,120px);line-height:0.9;color:var(--text);margin-bottom:20px;position:relative;z-index:1}
+.cta-title em{color:var(--gold);font-style:normal;display:block}
+.cta-sub{font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;color:var(--muted);max-width:500px;margin:0 auto 40px;position:relative;z-index:1;line-height:1.5}
+.cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;position:relative;z-index:1}
+.btn-wa{display:inline-flex;align-items:center;gap:8px;padding:16px 36px;background:var(--green);color:white;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;text-decoration:none;transition:all 0.2s}
+.btn-wa:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(37,211,102,0.3)}
 
 /* ── FOOTER ── */
-footer{
-  padding:40px 5%;
-  border-top:0.5px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;
-  flex-wrap:wrap;gap:16px;
-}
-.footer-logo{
-  font-family:'Cormorant Garamond',serif;
-  font-size:18px;font-weight:600;
-}
+footer{padding:48px 5%;border-top:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px}
+.footer-logo{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600}
 .footer-logo em{color:var(--gold);font-style:normal}
-.footer-links{display:flex;gap:20px}
-.footer-links a{font-size:12px;color:var(--muted);text-decoration:none;transition:color 0.2s}
+.footer-links{display:flex;gap:24px;flex-wrap:wrap}
+.footer-links a{font-size:12px;color:var(--muted2);text-decoration:none;transition:color 0.2s;letter-spacing:0.02em}
 .footer-links a:hover{color:var(--text)}
-.footer-copy{font-size:11px;color:rgba(255,255,255,0.2);letter-spacing:0.05em}
+.footer-copy{font-size:11px;color:rgba(255,255,255,0.15);letter-spacing:0.05em}
 
-/* ── ANIMATIONS ── */
-@keyframes fadeUp{
-  from{opacity:0;transform:translateY(24px)}
-  to{opacity:1;transform:translateY(0)}
-}
-@keyframes pulse{
-  0%,100%{transform:scale(1);opacity:1}
-  50%{transform:scale(1.3);opacity:0.6}
-}
+/* ── FLOATING WA ── */
+.float-wa{position:fixed;bottom:28px;right:28px;z-index:400;width:56px;height:56px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 8px 24px rgba(37,211,102,0.4);cursor:pointer;text-decoration:none;animation:floatWA 4s ease infinite}
+@keyframes floatWA{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 
-.reveal{
-  opacity:0;transform:translateY(32px);
-  transition:opacity 0.7s ease,transform 0.7s ease;
-}
+/* ── REVEAL ANIMATIONS ── */
+.reveal{opacity:0;transform:translateY(36px);transition:opacity 0.8s ease,transform 0.8s ease}
 .reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-delay-1{transition-delay:0.1s}
+.reveal-delay-2{transition-delay:0.2s}
+.reveal-delay-3{transition-delay:0.3s}
 
 /* ── MOBILE ── */
-@media(max-width:768px){
+@media(max-width:900px){
   .nav-links{display:none}
-  .problem-solution{grid-template-columns:1fr}
-  .features-grid{grid-template-columns:1fr}
-  .steps-wrap{grid-template-columns:1fr 1fr}
-  .step-card::after{display:none}
+  .bento{display:flex;flex-direction:column}
+  .preview-grid{grid-template-columns:1fr}
+  .how-grid{grid-template-columns:1fr}
+  .how-visual{display:none}
   .pricing-grid{grid-template-columns:1fr}
-  .testimonials-grid{grid-template-columns:1fr}
-  .stats-bar{display:grid;grid-template-columns:1fr 1fr}
+  .aud-cards{grid-template-columns:1fr}
+  .stats-ribbon{flex-wrap:wrap}
+  .stat-item{min-width:45%;border-right:none;border-bottom:0.5px solid var(--border);padding:16px}
   footer{flex-direction:column;text-align:center}
   .footer-links{justify-content:center}
-}
-
-/* ── FLOATING WA BUTTON ── */
-.float-wa{
-  position:fixed;bottom:24px;right:24px;z-index:200;
-  width:56px;height:56px;border-radius:50%;
-  background:#25D366;
-  display:flex;align-items:center;justify-content:center;
-  font-size:26px;
-  box-shadow:0 8px 24px rgba(37,211,102,0.4);
-  cursor:pointer;text-decoration:none;
-  transition:all 0.2s;
-  animation:float 3s ease infinite;
-}
-.float-wa:hover{transform:scale(1.1)}
-@keyframes float{
-  0%,100%{transform:translateY(0)}
-  50%{transform:translateY(-6px)}
 }
 </style>
 </head>
 <body>
 
+<!-- Custom cursor -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+<div class="grain"></div>
+
 <!-- NAV -->
-<nav>
+<nav id="nav">
   <div class="nav-logo">Photo<em>Find</em> Pro</div>
   <div class="nav-links">
     <a href="#features">Features</a>
-    <a href="#how">How It Works</a>
+    <a href="#for-guests">For Guests</a>
+    <a href="#for-photographers">For Photographers</a>
     <a href="#pricing">Pricing</a>
-    <a href="#testimonials">Reviews</a>
   </div>
-  <a href="https://www.templecity.digital/booking.html" class="nav-cta">Get Started →</a>
+  <a href="https://www.templecity.digital/booking.html" class="nav-cta">Book Now →</a>
 </nav>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-grid"></div>
-
-  <div class="hero-eyebrow">
-    <span class="eyebrow-dot"></span>
-    The Future of Wedding Photography
+  <div class="hero-bg">
+    <div class="hero-orb1"></div>
+    <div class="hero-orb2"></div>
+    <div class="hero-orb3"></div>
+    <div class="hero-grid"></div>
   </div>
 
-  <h1 class="hero-title">
-    YOUR GUESTS<br>
-    <span class="gold">FIND PHOTOS</span><br>
-    <span class="outline">INSTANTLY</span>
-  </h1>
-
-  <p class="hero-sub">
-    AI face recognition delivers every guest their personal photos in seconds — not days. The most complete event photo platform available.
-  </p>
-
-  <div class="hero-btns">
-    <a href="https://www.templecity.digital/booking.html" class="btn-primary">Start Your First Event →</a>
-    <a href="https://www.templecity.digital" class="btn-secondary">See Live Demo</a>
-  </div>
-
-  <div class="stats-bar">
-    <div class="stat">
-      <div class="stat-num">2s</div>
-      <div class="stat-lbl">Photo Delivery</div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">
+      <span class="hero-pulse"></span>
+      Complete Wedding Technology Platform
     </div>
-    <div class="stat">
-      <div class="stat-num">99%</div>
-      <div class="stat-lbl">Face Accuracy</div>
+
+    <h1 class="hero-title">
+      <span class="line1">PHOTOS FOUND</span>
+      <span class="line2">INSTANTLY</span>
+      <span class="line3">BY YOUR FACE</span>
+    </h1>
+
+    <p class="hero-sub">
+      AI face recognition delivers every wedding guest their personal photos in seconds — while photographers get a complete suite of 15+ tools.
+    </p>
+
+    <div class="hero-btns">
+      <a href="https://www.templecity.digital" class="btn-hero-primary">Try Live Demo →</a>
+      <a href="https://www.templecity.digital/booking.html" class="btn-hero-secondary">Book for Your Event</a>
     </div>
-    <div class="stat">
-      <div class="stat-num">15+</div>
-      <div class="stat-lbl">Features</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num">₹3K</div>
-      <div class="stat-lbl">Starting Price</div>
+
+    <div class="scroll-hint">
+      <div class="scroll-line"></div>
+      <span class="scroll-text">Scroll to explore</span>
     </div>
   </div>
 </section>
 
-<!-- MARQUEE -->
-<div class="marquee-wrap">
-  <div class="marquee">
-    <span class="marquee-item">AI Face Recognition</span>
-    <span class="marquee-item">Digital Flip Book Album</span>
-    <span class="marquee-item">Virtual Exhibition</span>
-    <span class="marquee-item">AI Photo Beautification</span>
-    <span class="marquee-item">Wedding Invitations</span>
-    <span class="marquee-item">Smart Album Designer</span>
-    <span class="marquee-item">WhatsApp Bot</span>
-    <span class="marquee-item">Highlight Reels</span>
-    <span class="marquee-item">Print Orders</span>
-    <span class="marquee-item">Fun Zone</span>
-    <span class="marquee-item">AI Face Recognition</span>
-    <span class="marquee-item">Digital Flip Book Album</span>
-    <span class="marquee-item">Virtual Exhibition</span>
-    <span class="marquee-item">AI Photo Beautification</span>
-    <span class="marquee-item">Wedding Invitations</span>
-    <span class="marquee-item">Smart Album Designer</span>
-    <span class="marquee-item">WhatsApp Bot</span>
-    <span class="marquee-item">Highlight Reels</span>
-    <span class="marquee-item">Print Orders</span>
-    <span class="marquee-item">Fun Zone</span>
+<!-- STATS -->
+<div class="stats-ribbon">
+  <div class="stat-item">
+    <div class="stat-num">2s</div>
+    <div class="stat-lbl">Photo Delivery Time</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">15+</div>
+    <div class="stat-lbl">Platform Features</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">99%</div>
+    <div class="stat-lbl">Face Match Accuracy</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">₹3K</div>
+    <div class="stat-lbl">Starting Per Event</div>
   </div>
 </div>
 
-<!-- PROBLEM / SOLUTION -->
-<section id="features">
-  <div class="section-label">The Problem</div>
-  <h2 class="section-title reveal">
-    Photography has changed.<br>
-    <em>Delivery hasn't. Until now.</em>
-  </h2>
-  <p class="section-sub reveal">Wedding photographers spend hours manually sharing photos. Guests wait days. Everyone is frustrated. We fix all of that.</p>
+<!-- MARQUEE -->
+<div class="marquee-section">
+  <div class="marquee-track">
+    <span class="marquee-item">AI Face Recognition</span>
+    <span class="marquee-item">Digital Flip Album</span>
+    <span class="marquee-item">Virtual Exhibition</span>
+    <span class="marquee-item">AI Photo Beautification</span>
+    <span class="marquee-item">Highlight Reels</span>
+    <span class="marquee-item">Wedding Invitations</span>
+    <span class="marquee-item">Smart Album Designer</span>
+    <span class="marquee-item">WhatsApp Bot</span>
+    <span class="marquee-item">Print Orders</span>
+    <span class="marquee-item">Fun Zone Frames</span>
+    <span class="marquee-item">Beautiful QR Cards</span>
+    <span class="marquee-item">AI Face Recognition</span>
+    <span class="marquee-item">Digital Flip Album</span>
+    <span class="marquee-item">Virtual Exhibition</span>
+    <span class="marquee-item">AI Photo Beautification</span>
+    <span class="marquee-item">Highlight Reels</span>
+    <span class="marquee-item">Wedding Invitations</span>
+    <span class="marquee-item">Smart Album Designer</span>
+    <span class="marquee-item">WhatsApp Bot</span>
+    <span class="marquee-item">Print Orders</span>
+    <span class="marquee-item">Fun Zone Frames</span>
+    <span class="marquee-item">Beautiful QR Cards</span>
+  </div>
+</div>
 
-  <div class="problem-solution reveal">
-    <div class="ps-card ps-before">
-      <span class="ps-label">❌ Before PhotoFind Pro</span>
-      <span class="ps-icon">😩</span>
-      <h3 class="ps-heading">The Old Way Is Broken</h3>
-      <ul class="ps-list">
-        <li>Guests wait 2-7 days for photos</li>
-        <li>Manually searching through 1000+ photos</li>
-        <li>Google Drive links sent to everyone (messy!)</li>
-        <li>No way to find YOUR specific photos</li>
-        <li>Photographer overwhelmed with requests</li>
-        <li>No digital album, no exhibition, nothing</li>
-      </ul>
+<!-- AUDIENCE SWITCHER -->
+<section class="audience-section" id="for-guests">
+  <div class="section-label reveal" style="justify-content:center">✦ Built For Everyone</div>
+  <h2 class="section-title reveal" style="text-align:center;margin-bottom:40px">Who is it for?</h2>
+
+  <div class="audience-toggle">
+    <button class="aud-btn active" onclick="switchAudience('guests')">👰 For Guests</button>
+    <button class="aud-btn" onclick="switchAudience('photographers')">📸 For Photographers</button>
+  </div>
+
+  <!-- Guests -->
+  <div class="audience-content active" id="aud-guests">
+    <div class="aud-cards reveal">
+      <div class="aud-card">
+        <span class="aud-card-icon">📱</span>
+        <div class="aud-card-title">Scan QR at Venue</div>
+        <div class="aud-card-desc">QR code is placed at the venue by the photographer. Scan it with your phone — no app download needed!</div>
+        <a href="https://www.templecity.digital" class="aud-card-link">Try it now →</a>
+      </div>
+      <div class="aud-card">
+        <span class="aud-card-icon">🤳</span>
+        <div class="aud-card-title">Take a Selfie</div>
+        <div class="aud-card-desc">Just take a quick selfie. Our AI scans your face and finds every photo you appear in — even group photos!</div>
+        <a href="https://www.templecity.digital" class="aud-card-link">See demo →</a>
+      </div>
+      <div class="aud-card">
+        <span class="aud-card-icon">✨</span>
+        <div class="aud-card-title">Get All Your Photos</div>
+        <div class="aud-card-desc">In 2 seconds — your complete personal gallery. Download, beautify with AI, create reels, order prints and more!</div>
+        <a href="https://www.templecity.digital" class="aud-card-link">Get yours →</a>
+      </div>
     </div>
-    <div class="ps-card ps-after">
-      <span class="ps-label">✓ With PhotoFind Pro</span>
-      <span class="ps-icon">🚀</span>
-      <h3 class="ps-heading">Instant. Automated. Magical.</h3>
-      <ul class="ps-list">
-        <li>Guest scans face → gets photos in 2 seconds</li>
-        <li>AI finds every photo with their face automatically</li>
-        <li>Personal gallery delivered instantly</li>
-        <li>Group photos detected separately</li>
-        <li>Zero manual work for photographer</li>
-        <li>Digital album + exhibition + reels all included!</li>
-      </ul>
+  </div>
+
+  <!-- Photographers -->
+  <div class="audience-content" id="aud-photographers" id="for-photographers">
+    <div class="aud-cards reveal">
+      <div class="aud-card">
+        <span class="aud-card-icon">💳</span>
+        <div class="aud-card-title">Book Your Event</div>
+        <div class="aud-card-desc">Choose Basic, Advanced or Premium package. Pay online. Instantly get all event links on WhatsApp.</div>
+        <a href="https://www.templecity.digital/booking.html" class="aud-card-link">Book now →</a>
+      </div>
+      <div class="aud-card">
+        <span class="aud-card-icon">📤</span>
+        <div class="aud-card-title">Upload & Index Photos</div>
+        <div class="aud-card-desc">Upload all event photos via your upload link. Click ⚡ Index to enable instant face matching. Done in minutes!</div>
+        <a href="https://www.templecity.digital/dashboard.html" class="aud-card-link">Open dashboard →</a>
+      </div>
+      <div class="aud-card">
+        <span class="aud-card-icon">🎊</span>
+        <div class="aud-card-title">Share & Earn More</div>
+        <div class="aud-card-desc">Share beautiful QR card at venue. Guests get photos instantly. You get 5-star reviews and more clients!</div>
+        <a href="https://www.templecity.digital/qrcard.html" class="aud-card-link">See QR cards →</a>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- FEATURES -->
-<section style="padding-top:0">
-  <div class="section-label">Everything Included</div>
-  <h2 class="section-title reveal">More than just<br><em>photo delivery</em></h2>
-  <p class="section-sub reveal">A complete wedding technology platform — not just one feature, but everything your clients need.</p>
+<!-- FEATURES BENTO -->
+<section class="section" id="features">
+  <div class="section-label reveal">✦ Platform Features</div>
+  <h2 class="section-title reveal">Everything in<br><em>one platform</em></h2>
+  <p class="section-sub reveal">Not just photo delivery — a complete wedding technology suite that delights guests and elevates photographers.</p>
 
-  <div class="features-grid reveal">
-    <div class="feat-card">
-      <span class="feat-icon">🤳</span>
-      <div class="feat-name">AI Face Recognition</div>
-      <div class="feat-desc">Guests scan their face and instantly receive every photo they appear in. Solo + group photos detected separately.</div>
-      <span class="feat-tag tag-all">All Plans</span>
+  <div class="bento reveal">
+
+    <!-- Big feature -->
+    <a href="https://www.templecity.digital" class="bento-card bento-big" style="min-height:320px">
+      <div class="bento-card-glow" style="background:radial-gradient(circle,#D4A843,transparent)"></div>
+      <div>
+        <span class="bento-tag tag-core">Core Feature</span>
+        <span class="bento-icon">🤳</span>
+        <div class="bento-title">AI Face Recognition</div>
+        <div class="bento-desc">Guests scan their face → AI searches through all event photos → Delivers every matching photo in under 2 seconds. Solo + group photos detected separately. Works with 1000+ photos instantly.</div>
+        <div class="bento-link">Try live demo →</div>
+      </div>
+    </a>
+
+    <a href="https://www.templecity.digital/album.html" class="bento-card bento-narrow" style="min-height:320px">
+      <div class="bento-card-glow" style="background:radial-gradient(circle,#64A0FF,transparent)"></div>
+      <span class="bento-tag tag-adv">Advanced+</span>
+      <span class="bento-icon">📖</span>
+      <div class="bento-title">Digital Flip Book Album</div>
+      <div class="bento-desc">Cinematic page-flip animations, background music, multiple layouts. Share link with family worldwide.</div>
+      <div class="bento-link">View album demo →</div>
+    </a>
+
+    <a href="https://www.templecity.digital/exhibition.html" class="bento-card bento-third">
+      <div class="bento-card-glow" style="background:radial-gradient(circle,#9B89D4,transparent)"></div>
+      <span class="bento-tag tag-adv">Advanced+</span>
+      <span class="bento-icon">🏛️</span>
+      <div class="bento-title">Virtual Exhibition</div>
+      <div class="bento-desc">3D gallery walk-through with gold frames on virtual museum walls.</div>
+      <div class="bento-link">Explore →</div>
+    </a>
+
+    <a href="https://www.templecity.digital/funzone.html" class="bento-card bento-third">
+      <div class="bento-card-glow" style="background:radial-gradient(circle,#FF8C42,transparent)"></div>
+      <span class="bento-tag tag-core">All Plans</span>
+      <span class="bento-icon">🎉</span>
+      <div class="bento-title">Fun Zone</div>
+      <div class="bento-desc">Bollywood posters, magazine covers, royal portraits, award frames. Guests love it!</div>
+      <div class="bento-link">Try frames →</div>
+    </a>
+
+    <a href="https://www.templecity.digital/invite-creator.html" class="bento-card bento-third">
+      <div class="bento-card-glow" style="background:radial-gradient(circle,#FFB6C1,transparent)"></div>
+      <span class="bento-tag tag-core">All Plans</span>
+      <span class="bento-icon">💌</span>
+      <div class="bento-title">Digital Invitations</div>
+      <div class="bento-desc">10 stunning templates. Countdown, RSVP, Maps. BGM included.</div>
+      <div class="bento-link">Create invite →</div>
+    </a>
+
+    <a href="https://www.templecity.digital/qrcard.html" class="bento-card bento-half">
+      <div class="bento-card-glow" style="background:radial-gradient(circle,#D4A843,transparent)"></div>
+      <span class="bento-tag tag-core">All Plans</span>
+      <span class="bento-icon">◈</span>
+      <div class="bento-title">Beautiful QR Cards</div>
+      <div class="bento-desc">6 stunning templates — floral, royal dark, traditional, night sky and more. Download as PNG. Print & place at venue. Guests scan to find photos instantly.</div>
+      <div class="bento-link">Design QR card →</div>
+    </a>
+
+    <div class="bento-card bento-half">
+      <div class="bento-card-glow" style="background:radial-gradient(circle,#5DD68A,transparent)"></div>
+      <span class="bento-tag tag-new">Coming Soon</span>
+      <span class="bento-icon">💬</span>
+      <div class="bento-title">WhatsApp Bot</div>
+      <div class="bento-desc">Guest sends "Hi" on WhatsApp → uploads selfie → receives all photos directly in chat. No browser needed. Pure magic.</div>
     </div>
-    <div class="feat-card">
-      <span class="feat-icon">📖</span>
-      <div class="feat-name">Digital Flip Book Album</div>
-      <div class="feat-desc">Beautiful cinematic album with page-flip animations, background music and multiple layouts. Share with family anywhere.</div>
-      <span class="feat-tag tag-adv">Advanced+</span>
-    </div>
-    <div class="feat-card">
-      <span class="feat-icon">🏛️</span>
-      <div class="feat-name">Virtual Exhibition</div>
-      <div class="feat-desc">Full 3D gallery walk-through. Photos displayed in gold frames on virtual museum walls. 4 beautiful themes.</div>
-      <span class="feat-tag tag-adv">Advanced+</span>
-    </div>
-    <div class="feat-card">
-      <span class="feat-icon">✨</span>
-      <div class="feat-name">AI Photo Beautification</div>
-      <div class="feat-desc">5 AI styles — Wedding, Glamour, Cinematic, Vibrant, Soft. Before/after comparison. Download enhanced photos instantly.</div>
-      <span class="feat-tag tag-all">All Plans</span>
-    </div>
-    <div class="feat-card">
-      <span class="feat-icon">🎬</span>
-      <div class="feat-name">AI Highlight Reels</div>
-      <div class="feat-desc">AI selects the best moments, applies cinematic color grading, adds background music. Personal + full event reels.</div>
-      <span class="feat-tag tag-all">All Plans</span>
-    </div>
-    <div class="feat-card">
-      <span class="feat-icon">💌</span>
-      <div class="feat-name">Digital Wedding Invitations</div>
-      <div class="feat-desc">10 beautiful templates — floral, royal, traditional, modern and more. Countdown timer, RSVP, Google Maps. BGM included.</div>
-      <span class="feat-tag tag-all">All Plans</span>
-    </div>
-    <div class="feat-card">
-      <span class="feat-icon">🎨</span>
-      <div class="feat-name">Smart Album Designer</div>
-      <div class="feat-desc">Auto-generates print-ready albums from event photos. 8 layouts, 6 themes, 5 page sizes. Export as PDF or JPEG.</div>
-      <span class="feat-tag tag-prem">Premium</span>
-    </div>
-    <div class="feat-card">
-      <span class="feat-icon">🎉</span>
-      <div class="feat-name">Fun Zone</div>
-      <div class="feat-desc">Bollywood poster, magazine cover, royal portrait, award show frames. Plus "Photo with couple" composite feature!</div>
-      <span class="feat-tag tag-all">All Plans</span>
-    </div>
-    <div class="feat-card">
-      <span class="feat-icon">🖨️</span>
-      <div class="feat-name">Print Order System</div>
-      <div class="feat-desc">Guests select photos, choose sizes (4×6 to Canvas), enter delivery address. Order sent to photographer via WhatsApp.</div>
-      <span class="feat-tag tag-all">All Plans</span>
-    </div>
+
+  </div>
+</section>
+
+<!-- FEATURE PREVIEWS -->
+<section class="preview-section">
+  <div class="preview-grid reveal">
+
+    <a href="https://www.templecity.digital/exhibition.html" class="preview-card">
+      <div class="preview-bg" style="background:linear-gradient(135deg,#1A0A1A,#0A0818,#1A1A0A)"></div>
+      <div class="preview-overlay"></div>
+      <div class="preview-content">
+        <span class="preview-tag">Virtual Exhibition</span>
+        <div class="preview-title">Walk Through Your Wedding</div>
+        <div class="preview-desc">3D museum-style gallery with gold frames, spotlight effects and 4 stunning themes.</div>
+        <div class="preview-cta">Open Exhibition →</div>
+      </div>
+    </a>
+
+    <a href="https://www.templecity.digital/invite-creator.html" class="preview-card">
+      <div class="preview-bg" style="background:linear-gradient(135deg,#1A0808,#2A1400,#0A1808)"></div>
+      <div class="preview-overlay"></div>
+      <div class="preview-content">
+        <span class="preview-tag">Digital Invitations</span>
+        <div class="preview-title">Invitations That Wow</div>
+        <div class="preview-desc">10 templates from floral pink to royal dark gold. Countdown timer, BGM, RSVP and Maps.</div>
+        <div class="preview-cta">Create Invite →</div>
+      </div>
+    </a>
+
+    <a href="https://www.templecity.digital/funzone.html" class="preview-card">
+      <div class="preview-bg" style="background:linear-gradient(135deg,#1A0A00,#2A1000,#0A1A0A)"></div>
+      <div class="preview-overlay"></div>
+      <div class="preview-content">
+        <span class="preview-tag">Fun Zone</span>
+        <div class="preview-title">Become the Star</div>
+        <div class="preview-desc">Bollywood posters, magazine covers, royal portraits. Guests go viral sharing these!</div>
+        <div class="preview-cta">Try Fun Zone →</div>
+      </div>
+    </a>
+
+    <a href="https://www.templecity.digital/qrcard.html" class="preview-card">
+      <div class="preview-bg" style="background:linear-gradient(135deg,#1A1200,#2A1A00,#0A1A14)"></div>
+      <div class="preview-overlay"></div>
+      <div class="preview-content">
+        <span class="preview-tag">QR Card Designer</span>
+        <div class="preview-title">QR Cards Worth Framing</div>
+        <div class="preview-desc">Floral, royal dark, traditional and more. Download as PNG and print at any shop.</div>
+        <div class="preview-cta">Design Card →</div>
+      </div>
+    </a>
+
   </div>
 </section>
 
 <!-- HOW IT WORKS -->
-<section id="how">
-  <div class="section-label">The Process</div>
-  <h2 class="section-title reveal">Dead simple.<br><em>Insanely powerful.</em></h2>
-  <p class="section-sub reveal">Set up once before the event. Everything else is automatic.</p>
+<section class="how-section" id="how">
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="how-grid">
+      <div>
+        <div class="section-label reveal">✦ The Process</div>
+        <h2 class="section-title reveal">Simple for guests.<br><em>Powerful for photographers.</em></h2>
 
-  <div class="steps-wrap reveal">
-    <div class="step-card">
-      <div class="step-num">01</div>
-      <span class="step-icon">💳</span>
-      <div class="step-title">Book Your Event</div>
-      <div class="step-desc">Choose Basic, Advanced or Premium plan. Pay online. Get all links instantly on WhatsApp.</div>
-    </div>
-    <div class="step-card">
-      <div class="step-num">02</div>
-      <span class="step-icon">📸</span>
-      <div class="step-title">Upload Photos</div>
-      <div class="step-desc">Upload event photos via our upload portal or directly to Google Drive folder.</div>
-    </div>
-    <div class="step-card">
-      <div class="step-num">03</div>
-      <span class="step-icon">⚡</span>
-      <div class="step-title">Index Faces</div>
-      <div class="step-desc">Click one button to index all faces. AI processes everything in 2-3 minutes.</div>
-    </div>
-    <div class="step-card">
-      <div class="step-num">04</div>
-      <span class="step-icon">🎊</span>
-      <div class="step-title">Guests Get Photos</div>
-      <div class="step-desc">Share QR code at venue. Guests scan face → get photos in 2 seconds. Zero effort!</div>
+        <div class="how-steps reveal">
+          <div class="how-step">
+            <div class="how-step-num">01</div>
+            <div class="how-step-content">
+              <div class="how-step-title">Photographer Books Event</div>
+              <div class="how-step-desc">Choose a package, pay online, receive all event links via WhatsApp instantly. Upload photos via the secure upload link.</div>
+            </div>
+          </div>
+          <div class="how-step">
+            <div class="how-step-num">02</div>
+            <div class="how-step-content">
+              <div class="how-step-title">Index Faces in 2 Minutes</div>
+              <div class="how-step-desc">Click ⚡ Index on the dashboard. AI pre-processes all faces so guest search takes 1-2 seconds instead of 30.</div>
+            </div>
+          </div>
+          <div class="how-step">
+            <div class="how-step-num">03</div>
+            <div class="how-step-content">
+              <div class="how-step-title">Place QR Card at Venue</div>
+              <div class="how-step-desc">Download a beautiful floral QR card from the QR Card Designer. Print it and place at venue entrance or tables.</div>
+            </div>
+          </div>
+          <div class="how-step">
+            <div class="how-step-num">04</div>
+            <div class="how-step-content">
+              <div class="how-step-title">Guests Scan & Get Photos</div>
+              <div class="how-step-desc">Guests scan QR, take a selfie, get all their photos in 2 seconds. They can beautify, create reels, order prints and more!</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="how-visual reveal reveal-delay-2">
+        <div class="how-phone">
+          <div class="how-screen">
+            <div class="how-screen-header">
+              <div class="how-screen-brand">Photo<em>Find</em> Pro</div>
+              <div class="how-screen-sub">AI-Powered Photo Delivery</div>
+            </div>
+            <div class="how-screen-body">
+              <div class="how-screen-step">
+                <span class="how-screen-step-icon">📱</span>
+                <div class="how-screen-step-text">
+                  <strong>Step 1 — Select Event</strong>
+                  Choose your wedding event from the list
+                </div>
+              </div>
+              <div class="how-screen-step">
+                <span class="how-screen-step-icon">🤳</span>
+                <div class="how-screen-step-text">
+                  <strong>Step 2 — Take Selfie</strong>
+                  AI scans your face from all event photos
+                </div>
+              </div>
+              <div class="how-screen-step">
+                <span class="how-screen-step-icon">✨</span>
+                <div class="how-screen-step-text">
+                  <strong>Step 3 — Get Photos</strong>
+                  3 solo + 0 group photos found in 2s
+                </div>
+              </div>
+              <div class="how-screen-step" style="border-color:rgba(212,168,67,0.3);background:rgba(212,168,67,0.06)">
+                <span class="how-screen-step-icon">🎬</span>
+                <div class="how-screen-step-text">
+                  <strong>Bonus — Personal Reel</strong>
+                  AI creates highlight reel with BGM!
+                </div>
+              </div>
+              <div class="how-scan-btn">📸 Find My Photos</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
 <!-- PRICING -->
-<section id="pricing">
-  <div class="section-label">Simple Pricing</div>
-  <h2 class="section-title reveal">One price.<br><em>No surprises.</em></h2>
-  <p class="section-sub reveal">Per-event pricing. No monthly fees. No hidden costs. Pay only when you have an event.</p>
+<section class="pricing-section" id="pricing">
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="section-label reveal">✦ Simple Pricing</div>
+    <h2 class="section-title reveal">One price.<br><em>No surprises.</em></h2>
+    <p class="section-sub reveal">Per-event pricing. No monthly fees. No hidden costs. Pay only when you have an event.</p>
 
-  <div class="pricing-grid reveal">
-    <div class="price-card">
-      <div class="price-eyebrow">For every event</div>
-      <div class="price-name">Basic</div>
-      <div class="price-amount">₹3,000</div>
-      <div class="price-per">per event · 45 days access</div>
-      <div class="price-divider"></div>
-      <ul class="price-features">
-        <li>AI Face Recognition</li>
-        <li>Solo + Group Photos</li>
-        <li>Duplicate Detection</li>
-        <li>Instagram Reels + BGM</li>
-        <li>AI Photo Beautification</li>
-        <li>Fun Zone + Face Frames</li>
-        <li>Print Order System</li>
-        <li>Beautiful QR Cards</li>
-        <li>Digital Wedding Invitation</li>
-        <li>Unlimited Photos</li>
-      </ul>
-      <a href="https://www.templecity.digital/booking.html" class="price-btn price-btn-ghost">Get Started</a>
-    </div>
-
-    <div class="price-card featured">
-      <div class="price-eyebrow">Best value</div>
-      <div class="price-name">Advanced</div>
-      <div class="price-amount">₹5,000</div>
-      <div class="price-per">per event · 90 days access</div>
-      <div class="price-divider"></div>
-      <ul class="price-features">
-        <li>Everything in Basic</li>
-        <li>AI Photo Enhancement</li>
-        <li>Cinematic Color Grading</li>
-        <li>Digital Flip Book Album</li>
-        <li>Final Video Delivery Page</li>
-        <li>Virtual Exhibition</li>
-        <li>AI Highlight Reel Upgrade</li>
-      </ul>
-      <a href="https://www.templecity.digital/booking.html" class="price-btn price-btn-gold">Get Started →</a>
-    </div>
-
-    <div class="price-card">
-      <div class="price-eyebrow">Complete platform</div>
-      <div class="price-name">Premium</div>
-      <div class="price-amount">₹8,000</div>
-      <div class="price-per">per event · 180 days access</div>
-      <div class="price-divider"></div>
-      <ul class="price-features">
-        <li>Everything in Advanced</li>
-        <li>Best Photo AI Selection</li>
-        <li>Smart Album Designer</li>
-        <li>Print-Ready PDF Export</li>
-        <li>180 Days Access</li>
-        <li>Priority Support</li>
-      </ul>
-      <a href="https://www.templecity.digital/booking.html" class="price-btn price-btn-ghost">Get Started</a>
-    </div>
-  </div>
-</section>
-
-<!-- TESTIMONIALS -->
-<section id="testimonials">
-  <div class="section-label">What Photographers Say</div>
-  <h2 class="section-title reveal">Real results.<br><em>Real photographers.</em></h2>
-
-  <div class="testimonials-grid reveal">
-    <div class="testimonial-card">
-      <div class="t-stars">★★★★★</div>
-      <div class="t-text">"Guests were shocked when they got their photos within 2 seconds of scanning. I've never seen anything like this. My clients loved it!"</div>
-      <div class="t-author">
-        <div class="t-avatar">R</div>
-        <div>
-          <div class="t-name">Rahul Photography</div>
-          <div class="t-role">Wedding Photographer · Bhubaneswar</div>
-        </div>
+    <div class="pricing-grid reveal" style="grid-template-columns:1fr 1fr;max-width:800px;margin:0 auto">
+      <div class="price-card">
+        <div class="price-plan">Basic Plan</div>
+        <div class="price-name">Essential</div>
+        <div class="price-amount">₹3,000</div>
+        <div class="price-period">per event · 45 days · 1 Event</div>
+        <div class="price-divider"></div>
+        <ul class="price-features">
+          <li>AI Face Recognition</li>
+          <li>Solo + Group Photos</li>
+          <li>Unlimited Guest Scans</li>
+          <li>QR Card Designer</li>
+          <li>Digital Flip Book Album</li>
+          <li>AI Photo Beautification</li>
+          <li>Virtual Exhibition</li>
+          <li>Fun Zone + Frames</li>
+          <li>Print Order System</li>
+          <li>Digital Invitations</li>
+          <li>Google Drive Storage</li>
+          <li>WhatsApp Support</li>
+        </ul>
+        <a href="https://www.templecity.digital/booking.html" class="price-btn price-btn-ghost">Get Started</a>
       </div>
-    </div>
-    <div class="testimonial-card">
-      <div class="t-stars">★★★★★</div>
-      <div class="t-text">"The digital album and virtual exhibition impressed the couple so much they referred 3 more clients to me. This platform paid for itself 10x over."</div>
-      <div class="t-author">
-        <div class="t-avatar">P</div>
-        <div>
-          <div class="t-name">Pixel Perfect Studio</div>
-          <div class="t-role">Event Photographer · Cuttack</div>
-        </div>
-      </div>
-    </div>
-    <div class="testimonial-card">
-      <div class="t-stars">★★★★★</div>
-      <div class="t-text">"The Fun Zone feature became the most popular thing at the wedding! Guests were making Bollywood posters all night. Amazing platform."</div>
-      <div class="t-author">
-        <div class="t-avatar">S</div>
-        <div>
-          <div class="t-name">Studio Memories</div>
-          <div class="t-role">Wedding Photographer · Puri</div>
-        </div>
+
+      <div class="price-card featured">
+        <div class="price-plan">Premium Plan</div>
+        <div class="price-name">Professional</div>
+        <div class="price-amount">₹5,000</div>
+        <div class="price-period">per event · 90 days · 3 Events</div>
+        <div class="price-divider"></div>
+        <ul class="price-features">
+          <li>Everything in Basic</li>
+          <li>AI Cinematic Color Grading</li>
+          <li>Album Designer (PDF)</li>
+          <li>Wedding Website Builder</li>
+          <li>RSVP Tracking System</li>
+          <li>Smart AI Photo Selection</li>
+          <li>Custom Branding</li>
+          <li>Analytics Dashboard</li>
+          <li>Priority Support</li>
+        </ul>
+        <a href="https://www.templecity.digital/booking.html" class="price-btn price-btn-gold">Book Now →</a>
       </div>
     </div>
   </div>
 </section>
 
 <!-- CTA -->
-<div class="cta-section">
+<section class="cta-section">
+  <span class="cta-eyebrow">Ready to begin?</span>
   <h2 class="cta-title">
-    READY TO<br>
-    <em>TRANSFORM</em><br>
-    YOUR STUDIO?
+    MAKE EVERY
+    <em>WEDDING</em>
+    UNFORGETTABLE
   </h2>
   <p class="cta-sub">Join photographers across India who are delivering a better experience and earning more.</p>
   <div class="cta-btns">
-    <a href="https://www.templecity.digital/booking.html" class="btn-primary" style="font-size:16px;padding:16px 40px">Book Your First Event →</a>
-    <a href="https://wa.me/918895195862?text=Hi!%20I%20want%20to%20know%20more%20about%20PhotoFind%20Pro" class="cta-wa">
-      💬 Chat on WhatsApp
-    </a>
+    <a href="https://www.templecity.digital/booking.html" class="btn-hero-primary" style="font-size:16px;padding:17px 44px">Book Your First Event →</a>
+    <a href="https://wa.me/918895195862?text=Hi!%20I%20want%20to%20know%20more%20about%20PhotoFind%20Pro" class="btn-wa">💬 Chat on WhatsApp</a>
   </div>
-</div>
+</section>
 
 <!-- FOOTER -->
 <footer>
   <div class="footer-logo">Photo<em>Find</em> Pro · Temple City Digital</div>
   <div class="footer-links">
     <a href="https://www.templecity.digital">Guest App</a>
-    <a href="https://www.templecity.digital/booking.html">Book Now</a>
+    <a href="https://www.templecity.digital/booking.html">Book Event</a>
     <a href="https://www.templecity.digital/dashboard.html">Dashboard</a>
+    <a href="https://www.templecity.digital/invite-creator.html">Invitations</a>
+    <a href="https://www.templecity.digital/exhibition.html">Exhibition</a>
+    <a href="https://www.templecity.digital/funzone.html">Fun Zone</a>
+    <a href="https://www.templecity.digital/qrcard.html">QR Cards</a>
     <a href="https://wa.me/918895195862">WhatsApp</a>
   </div>
   <div class="footer-copy">© 2026 Temple City Digital · Bhubaneswar, Odisha</div>
@@ -913,21 +731,59 @@ footer{
 <a href="https://wa.me/918895195862?text=Hi!%20I%20want%20to%20know%20more%20about%20PhotoFind%20Pro" class="float-wa" target="_blank">💬</a>
 
 <script>
+// Custom cursor
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX - 4 + 'px';
+  cursor.style.top = e.clientY - 4 + 'px';
+  ring.style.left = e.clientX - 16 + 'px';
+  ring.style.top = e.clientY - 16 + 'px';
+});
+document.querySelectorAll('a,button').forEach(el => {
+  el.addEventListener('mouseenter', () => { ring.style.transform = 'scale(1.6)'; cursor.style.transform = 'scale(0.6)'; });
+  el.addEventListener('mouseleave', () => { ring.style.transform = 'scale(1)'; cursor.style.transform = 'scale(1)'; });
+});
+
+// Nav scroll
+window.addEventListener('scroll', () => {
+  document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 60);
+});
+
+// Audience switcher
+function switchAudience(type) {
+  document.querySelectorAll('.aud-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.audience-content').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('aud-' + type).classList.add('active');
+}
+
 // Scroll reveal
-const reveals = document.querySelectorAll('.reveal');
 const observer = new IntersectionObserver(entries => {
   entries.forEach((entry, i) => {
     if (entry.isIntersecting) {
-      setTimeout(() => entry.target.classList.add('visible'), i * 80);
+      setTimeout(() => entry.target.classList.add('visible'), i * 60);
     }
   });
-}, { threshold: 0.1 });
-reveals.forEach(el => observer.observe(el));
+}, { threshold: 0.08 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-// Nav scroll effect
-window.addEventListener('scroll', () => {
-  document.querySelector('nav').style.boxShadow =
-    window.scrollY > 50 ? '0 4px 30px rgba(0,0,0,0.3)' : 'none';
+// Number counter animation
+function animateNumber(el, target, suffix = '') {
+  let current = 0;
+  const step = target / 40;
+  const timer = setInterval(() => {
+    current = Math.min(current + step, target);
+    el.textContent = Math.floor(current) + suffix;
+    if (current >= target) clearInterval(timer);
+  }, 40);
+}
+const statsObserver = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      statsObserver.unobserve(entry.target);
+    }
+  });
 });
 </script>
 </body>

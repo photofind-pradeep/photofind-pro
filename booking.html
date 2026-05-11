@@ -122,50 +122,40 @@ select option{background:#151820}
     </div>
 
     <!-- PACKAGES -->
-    <div class="packages">
+    <div class="packages" style="grid-template-columns:1fr 1fr;max-width:600px;margin:0 auto 24px">
       <div class="pkg" id="pkg-basic" onclick="selectPackage('basic')" style="border-color:var(--gold);background:var(--gold-dim)">
         <div class="pkg-name">Basic</div>
         <div class="pkg-price">₹3,000 <span>/event</span></div>
         <div class="pkg-features">
           ✓ AI Face Recognition<br>
           ✓ Solo + Group Photos<br>
-          ✓ Instagram Reels + BGM<br>
-          ✓ Duplicate Detection<br>
-          ✓ Multi Photographer<br>
-          ✓ Face Swap + Fun Zone<br>
-          ✓ Print Order<br>
-          ✓ WhatsApp Bot<br>
-          ✓ Unlimited photos<br>
-          ✓ 45 days access
+          ✓ Unlimited Guest Scans<br>
+          ✓ QR Card Designer<br>
+          ✓ Digital Flip Book Album<br>
+          ✓ AI Photo Beautification<br>
+          ✓ Virtual Exhibition<br>
+          ✓ Fun Zone Frames<br>
+          ✓ Print Order System<br>
+          ✓ Digital Invitations<br>
+          ✓ Google Drive Storage<br>
+          ✓ 45 days access · 1 Event
         </div>
       </div>
       <div class="pkg" id="pkg-advanced" onclick="selectPackage('advanced')" style="position:relative">
         <div class="pkg-popular">POPULAR</div>
-        <div class="pkg-name">Advanced</div>
+        <div class="pkg-name">Premium</div>
         <div class="pkg-price">₹5,000 <span>/event</span></div>
         <div class="pkg-features">
           ✓ Everything in Basic<br>
-          ✓ AI Photo Enhancement<br>
-          ✓ Cinematic Color Grade<br>
-          ✓ Digital Flip Book Album<br>
-          ✓ Final Video Delivery<br>
-          ✓ Virtual Exhibition<br>
-          ✓ 90 days access
-        </div>
-      </div>
-      <div class="pkg" id="pkg-premium" onclick="selectPackage('premium')" style="position:relative">
-        <div class="pkg-popular" style="background:linear-gradient(135deg,#9B89D4,#6B4DA4);color:white">✨ PREMIUM</div>
-        <div class="pkg-name">Premium</div>
-        <div class="pkg-price">₹8,000 <span>/event</span></div>
-        <div class="pkg-features">
-          ✓ Everything in Advanced<br>
-          ✓ Best Photo AI Selection<br>
-          ✓ <strong style="color:var(--gold)">Smart Album Designer</strong><br>
-          &nbsp;&nbsp;→ Auto layout engine<br>
-          &nbsp;&nbsp;→ 20+ print templates<br>
-          &nbsp;&nbsp;→ Export PDF/JPEG<br>
-          &nbsp;&nbsp;→ Print-ready output<br>
-          ✓ 180 days access
+          ✓ AI Cinematic Color Grade<br>
+          ✓ Album Designer (PDF)<br>
+          ✓ Wedding Website Builder<br>
+          ✓ RSVP Tracking System<br>
+          ✓ Smart AI Photo Selection<br>
+          ✓ Custom Branding<br>
+          ✓ Analytics Dashboard<br>
+          ✓ Priority Support<br>
+          ✓ 90 days access · 3 Events
         </div>
       </div>
     </div>
@@ -298,7 +288,7 @@ let bookingData = null;
 let appliedCoupon = null;
 
 const prices = { basic: 3000, advanced: 5000 };
-const pkgNames = { basic: 'Basic', advanced: 'Advanced', premium: 'Premium' };
+const pkgNames = { basic: 'Basic', advanced: 'Premium' };
 
 function selectPackage(pkg) {
   selectedPkg = pkg;
