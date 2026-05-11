@@ -159,33 +159,55 @@ nav.solid{background:rgba(245,240,232,0.95);backdrop-filter:blur(20px);border-bo
 .pg-grid.list-view{grid-template-columns:1fr}
 
 /* ── PHOTOGRAPHER CARD ── */
-.ph-card{border-radius:4px;overflow:hidden;background:white;border:0.5px solid var(--border);transition:all 0.35s;cursor:none;position:relative;display:flex;flex-direction:column}
-.ph-card:hover{transform:translateY(-6px);box-shadow:0 24px 60px rgba(26,18,8,0.12);border-color:var(--border2)}
+.ph-card{border-radius:16px;overflow:hidden;background:white;border:0.5px solid var(--border);transition:all 0.35s;cursor:none;position:relative;display:flex;flex-direction:column;box-shadow:0 2px 12px rgba(26,18,8,0.06)}
+.ph-card:hover{transform:translateY(-6px);box-shadow:0 24px 48px rgba(26,18,8,0.12);border-color:var(--border2)}
 
 /* Card portfolio strip */
-.card-portfolio{height:200px;position:relative;overflow:hidden;background:var(--ink)}
+.card-portfolio{height:200px;position:relative;overflow:hidden}
 .cp-grid{display:grid;grid-template-columns:2fr 1fr;height:100%;gap:2px}
 .cp-main{overflow:hidden;position:relative}
 .cp-side{display:grid;grid-template-rows:1fr 1fr;gap:2px}
-.cp-cell{overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:22px;transition:transform 0.4s ease}
-.ph-card:hover .cp-cell{transform:scale(1.06)}
-.cp-overlay{position:absolute;inset:0;background:linear-gradient(0deg,rgba(10,8,6,0.7) 0%,rgba(10,8,6,0.1) 50%,transparent 100%)}
+.cp-cell{overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:32px;transition:transform 0.5s ease;position:relative}
+.ph-card:hover .cp-cell{transform:scale(1.08)}
+
+/* Beautiful gradient backgrounds per specialty */
+.cp-wedding-main{background:linear-gradient(160deg,#F5E6D5,#E8C9A0,#D4A07A)}
+.cp-wedding-1{background:linear-gradient(160deg,#FDF0E8,#F0D5B8)}
+.cp-wedding-2{background:linear-gradient(160deg,#E8D5C0,#D4B896)}
+.cp-candid-main{background:linear-gradient(160deg,#E8F0F5,#C8DCE8,#A8C4D4)}
+.cp-candid-1{background:linear-gradient(160deg,#F0F5F8,#D8ECF4)}
+.cp-candid-2{background:linear-gradient(160deg,#D4E8F0,#B8D4E4)}
+.cp-traditional-main{background:linear-gradient(160deg,#F5E8D8,#E0C090,#C8983C)}
+.cp-traditional-1{background:linear-gradient(160deg,#FDF5E8,#F0D8A0)}
+.cp-traditional-2{background:linear-gradient(160deg,#E8D098,#D4B870)}
+.cp-prewedding-main{background:linear-gradient(160deg,#F0E8F5,#D8C0E8,#B890D0)}
+.cp-prewedding-1{background:linear-gradient(160deg,#F8F0FC,#E8D0F4)}
+.cp-prewedding-2{background:linear-gradient(160deg,#E0C8F0,#C8A0E0)}
+.cp-default-main{background:linear-gradient(160deg,#F0EDE8,#D8CFC0,#C0B098)}
+.cp-default-1{background:linear-gradient(160deg,#F5F2EC,#E4DAC8)}
+.cp-default-2{background:linear-gradient(160deg,#DDD4C0,#C8BC98)}
+
+/* Decorative pattern overlay */
+.cp-cell::after{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 30% 30%,rgba(255,255,255,0.3) 0%,transparent 60%);pointer-events:none}
+.cp-cell::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.1) 0%,transparent 50%,rgba(0,0,0,0.05) 100%);pointer-events:none}
+
+.cp-overlay{position:absolute;inset:0;background:linear-gradient(0deg,rgba(26,18,8,0.5) 0%,rgba(26,18,8,0.1) 40%,transparent 70%)}
 
 /* Card badges */
-.card-badges{position:absolute;top:12px;left:12px;display:flex;gap:5px;z-index:2}
-.cbadge{padding:3px 9px;border-radius:2px;font-size:8px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase}
-.cbadge-feat{background:var(--gold);color:white}
-.cbadge-new{background:var(--ink);color:var(--gold2);border:0.5px solid rgba(201,150,60,0.3)}
-.cbadge-ver{background:rgba(26,107,60,0.9);color:#7DEB9A}
+.card-badges{position:absolute;top:10px;left:10px;display:flex;gap:4px;z-index:2}
+.cbadge{padding:3px 8px;border-radius:20px;font-size:8px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;backdrop-filter:blur(8px)}
+.cbadge-feat{background:rgba(201,150,60,0.9);color:white;border:0.5px solid rgba(255,255,255,0.3)}
+.cbadge-new{background:rgba(26,18,8,0.7);color:var(--gold2);border:0.5px solid rgba(201,150,60,0.3)}
+.cbadge-ver{background:rgba(26,107,60,0.85);color:#7DEB9A;border:0.5px solid rgba(93,214,138,0.3)}
 
 /* Card service pills on portfolio */
 .card-services-preview{position:absolute;bottom:10px;left:10px;right:10px;display:flex;gap:4px;flex-wrap:wrap;z-index:2}
-.csp{padding:2px 8px;border-radius:20px;font-size:8px;font-weight:700;background:rgba(10,8,6,0.7);color:rgba(255,255,255,0.8);border:0.5px solid rgba(255,255,255,0.1);backdrop-filter:blur(4px);letter-spacing:0.04em}
+.csp{padding:3px 8px;border-radius:20px;font-size:8px;font-weight:700;background:rgba(255,255,255,0.85);color:var(--text);border:0.5px solid rgba(255,255,255,0.5);backdrop-filter:blur(4px);letter-spacing:0.03em}
 
 /* Card body */
 .card-body{padding:16px;flex:1;display:flex;flex-direction:column}
 .card-header{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
-.card-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--ink2),var(--ink3));display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold);flex-shrink:0;border:1.5px solid var(--border2)}
+.card-avatar{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--ink2),var(--ink3));display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold);flex-shrink:0;border:1.5px solid var(--border2)}
 .card-name{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:var(--text);margin-bottom:1px;line-height:1.1}
 .card-studio{font-size:10px;color:var(--muted2);letter-spacing:0.04em}
 .card-loc{font-size:10px;color:var(--gold);display:flex;align-items:center;gap:3px;margin-top:2px;font-weight:600}
@@ -197,11 +219,11 @@ nav.solid{background:rgba(245,240,232,0.95);backdrop-filter:blur(20px);border-bo
 .star.empty{color:var(--cream3)}
 .rating-num{font-size:12px;font-weight:700;color:var(--text)}
 .review-count{font-size:10px;color:var(--muted2)}
-.exp-badge{margin-left:auto;font-size:9px;color:var(--muted2);background:var(--cream2);border-radius:2px;padding:2px 7px;font-weight:600}
+.exp-badge{margin-left:auto;font-size:9px;color:var(--muted2);background:var(--cream2);border-radius:20px;padding:2px 8px;font-weight:600}
 
 /* Specialties */
 .card-specs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px}
-.spec-tag{padding:3px 8px;border-radius:2px;font-size:9px;font-weight:600;background:var(--cream);border:0.5px solid var(--border);color:var(--muted);letter-spacing:0.04em}
+.spec-tag{padding:3px 8px;border-radius:20px;font-size:9px;font-weight:600;background:var(--cream);border:0.5px solid var(--border);color:var(--muted);letter-spacing:0.03em}
 .spec-tag.highlight{border-color:var(--gold);background:var(--gold-dim);color:var(--gold)}
 
 /* Price + actions */
@@ -210,9 +232,8 @@ nav.solid{background:rgba(245,240,232,0.95);backdrop-filter:blur(20px);border-bo
 .cp-label{font-size:8px;text-transform:uppercase;letter-spacing:0.15em;color:var(--muted2);font-weight:700}
 .cp-amount{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--gold);line-height:1}
 .cp-per{font-size:9px;color:var(--muted2)}
-
 .card-actions{display:flex;gap:6px}
-.ca-btn{padding:8px 14px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;cursor:none;transition:all 0.2s;border:none;letter-spacing:0.05em}
+.ca-btn{padding:8px 14px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;cursor:none;transition:all 0.2s;border:none;letter-spacing:0.05em}
 .ca-btn:active{transform:scale(0.97)}
 .ca-inquiry{background:var(--gold);color:white}
 .ca-inquiry:hover{background:var(--gold2)}
@@ -223,7 +244,7 @@ nav.solid{background:rgba(245,240,232,0.95);backdrop-filter:blur(20px);border-bo
 .ph-card-featured{grid-column:span 2;display:grid;grid-template-columns:1fr 1fr;border-radius:4px;overflow:hidden;background:white;border:0.5px solid var(--border2);transition:all 0.35s;cursor:none}
 .ph-card-featured:hover{transform:translateY(-4px);box-shadow:0 24px 60px rgba(26,18,8,0.12)}
 .feat-portfolio{position:relative;overflow:hidden;min-height:280px}
-.feat-portfolio-bg{position:absolute;inset:0;background:var(--ink);display:flex;align-items:center;justify-content:center;font-size:60px;transition:transform 0.5s ease}
+.feat-portfolio-bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:80px;transition:transform 0.5s ease}
 .ph-card-featured:hover .feat-portfolio-bg{transform:scale(1.04)}
 .feat-overlay{position:absolute;inset:0;background:linear-gradient(90deg,transparent 40%,rgba(255,255,255,0.03) 100%),linear-gradient(0deg,rgba(10,8,6,0.8),rgba(10,8,6,0.2) 50%,transparent)}
 .feat-info{padding:28px;display:flex;flex-direction:column;justify-content:space-between}
@@ -849,10 +870,20 @@ function render(){
     const isFeat=p.featured&&i===0&&sortMode==='featured';
     const hl=activeSvc&&(p.specialties||[]).includes(activeSvc);
 
+    // Get gradient class based on specialty
+    const getGradient = (specialties, idx) => {
+      const s = (specialties||[])[0] || '';
+      if(s.includes('Wedding') || s.includes('Reception')) return idx===0?'cp-wedding-main':idx===1?'cp-wedding-1':'cp-wedding-2';
+      if(s.includes('Candid')) return idx===0?'cp-candid-main':idx===1?'cp-candid-1':'cp-candid-2';
+      if(s.includes('Traditional')) return idx===0?'cp-traditional-main':idx===1?'cp-traditional-1':'cp-traditional-2';
+      if(s.includes('Pre-Wedding')) return idx===0?'cp-prewedding-main':idx===1?'cp-prewedding-1':'cp-prewedding-2';
+      return idx===0?'cp-default-main':idx===1?'cp-default-1':'cp-default-2';
+    };
+
     if(isFeat){
       html+=`<div class="ph-card-featured reveal">
         <div class="feat-portfolio">
-          <div class="feat-portfolio-bg">${p.photos?.[0]||'📸'}</div>
+          <div class="feat-portfolio-bg ${getGradient(p.specialties,0)}" style="font-size:80px">${p.photos?.[0]||'📸'}</div>
           <div class="feat-overlay"></div>
           <div class="card-badges" style="position:absolute;top:14px;left:14px;z-index:2">
             <span class="cbadge cbadge-feat">⭐ Featured</span>
@@ -887,10 +918,10 @@ function render(){
       html+=`<div class="ph-card reveal">
         <div class="card-portfolio">
           <div class="cp-grid">
-            <div class="cp-main cp-cell" style="background:linear-gradient(160deg,#${Math.floor(Math.random()*4+1)*4}0A08,#1A1200)">${p.photos?.[0]||'📸'}</div>
+            <div class="cp-main cp-cell ${getGradient(p.specialties,0)}">${p.photos?.[0]||'📸'}</div>
             <div class="cp-side">
-              <div class="cp-cell" style="background:linear-gradient(160deg,#0A1208,#081800)">${p.photos?.[1]||'💍'}</div>
-              <div class="cp-cell" style="background:linear-gradient(160deg,#0A080A,#180820)">${p.photos?.[2]||'🎊'}</div>
+              <div class="cp-cell ${getGradient(p.specialties,1)}">${p.photos?.[1]||'💍'}</div>
+              <div class="cp-cell ${getGradient(p.specialties,2)}">${p.photos?.[2]||'🎊'}</div>
             </div>
           </div>
           <div class="cp-overlay"></div>
