@@ -124,7 +124,10 @@ nav.scrolled{background:rgba(7,6,10,0.92);backdrop-filter:blur(24px);border-bott
 .aud-card-link:hover{gap:10px}
 
 /* ── FEATURES BENTO ── */
-.bento{display:grid;grid-template-columns:repeat(12,1fr);grid-auto-rows:minmax(160px,auto);gap:12px}
+.bento{display:grid;grid-template-columns:repeat(12,1fr);grid-auto-rows:minmax(160px,auto);gap:12px;overflow:hidden}
+.bento-narrow{grid-column:span 5}
+.bento-third{grid-column:span 4}
+.bento-quarter{grid-column:span 3}
 
 .bento-card{background:var(--dark2);border:0.5px solid var(--border);border-radius:16px;padding:32px;position:relative;overflow:hidden;transition:all 0.3s;cursor:pointer;text-decoration:none;display:flex;flex-direction:column;justify-content:flex-end}
 .bento-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 16px 48px rgba(0,0,0,0.3)}
@@ -153,7 +156,7 @@ nav.scrolled{background:rgba(7,6,10,0.92);backdrop-filter:blur(24px);border-bott
 .bento-card:hover .bento-link{gap:10px}
 
 /* Big feature card */
-.bento-big{grid-column:span 7;grid-row:span 2;background:linear-gradient(160deg,#1A1200,#0D0B12);border-color:rgba(212,168,67,0.2)}
+.bento-big{grid-column:span 7;grid-row:span 2;background:linear-gradient(160deg,#1A1200,#0D0B08);border-color:rgba(212,168,67,0.25)}
 .bento-big .bento-title{font-size:32px}
 
 /* ── FEATURE PREVIEW CARDS ── */
@@ -441,9 +444,20 @@ footer{padding:48px 5%;border-top:0.5px solid var(--border);display:flex;align-i
     <!-- Big feature -->
     <a href="https://www.templecity.digital" class="bento-card bento-big" style="min-height:320px">
       <div class="bento-card-glow" style="background:radial-gradient(circle,#D4A843,transparent)"></div>
+      <!-- Visual mockup -->
+      <div style="position:absolute;top:20px;right:24px;display:flex;flex-direction:column;gap:8px;opacity:0.15">
+        <div style="width:120px;height:16px;background:var(--gold);border-radius:8px"></div>
+        <div style="width:80px;height:16px;background:var(--gold);border-radius:8px"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">
+          <div style="height:70px;background:rgba(212,168,67,0.5);border-radius:8px"></div>
+          <div style="height:70px;background:rgba(212,168,67,0.3);border-radius:8px"></div>
+          <div style="height:70px;background:rgba(212,168,67,0.3);border-radius:8px"></div>
+          <div style="height:70px;background:rgba(212,168,67,0.5);border-radius:8px"></div>
+        </div>
+      </div>
       <div>
         <span class="bento-tag tag-core">Core Feature</span>
-        <span class="bento-icon">🤳</span>
+        <div style="font-size:48px;margin:12px 0">🤳</div>
         <div class="bento-title">AI Face Recognition</div>
         <div class="bento-desc">Guests scan their face → AI searches through all event photos → Delivers every matching photo in under 2 seconds. Solo + group photos detected separately. Works with 1000+ photos instantly.</div>
         <div class="bento-link">Try live demo →</div>
